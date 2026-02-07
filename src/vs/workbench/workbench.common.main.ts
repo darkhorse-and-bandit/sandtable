@@ -434,10 +434,14 @@ import './contrib/editTelemetry/browser/editTelemetry.contribution.js';
 // Opener
 import './contrib/opener/browser/opener.contribution.js';
 
-// Sandtable -- Cortex platform service + chat + status + settings
+// Sandtable -- Cortex platform service + chat + status + settings + completion + models + agent + appearance
 import '../platform/cortex/browser/cortexService.js';
 import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
 import './contrib/sandtableStatus/browser/sandtableStatus.contribution.js';
 import './contrib/sandtableSettings/browser/sandtableSettings.contribution.js';
+import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.js';
+import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
+import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';
+import './contrib/sandtableAppearance/browser/sandtableAppearance.contribution.js';
 
 //#endregion

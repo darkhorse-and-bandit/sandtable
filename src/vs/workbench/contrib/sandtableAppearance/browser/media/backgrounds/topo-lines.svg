@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <defs>
+    <style>
+      .topo { fill: none; stroke: #888; stroke-width: 0.8; opacity: 0.6; }
+    </style>
+  </defs>
+  <path class="topo" d="M0 200 Q100 180 200 210 Q300 240 400 190 Q500 160 600 220 Q700 250 800 200"/>
+  <path class="topo" d="M0 280 Q80 260 180 300 Q280 340 380 270 Q480 230 580 310 Q680 350 800 290"/>
+  <path class="topo" d="M0 370 Q120 340 220 380 Q320 420 420 360 Q520 320 620 400 Q720 430 800 380"/>
+  <path class="topo" d="M0 460 Q90 440 190 480 Q290 510 390 440 Q490 400 590 470 Q690 510 800 460"/>
+  <path class="topo" d="M0 540 Q110 520 210 560 Q310 590 410 530 Q510 490 610 550 Q710 580 800 540"/>
+  <path class="topo" d="M0 120 Q130 100 230 140 Q330 170 430 110 Q530 80 630 150 Q730 180 800 130"/>
+  <path class="topo" d="M0 630 Q100 610 200 650 Q300 680 400 620 Q500 580 600 640 Q700 670 800 630"/>
+  <path class="topo" d="M0 710 Q80 690 180 730 Q280 760 380 700 Q480 660 580 720 Q680 750 800 710"/>
+  <ellipse class="topo" cx="400" cy="400" rx="180" ry="120"/>
+  <ellipse class="topo" cx="400" cy="400" rx="260" ry="180"/>
+  <ellipse class="topo" cx="400" cy="400" rx="340" ry="240"/>
+  <ellipse class="topo" cx="200" cy="600" rx="100" ry="70"/>
+  <ellipse class="topo" cx="200" cy="600" rx="150" ry="100"/>
+  <ellipse class="topo" cx="650" cy="200" rx="80" ry="55"/>
+  <ellipse class="topo" cx="650" cy="200" rx="130" ry="90"/>
+</svg>

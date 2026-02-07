@@ -58,6 +58,7 @@
 .monaco-editor .overflow-guard {
 	position: relative;
 	overflow: hidden;
+	isolation: isolate; /* Sandtable: creates stacking context for background image pseudo-elements */
 }
 
 .monaco-editor .view-overlays {

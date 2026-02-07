@@ -25,6 +25,14 @@ Detailed task breakdowns for each implementation phase:
 | Phase 3 | [PHASE-3-MODEL-MANAGER.md](phases/PHASE-3-MODEL-MANAGER.md) | GPU dashboard, model start/stop, logs viewer, system monitor |
 | Phase 4 | [PHASE-4-AGENT-MODE.md](phases/PHASE-4-AGENT-MODE.md) | Agent loop, tool calling, file edits, terminal execution |
 
+## Funspace -- Non-Core Fun Features
+
+The [funspace/](funspace/) directory documents optional, non-core features built by the dev team for fun -- visual customizations, quality-of-life enhancements, and experimental ideas that make Sandtable more enjoyable to use but are not part of the core Cortex integration roadmap.
+
+| Feature | Document | Description |
+|---------|----------|-------------|
+| Editor Background Image | [funspace/EDITOR-BACKGROUND-IMAGE.md](funspace/EDITOR-BACKGROUND-IMAGE.md) | Custom background images behind code with opacity, blur, and overlay controls |
+
 ## How to Use These Documents
 
 1. **Starting out?** Read the [Project Charter](PROJECT-CHARTER.md) for the big picture.
@@ -32,6 +40,7 @@ Detailed task breakdowns for each implementation phase:
 3. **Need architecture context?** The [Architecture doc](ARCHITECTURE.md) has diagrams, interfaces, and data flows.
 4. **Working on Cortex?** The [Cortex Enhancements doc](CORTEX-ENHANCEMENTS.md) has every endpoint spec and implementation detail.
 5. **Need to look something up?** The [Research Reference](RESEARCH-REFERENCE.md) compiles all background research.
+6. **Built something fun?** Document it in the [funspace/](funspace/) directory.
 
 ## Directory Note
 

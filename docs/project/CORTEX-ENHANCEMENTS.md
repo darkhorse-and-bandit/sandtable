@@ -529,6 +529,91 @@ class ModelUpdate(BaseModel):
 
 ---
 
+## FIM Model Setup Guide
+
+This section provides the Cortex development team with everything they need to get a FIM-capable model running for inline code completion.
+
+### What is FIM (Fill-in-the-Middle)?
+
+FIM is a code completion technique where the model receives:
+- **Prefix**: Code before the cursor
+- **Suffix**: Code after the cursor
+- **Task**: Generate what goes in between
+
+This is far superior to simple text completion because the model understands context on both sides of the cursor. FIM requires models that were specifically trained with FIM objectives (not all code models support it).
+
+### Recommended FIM Models (Priority Order)
+
+| Priority | Model | Size | Format | Engine | VRAM | Why |
+|----------|-------|------|--------|--------|------|-----|
+| 1 (Best) | [Codestral 22B](https://huggingface.co/mistralai/Codestral-22B-v0.1) | 22B | BF16 / AWQ | vLLM | ~44 GB (BF16), ~12 GB (AWQ) | Purpose-built for code completion; best FIM quality |
+| 2 | [DeepSeek Coder V2 Lite](https://huggingface.co/deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct) | 6.7B (MoE 2.4B active) | BF16 | vLLM | ~14 GB | Excellent quality-to-size ratio; native FIM tokens |
+| 3 | [Qwen2.5-Coder-7B](https://huggingface.co/Qwen/Qwen2.5-Coder-7B) | 7B | BF16 / GPTQ | vLLM | ~14 GB (BF16) | Apache 2.0; strong FIM support |
+| 4 | [StarCoder2-7B](https://huggingface.co/bigcode/starcoder2-7b) | 7B | BF16 | vLLM | ~14 GB | Open license; reliable FIM |
+| 5 | Any GGUF model | varies | GGUF | llama.cpp | varies | Uses llama.cpp native `/infill` endpoint |
+
+### Model Requirements
+
+For a model to work with Sandtable's FIM completion system:
+
+1. **Must support FIM tokens**: The model must have been trained with Fill-in-the-Middle special tokens (e.g., `<fim_prefix>`, `<fim_suffix>`, `<fim_middle>` for DeepSeek/StarCoder/Qwen, or `[PREFIX]`, `[SUFFIX]`, `[MIDDLE]` for Codestral).
+2. **Must be served via Cortex**: The model must be registered and running in Cortex's model registry.
+3. **Must support text completion**: The Cortex FIM endpoint uses `/v1/completions` (not `/v1/chat/completions`) under the hood for vLLM models.
+4. **Streaming support**: Must support SSE streaming for responsive ghost text display.
+
+### Engine-Specific Notes
+
+#### vLLM Models
+- vLLM serves the model via `/v1/completions` endpoint
+- Cortex's FIM endpoint builds the model-specific FIM prompt (with special tokens) and sends it as a regular completion request
+- The FIM template registry in `fim_templates.py` handles token formatting per model family
+- vLLM must be started with the model's tokenizer to properly handle special tokens
+
+#### llama.cpp Models (GGUF)
+- llama.cpp has a **native `/infill` endpoint** that handles FIM internally
+- The GGUF model must have been trained with FIM support
+- Cortex proxies FIM requests directly to llama.cpp's `/infill` endpoint with `input_prefix` and `input_suffix` fields
+- GPT-OSS models (20B/120B) can use this path if they support FIM
+
+### Quick Start: Getting FIM Working
+
+1. **Choose a model** from the table above (Codestral 22B recommended if you have 48+ GB VRAM, DeepSeek Coder V2 Lite for single GPU)
+2. **Register the model in Cortex** with `task: "generate"` (FIM uses the completion endpoint)
+3. **Implement the FIM endpoint** in Cortex following the specification in Enhancement 2 above
+4. **Verify with curl**:
+   ```bash
+   curl -X POST http://localhost:8084/v1/fim/completions \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "model": "your-model-name",
+       "prefix": "def hello():\n    ",
+       "suffix": "\n    return greeting",
+       "max_tokens": 50,
+       "temperature": 0.2,
+       "stream": false
+     }'
+   ```
+5. **Expected response**: A completion like `greeting = "Hello, World!"` that makes sense given the prefix and suffix context
+6. **Enable in Sandtable**: Set `sandtable.completion.model` to your model's `served_model_name`, or leave empty for auto-detection
+
+### Performance Targets
+
+For a good user experience with ghost text completions:
+
+| Metric | Target | Notes |
+|--------|--------|-------|
+| Time to First Token (TTFT) | < 150ms | Critical for responsive feel; localhost should achieve this |
+| Total completion time | < 500ms | For typical 1-3 line completions (128 tokens max) |
+| Tokens/second | > 50 tok/s | Ensures multi-line completions appear quickly |
+
+If TTFT exceeds 500ms, completions will feel sluggish. Consider:
+- Using a smaller/quantized model
+- Ensuring the model is on GPU (not CPU)
+- Reducing `max_tokens` in IDE settings
+
+---
+
 ## Testing Plan
 
 ### FIM Endpoint Tests

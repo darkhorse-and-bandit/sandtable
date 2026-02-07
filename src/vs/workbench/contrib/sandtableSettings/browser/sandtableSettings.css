@@ -279,3 +279,304 @@
 	margin-bottom: 0;
 	cursor: pointer;
 }
+
+/* ─── Appearance: Thumbnail Grid ───────────────────────────────────────────── */
+
+.sandtable-bg-thumbnail-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 8px;
+}
+
+.sandtable-bg-thumbnail {
+	width: 120px;
+	cursor: pointer;
+	border: 2px solid transparent;
+	border-radius: 6px;
+	overflow: hidden;
+	background: var(--vscode-editor-background, #1e1e1e);
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sandtable-bg-thumbnail:hover {
+	border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-bg-thumbnail.selected {
+	border-color: var(--vscode-focusBorder, #007acc);
+	box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-bg-thumbnail-preview {
+	width: 100%;
+	height: 72px;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-color: var(--vscode-editor-background, #1e1e1e);
+}
+
+.sandtable-bg-thumbnail-label {
+	padding: 4px 6px;
+	font-size: 11px;
+	text-align: center;
+	color: var(--vscode-descriptionForeground, #999);
+	text-transform: capitalize;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ─── Appearance: Drag & Drop Zone ─────────────────────────────────────────── */
+
+.sandtable-bg-dropzone {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 80px;
+	margin: 8px 0;
+	border: 2px dashed var(--vscode-input-border, #555);
+	border-radius: 6px;
+	color: var(--vscode-descriptionForeground, #999);
+	font-size: 13px;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+	cursor: pointer;
+}
+
+.sandtable-bg-dropzone:hover,
+.sandtable-bg-dropzone.dragover {
+	border-color: var(--vscode-focusBorder, #007acc);
+	background-color: rgba(0, 122, 204, 0.08);
+	color: var(--vscode-foreground, #cccccc);
+}
+
+/* ─── Appearance: Buttons ──────────────────────────────────────────────────── */
+
+.sandtable-bg-button {
+	display: inline-block;
+	padding: 6px 16px;
+	margin-top: 8px;
+	margin-right: 8px;
+	background: var(--vscode-button-secondaryBackground, #3a3d41);
+	color: var(--vscode-button-secondaryForeground, #cccccc);
+	border: 1px solid var(--vscode-input-border, #555);
+	border-radius: 4px;
+	font-size: 13px;
+	font-family: var(--vscode-font-family);
+	cursor: pointer;
+	transition: background-color 0.1s ease;
+}
+
+.sandtable-bg-button:hover {
+	background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+
+.sandtable-bg-button.active {
+	background: var(--vscode-button-background, #0e639c);
+	color: var(--vscode-button-foreground, #ffffff);
+	border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-bg-button-danger {
+	background: transparent;
+	color: var(--vscode-errorForeground, #f44747);
+	border-color: var(--vscode-errorForeground, #f44747);
+}
+
+.sandtable-bg-button-danger:hover {
+	background: rgba(244, 71, 71, 0.15);
+}
+
+/* ─── Appearance: Slider ───────────────────────────────────────────────────── */
+
+.sandtable-bg-slider-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.sandtable-bg-slider {
+	flex: 1;
+	height: 6px;
+	appearance: none;
+	-webkit-appearance: none;
+	background: var(--vscode-input-background, #3c3c3c);
+	border-radius: 3px;
+	outline: none;
+	cursor: pointer;
+}
+
+.sandtable-bg-slider::-webkit-slider-thumb {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--vscode-button-background, #0e639c);
+	cursor: pointer;
+	border: 2px solid var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-bg-slider::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--vscode-button-background, #0e639c);
+	cursor: pointer;
+	border: 2px solid var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-bg-slider-value {
+	min-width: 48px;
+	text-align: right;
+	font-size: 13px;
+	font-family: var(--monaco-monospace-font);
+	color: var(--vscode-foreground, #cccccc);
+}
+
+/* ─── Appearance: Overlay Color Row ────────────────────────────────────────── */
+
+.sandtable-bg-overlay-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.sandtable-bg-color-picker {
+	width: 40px;
+	height: 32px;
+	padding: 2px;
+	border: 1px solid var(--vscode-input-border, #555);
+	border-radius: 4px;
+	background: var(--vscode-input-background, #3c3c3c);
+	cursor: pointer;
+}
+
+.sandtable-bg-overlay-row.auto-mode .sandtable-bg-overlay-value {
+	opacity: 0.5;
+}
+
+.sandtable-bg-overlay-slider {
+	flex: 1;
+	min-width: 100px;
+	height: 6px;
+	appearance: none;
+	-webkit-appearance: none;
+	background: var(--vscode-input-background, #3c3c3c);
+	border-radius: 3px;
+	outline: none;
+	cursor: pointer;
+}
+
+.sandtable-bg-overlay-slider::-webkit-slider-thumb {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--vscode-button-background, #0e639c);
+	cursor: pointer;
+	border: 2px solid var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-bg-overlay-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--vscode-button-background, #0e639c);
+	cursor: pointer;
+	border: 2px solid var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-bg-overlay-row.auto-mode .sandtable-bg-color-picker,
+.sandtable-bg-overlay-row.auto-mode .sandtable-bg-overlay-slider {
+	opacity: 0.35;
+}
+
+.sandtable-bg-overlay-value {
+	min-width: 40px;
+	text-align: right;
+	font-size: 12px;
+	font-family: var(--monaco-monospace-font);
+	color: var(--vscode-descriptionForeground, #999);
+}
+
+/* ─── Appearance: Button Group ─────────────────────────────────────────────── */
+
+.sandtable-bg-button-group {
+	display: inline-flex;
+	border-radius: 4px;
+	overflow: hidden;
+	border: 1px solid var(--vscode-input-border, #555);
+}
+
+.sandtable-bg-button-group-item {
+	padding: 6px 16px;
+	background: var(--vscode-input-background, #3c3c3c);
+	color: var(--vscode-foreground, #cccccc);
+	border: none;
+	border-right: 1px solid var(--vscode-input-border, #555);
+	font-size: 12px;
+	font-family: var(--vscode-font-family);
+	cursor: pointer;
+	transition: background-color 0.1s ease;
+}
+
+.sandtable-bg-button-group-item:last-child {
+	border-right: none;
+}
+
+.sandtable-bg-button-group-item:hover {
+	background: var(--vscode-list-hoverBackground, #2a2d2e);
+}
+
+.sandtable-bg-button-group-item.active {
+	background: var(--vscode-button-background, #0e639c);
+	color: var(--vscode-button-foreground, #ffffff);
+}
+
+/* ─── Appearance: Position Grid ────────────────────────────────────────────── */
+
+.sandtable-bg-position-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 36px);
+	grid-template-rows: repeat(3, 36px);
+	gap: 4px;
+	margin-top: 4px;
+}
+
+.sandtable-bg-position-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--vscode-input-border, #555);
+	border-radius: 4px;
+	background: var(--vscode-input-background, #3c3c3c);
+	cursor: pointer;
+	transition: border-color 0.1s ease, background-color 0.1s ease;
+}
+
+.sandtable-bg-position-cell:hover {
+	border-color: var(--vscode-focusBorder, #007acc);
+	background: rgba(0, 122, 204, 0.15);
+}
+
+.sandtable-bg-position-cell.selected {
+	border-color: var(--vscode-focusBorder, #007acc);
+	background: var(--vscode-button-background, #0e639c);
+}
+
+.sandtable-bg-position-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--vscode-descriptionForeground, #999);
+	opacity: 0.4;
+}
+
+.sandtable-bg-position-cell.selected .sandtable-bg-position-dot {
+	background: var(--vscode-button-foreground, #ffffff);
+	opacity: 1;
+}

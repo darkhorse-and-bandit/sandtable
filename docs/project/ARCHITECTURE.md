@@ -418,7 +418,7 @@ sequenceDiagram
 
     User->>Editor: Types code
     Editor->>Editor: Debounce 350ms
-    Editor->>Provider: provideInlineCompletionItems(doc, position)
+    Editor->>Provider: provideInlineCompletions(model, position)
     Provider->>Cache: Check cache for position
     alt Cache hit
         Cache-->>Provider: Cached completion
@@ -575,6 +575,14 @@ All new settings registered under the `sandtable` namespace:
 // Model Manager
 'sandtable.models.showInActivityBar'      // type: boolean, default: true
 'sandtable.models.gpuPollIntervalMs'      // type: number,  default: 5000
+
+// Appearance
+'sandtable.appearance.backgroundImage'    // type: string,  default: '' (bundled: or file path)
+'sandtable.appearance.backgroundOpacity'  // type: number,  default: 0.08
+'sandtable.appearance.backgroundOverlayColor' // type: string, default: '' (auto from theme)
+'sandtable.appearance.backgroundBlur'     // type: number,  default: 0
+'sandtable.appearance.backgroundSize'     // type: string,  default: 'cover'
+'sandtable.appearance.backgroundPosition' // type: string,  default: 'center'
 ```
 
 ## New File Structure Map
@@ -640,14 +648,24 @@ src/vs/workbench/contrib/sandtableModels/
     sandtableModels.css                    # Styling
 ```
 
+### Appearance Files (Bonus)
+
+```
+src/vs/workbench/contrib/sandtableAppearance/
+  browser/
+    sandtableAppearance.contribution.ts    # Editor background image/watermark overlay
+    media/backgrounds/                     # Bundled SVG background images
+```
+
 ### Phase 4 Files
 
 ```
 src/vs/workbench/contrib/sandtableAgent/
   browser/
     sandtableAgent.contribution.ts         # Registers agent panel and commands
-    sandtableAgentPanel.ts                 # Agent conversation UI
+    sandtableAgentPanel.ts                 # Agent conversation UI + tool executors
     sandtableAgentDiffView.ts              # Inline diff display for proposed changes
+    sandtableAgent.css                     # Agent panel styling
 
   common/
     sandtableAgentLoop.ts                  # Core agent loop (message -> tool -> repeat)
@@ -661,16 +679,15 @@ src/vs/workbench/contrib/sandtableAgent/
 All contributions are registered by importing them in `src/vs/workbench/workbench.common.main.ts`:
 
 ```typescript
-// Sandtable -- Cortex platform service + chat + status + settings
+// Sandtable -- Cortex platform service + chat + status + settings + completion + models + agent + appearance
 import '../platform/cortex/browser/cortexService.js';
 import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
 import './contrib/sandtableStatus/browser/sandtableStatus.contribution.js';
 import './contrib/sandtableSettings/browser/sandtableSettings.contribution.js';
-
-// Future phases (not yet implemented):
-// import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.js';
-// import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
-// import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';
+import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.js';
+import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
+import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';
+import './contrib/sandtableAppearance/browser/sandtableAppearance.contribution.js';
 ```
 
 The `cortexService.js` import triggers the `registerSingleton()` call that registers `ICortexService` with the DI system. The platform service is then available to any workbench contribution via constructor injection.

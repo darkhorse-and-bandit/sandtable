@@ -58,11 +58,11 @@ Registers:
 - Commands: `sandtable.models.refresh`, `sandtable.models.startModel`, `sandtable.models.stopModel`
 
 ```typescript
-const MAGE_MODELS_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
+const SANDTABLE_MODELS_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
     ViewExtensions.ViewContainersRegistry
 ).registerViewContainer({
-    id: 'mage-models',
-    title: 'MAGE Models',
+    id: 'sandtable-models',
+    title: 'Sandtable Models',
     icon: Codicon.server,
     order: 101,
 }, ViewContainerLocation.Sidebar);

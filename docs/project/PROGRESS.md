@@ -3,7 +3,7 @@
 This is the living checklist for the Sandtable project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
 
 **Last updated:** 2026-02-07
-**Current phase:** Phase 1 Complete -- Ready for Phase 2 (Inline Code Completion)
+**Current phase:** Phase 4 IDE Side Complete -- Awaiting Cortex Tool Calling Metadata
 
 ---
 
@@ -86,7 +86,7 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 ### Sandtable Settings Page (Bonus -- not in original Phase 1 scope)
 - [x] Create `src/vs/workbench/contrib/sandtableSettings/browser/` directory
 - [x] Implement `SandtableSettingsInput` (EditorInput with virtual `sandtable://settings` URI)
-- [x] Implement `SandtableSettingsPage` (EditorPane with General/Connection/Chat sections)
+- [x] Implement `SandtableSettingsPage` (EditorPane with General/Connection/Chat/Code Completion/Models sections)
 - [x] Register editor resolver for `sandtable://` URI scheme
 - [x] Add "Sandtable Settings" entry to File > Preferences menu
 - [x] Add `sandtable.openSettings` command (available in Command Palette)
@@ -161,8 +161,9 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 
 ## Phase 2: Inline Code Completion
 
-**Status:** Not Started
+**Status:** IDE Side Complete -- Awaiting Cortex FIM Endpoint
 **Target:** Days 18-31
+**Completed (IDE):** 2026-02-07
 **Docs:** [PHASE-2-CODE-COMPLETION.md](phases/PHASE-2-CODE-COMPLETION.md)
 
 ### Cortex Side
@@ -181,27 +182,28 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [ ] Test FIM streaming responses
 
 ### IDE Side
-- [ ] Create `src/vs/workbench/contrib/sandtableCompletion/browser/` directory
-- [ ] Implement `sandtableFimPromptBuilder.ts` -- prefix/suffix extraction
-- [ ] Implement file path hint in prefix
-- [ ] Implement import context inclusion
-- [ ] Implement `sandtableCompletionCache.ts` -- LRU cache
-- [ ] Cache key based on prefix/suffix hash
-- [ ] Cache hit detection for cursor-forward movement
-- [ ] Cache invalidation on non-matching input
-- [ ] 30-second TTL
-- [ ] Implement `sandtableInlineCompletionProvider.ts`
-- [ ] Provider triggers after debounce period
-- [ ] Cancels previous request on new keystroke
-- [ ] Returns `InlineCompletionItem` with ghost text
-- [ ] Tab accepts, Escape dismisses
-- [ ] Register `sandtable.completion.enabled` setting
-- [ ] Register `sandtable.completion.model` setting
-- [ ] Register `sandtable.completion.debounceMs` setting
-- [ ] Register `sandtable.completion.maxTokens` setting
-- [ ] Register `sandtable.completion.temperature` setting
-- [ ] Register `sandtable.completion.contextLines` setting
-- [ ] Register contribution in `workbench.common.main.ts`
+- [x] Create `src/vs/workbench/contrib/sandtableCompletion/browser/` directory
+- [x] Implement `sandtableFimPromptBuilder.ts` -- prefix/suffix extraction
+- [x] Implement file path hint in prefix
+- [x] Implement import context inclusion
+- [x] Implement `sandtableCompletionCache.ts` -- LRU cache
+- [x] Cache key based on prefix/suffix hash
+- [x] Cache hit detection for cursor-forward movement
+- [x] Cache invalidation on non-matching input
+- [x] 30-second TTL
+- [x] Implement `sandtableInlineCompletionProvider.ts`
+- [x] Provider triggers after debounce period
+- [x] Cancels previous request on new keystroke (via CancellationToken)
+- [x] Returns `InlineCompletionItem` with ghost text
+- [x] Tab accepts, Escape dismisses (built-in VS Code behavior)
+- [x] Register `sandtable.completion.enabled` setting
+- [x] Register `sandtable.completion.model` setting
+- [x] Register `sandtable.completion.debounceMs` setting
+- [x] Register `sandtable.completion.maxTokens` setting
+- [x] Register `sandtable.completion.temperature` setting
+- [x] Register `sandtable.completion.contextLines` setting
+- [x] Register contribution in `workbench.common.main.ts`
+- [x] `npm run compile` passes with 0 errors
 
 ### Testing
 - [ ] Ghost text appears after typing pause in .py file
@@ -219,8 +221,9 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 
 ## Phase 3: Model Manager Panel
 
-**Status:** Not Started
+**Status:** IDE Side Complete -- Awaiting Cortex IDE Status Endpoint
 **Target:** Days 32-45
+**Completed (IDE):** 2026-02-07
 **Docs:** [PHASE-3-MODEL-MANAGER.md](phases/PHASE-3-MODEL-MANAGER.md)
 
 ### Cortex Side
@@ -231,38 +234,38 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [ ] Test endpoint returns all sections
 
 ### IDE Side
-- [ ] Create `src/vs/workbench/contrib/sandtableModels/browser/` directory
-- [ ] Register view container in Activity Bar
-- [ ] Implement `sandtableModelsPanel.ts` -- main panel
-- [ ] Implement `sandtableModelsList.ts` -- model list with state indicators
-- [ ] Green dot for running models
-- [ ] Gray dot for stopped models
-- [ ] Yellow dot for starting/loading models
-- [ ] Red dot for failed models
-- [ ] Start button for stopped models
-- [ ] Stop button for running models
-- [ ] Implement `sandtableGpuDashboard.ts` -- GPU metric cards
-- [ ] GPU name display
-- [ ] VRAM usage progress bar
-- [ ] Utilization percentage
-- [ ] Temperature with color coding
-- [ ] Flash attention badge
-- [ ] Implement `sandtableSystemSummary.ts` -- CPU/RAM/disk bars
-- [ ] Implement `sandtableModelLogs.ts` -- container log viewer
-- [ ] Auto-scrolling log display
-- [ ] Diagnostic severity indicators
-- [ ] Copy button
-- [ ] Implement dry-run check before starting models
-- [ ] Show VRAM warnings in confirmation dialog
-- [ ] Implement admin session authentication
-- [ ] Login with username/password from settings
-- [ ] Session cookie storage
-- [ ] Auto re-auth on 401
-- [ ] Implement polling with pause when panel not visible
-- [ ] Register `sandtable.models.showInActivityBar` setting
-- [ ] Register `sandtable.models.gpuPollIntervalMs` setting
-- [ ] Register contribution in `workbench.common.main.ts`
-- [ ] Create `sandtableModels.css` with styling
+- [x] Create `src/vs/workbench/contrib/sandtableModels/browser/` directory
+- [x] Register view container in Activity Bar
+- [x] Implement `sandtableModelsPanel.ts` -- main panel
+- [x] Implement `sandtableModelsList.ts` -- model list with state indicators
+- [x] Green dot for running models
+- [x] Gray dot for stopped models
+- [x] Yellow dot for starting/loading models
+- [x] Red dot for failed models
+- [x] Start button for stopped models
+- [x] Stop button for running models
+- [x] Implement `sandtableGpuDashboard.ts` -- GPU metric cards
+- [x] GPU name display
+- [x] VRAM usage progress bar
+- [x] Utilization percentage
+- [x] Temperature with color coding
+- [x] Flash attention badge
+- [x] Implement `sandtableSystemSummary.ts` -- CPU/RAM/disk bars
+- [x] Implement `sandtableModelLogs.ts` -- container log viewer
+- [x] Auto-scrolling log display
+- [x] Diagnostic severity indicators
+- [x] Copy button
+- [x] Implement dry-run check before starting models
+- [x] Show VRAM warnings in confirmation dialog
+- [x] Implement admin session authentication
+- [x] Login with username/password from settings
+- [x] Session cookie storage
+- [x] Auto re-auth on 401
+- [x] Implement polling with pause when panel not visible
+- [x] Register `sandtable.models.showInActivityBar` setting
+- [x] Register `sandtable.models.gpuPollIntervalMs` setting
+- [x] Register contribution in `workbench.common.main.ts`
+- [x] Create `sandtableModels.css` with styling
 
 ### Testing
 - [ ] Panel opens from Activity Bar
@@ -279,8 +282,9 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 
 ## Phase 4: Agent Mode
 
-**Status:** Not Started
+**Status:** IDE Side Complete -- Awaiting Cortex Tool Calling Metadata
 **Target:** Days 46-66
+**Completed (IDE):** 2026-02-07
 **Docs:** [PHASE-4-AGENT-MODE.md](phases/PHASE-4-AGENT-MODE.md)
 
 ### Cortex Side
@@ -290,45 +294,52 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [ ] Test with known tool-calling models
 
 ### IDE Side
-- [ ] Create `src/vs/workbench/contrib/sandtableAgent/browser/` directory
-- [ ] Create `src/vs/workbench/contrib/sandtableAgent/common/` directory
-- [ ] Implement `sandtableAgentTools.ts` -- tool definitions
-- [ ] `read_file` tool
-- [ ] `edit_file` tool
-- [ ] `create_file` tool
-- [ ] `run_command` tool
-- [ ] `search_files` tool
-- [ ] `list_directory` tool
-- [ ] Implement `sandtableAgentLoop.ts` -- core agent loop
-- [ ] Message -> tool_call -> execute -> repeat cycle
-- [ ] Max iteration guard (default 25)
-- [ ] Cancellation support (stop button)
-- [ ] Context pruning when token budget exceeded
-- [ ] Implement `sandtableAgentSafety.ts` -- confirmation system
-- [ ] Confirmation for `edit_file`
-- [ ] Confirmation for `create_file`
-- [ ] Confirmation for `run_command`
-- [ ] No confirmation for read-only tools
-- [ ] Respect `sandtable.agent.confirmDestructive` setting
-- [ ] Implement `sandtableAgentPanel.ts` -- agent conversation UI
-- [ ] Message display (reuses chat rendering)
-- [ ] Tool execution indicators
-- [ ] Iteration counter
-- [ ] Stop button
-- [ ] Implement `sandtableAgentDiffView.ts` -- inline diff display
-- [ ] Show old_text vs new_text for edit_file
-- [ ] Accept/Reject buttons on diffs
-- [ ] Use VS Code's native diff editor
-- [ ] Implement `sandtableAgentContext.ts` -- token budget management
-- [ ] Calculate available context from model constraints
-- [ ] Summarize old tool results when budget is tight
-- [ ] Always preserve system prompt and latest user message
-- [ ] Register `sandtable.agent.enabled` setting
-- [ ] Register `sandtable.agent.model` setting
-- [ ] Register `sandtable.agent.confirmDestructive` setting
-- [ ] Register `sandtable.agent.maxIterations` setting
-- [ ] Register `sandtable.agent.maxTokens` setting
-- [ ] Register contribution in `workbench.common.main.ts`
+- [x] Create `src/vs/workbench/contrib/sandtableAgent/browser/` directory
+- [x] Create `src/vs/workbench/contrib/sandtableAgent/common/` directory
+- [x] Implement `sandtableAgentTools.ts` -- tool definitions
+- [x] `read_file` tool
+- [x] `edit_file` tool
+- [x] `create_file` tool
+- [x] `run_command` tool
+- [x] `search_files` tool
+- [x] `list_directory` tool
+- [x] Implement `sandtableAgentLoop.ts` -- core agent loop
+- [x] Message -> tool_call -> execute -> repeat cycle
+- [x] Max iteration guard (default 25)
+- [x] Cancellation support (stop button)
+- [x] Context pruning when token budget exceeded
+- [x] Implement `sandtableAgentSafety.ts` -- confirmation system
+- [x] Confirmation for `edit_file`
+- [x] Confirmation for `create_file`
+- [x] Confirmation for `run_command`
+- [x] No confirmation for read-only tools
+- [x] Respect `sandtable.agent.confirmDestructive` setting
+- [x] Implement `sandtableAgentPanel.ts` -- agent conversation UI
+- [x] Message display with markdown rendering (reuses `renderMarkdown` from VS Code base)
+- [x] Tool execution indicators
+- [x] Iteration counter
+- [x] Stop button
+- [x] Disabled state when `agent.enabled` is false
+- [x] `run_command` via `ITerminalService` with rich/basic command detection fallback
+- [x] `search_files` via `ISearchService.textSearch()` (ripgrep-backed)
+- [x] Model selection with specific fallback messages (configured / auto-tool / auto-fallback / no-models)
+- [x] Implement `sandtableAgentDiffView.ts` -- inline diff display
+- [x] Show old_text vs new_text for edit_file
+- [x] Accept/Reject buttons on diffs
+- [x] Inline DOM-based diff rendering with red/green lines
+- [x] Implement `sandtableAgentContext.ts` -- token budget management
+- [x] Calculate available context from model constraints
+- [x] Summarize old tool results when budget is tight
+- [x] Always preserve system prompt and latest user message
+- [x] Register `sandtable.agent.enabled` setting
+- [x] Register `sandtable.agent.model` setting
+- [x] Register `sandtable.agent.confirmDestructive` setting
+- [x] Register `sandtable.agent.maxIterations` setting
+- [x] Register `sandtable.agent.maxTokens` setting
+- [x] Register contribution in `workbench.common.main.ts`
+- [x] Add "Agent" section to Sandtable Settings page
+- [x] Create `sandtableAgent.css` with all agent styling
+- [x] `npm run compile` passes with 0 errors
 
 ### Testing
 - [ ] Agent reads a file when asked "what does X contain?"
@@ -373,3 +384,23 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [x] `docs/project/CORTEX-ENHANCEMENTS.md` -- Cortex changes
 - [x] `docs/project/RESEARCH-REFERENCE.md` -- Research reference
 - [x] `docs/project/PROGRESS.md` -- This file
+- [x] `docs/project/funspace/README.md` -- Funspace index (non-core fun features)
+- [x] `docs/project/funspace/EDITOR-BACKGROUND-IMAGE.md` -- Editor background image feature
+
+---
+
+## Funspace Features (Non-Core)
+
+**Docs:** [funspace/](funspace/)
+
+Optional, self-contained features built by the dev team for fun. These don't block the phase roadmap.
+
+### Editor Background Image
+- [x] `AppearanceConfigKeys` enum and 6 settings registered in `cortexConfiguration.ts`
+- [x] `sandtableAppearance.contribution.ts` -- dynamic CSS injection, config watching, URI resolution
+- [x] `isolation: isolate` added to `.overflow-guard` in `editor.css`
+- [x] 5 bundled SVG backgrounds shipped (topo-lines, grid-blueprint, dark-gradient, sandtable-watermark, circuit-board)
+- [x] "Appearance" section added to Sandtable Settings page with image selector, preview, and controls
+- [x] Contribution registered in `workbench.common.main.ts`
+- [x] Auto-overlay derives color from theme (dark: 85% opacity, light: 90%)
+- [x] `npm run compile` passes with 0 errors
