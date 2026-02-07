@@ -3,7 +3,7 @@
 This is the living checklist for the Sandtable project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
 
 **Last updated:** 2026-02-07
-**Current phase:** Phase 0 (Complete)
+**Current phase:** Phase 0 (Complete) -- Ready for Phase 1
 
 ---
 
@@ -54,6 +54,22 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [x] Ensure `docs/project/` directory is preserved
 - [x] Increase inotify watchers if needed (`fs.inotify.max_user_watches=524288`)
 - [x] Create initial commit on `sandtable/main` branch
+
+### Additional Completed Work (Beyond Original Phase 0 Scope)
+- [x] Rename project from MAGE IDE to Sandtable across all files
+- [x] Rename git branch from `mage-ide/main` to `sandtable/main`
+- [x] Configure git remotes: `origin` = darkhorse-and-bandit/sandtable, `upstream` = microsoft/vscode
+- [x] Push to GitHub at https://github.com/darkhorse-and-bandit/sandtable
+- [x] Set `sandtable/main` as the default branch on GitHub
+- [x] Rewrite root `README.md` with Sandtable vision (research, roleplay, wargaming use cases)
+- [x] Update `PROJECT-CHARTER.md` with expanded mission, goals, and target audience
+- [x] Expand `MILESTONES.md` with post-MVP phases 5-9 (documents, personas, MCP, collaboration)
+- [x] Fix all stale MAGE/mage references in code blocks across docs
+- [x] Add Sandtable logo (`assets/sandtableLogoNoBackground.png`) to README
+- [x] Replace Linux application icon (`resources/linux/code.png`)
+- [x] Replace workbench UI icon (`src/vs/workbench/browser/media/code-icon.svg`)
+- [x] Remove `.github/README.md` that was overriding root README on GitHub
+- [x] Install Node.js 22.21.1 via `mise` (required for native module compilation; Node 25.x was incompatible with tree-sitter)
 
 ---
 
