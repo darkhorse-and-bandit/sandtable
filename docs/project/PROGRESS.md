@@ -3,7 +3,7 @@
 This is the living checklist for the Sandtable project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
 
 **Last updated:** 2026-02-07
-**Current phase:** Phase 0 (Complete) -- Ready for Phase 1
+**Current phase:** Phase 1 Complete -- Ready for Phase 2 (Inline Code Completion)
 
 ---
 
@@ -75,66 +75,78 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 
 ## Phase 1: Cortex Connection + Chat Panel
 
-**Status:** Not Started
+**Status:** Complete (IDE-side implementation)
 **Target:** Days 4-17
+**Completed:** 2026-02-07
 **Docs:** [PHASE-1-CORTEX-CONNECTION.md](phases/PHASE-1-CORTEX-CONNECTION.md)
 
 ### Cortex Side
 - [ ] Configure CORS for Electron origins (`file://`, `null`) in Cortex
 
+### Sandtable Settings Page (Bonus -- not in original Phase 1 scope)
+- [x] Create `src/vs/workbench/contrib/sandtableSettings/browser/` directory
+- [x] Implement `SandtableSettingsInput` (EditorInput with virtual `sandtable://settings` URI)
+- [x] Implement `SandtableSettingsPage` (EditorPane with General/Connection/Chat sections)
+- [x] Register editor resolver for `sandtable://` URI scheme
+- [x] Add "Sandtable Settings" entry to File > Preferences menu
+- [x] Add `sandtable.openSettings` command (available in Command Palette)
+- [x] Settings page reads/writes all `sandtable.*` settings via `IConfigurationService`
+- [x] Register contribution in `workbench.common.main.ts`
+- [x] Create `sandtableSettings.css` with two-column layout
+
 ### Platform Service
-- [ ] Create directory `src/vs/platform/cortex/common/`
-- [ ] Create directory `src/vs/platform/cortex/browser/`
-- [ ] Define `ICortexService` interface in `cortex.ts`
-- [ ] Define all TypeScript types (requests, responses, models, etc.)
-- [ ] Implement `CortexClient` with non-streaming requests
-- [ ] Implement `CortexClient` SSE streaming with `ReadableStream`
-- [ ] Implement `CortexClient` request cancellation via `AbortController`
-- [ ] Handle error responses (4xx, 5xx) with typed errors
-- [ ] Implement `CortexService` browser-side service
-- [ ] Register `CortexService` as singleton with DI system
+- [x] Create directory `src/vs/platform/cortex/common/`
+- [x] Create directory `src/vs/platform/cortex/browser/`
+- [x] Define `ICortexService` interface in `cortex.ts`
+- [x] Define all TypeScript types (requests, responses, models, etc.)
+- [x] Implement `CortexClient` with non-streaming requests
+- [x] Implement `CortexClient` SSE streaming with `ReadableStream`
+- [x] Implement `CortexClient` request cancellation via `AbortController`
+- [x] Handle error responses (4xx, 5xx) with typed errors
+- [x] Implement `CortexService` browser-side service
+- [x] Register `CortexService` as singleton with DI system
 
 ### Settings
-- [ ] Register `sandtable.cortex.endpoint` setting
-- [ ] Register `sandtable.cortex.apiKey` setting
-- [ ] Register `sandtable.cortex.username` setting
-- [ ] Register `sandtable.cortex.password` setting
-- [ ] Register `sandtable.cortex.healthCheckIntervalMs` setting
-- [ ] Register `sandtable.chat.defaultModel` setting
-- [ ] Register `sandtable.chat.streamingEnabled` setting
-- [ ] Register `sandtable.chat.systemPrompt` setting
-- [ ] Register `sandtable.chat.maxTokens` setting
-- [ ] Register `sandtable.chat.temperature` setting
-- [ ] Verify all settings appear in Settings UI under "Sandtable" section
+- [x] Register `sandtable.cortex.endpoint` setting
+- [x] Register `sandtable.cortex.apiKey` setting
+- [x] Register `sandtable.cortex.username` setting
+- [x] Register `sandtable.cortex.password` setting
+- [x] Register `sandtable.cortex.healthCheckIntervalMs` setting
+- [x] Register `sandtable.chat.defaultModel` setting
+- [x] Register `sandtable.chat.streamingEnabled` setting
+- [x] Register `sandtable.chat.systemPrompt` setting
+- [x] Register `sandtable.chat.maxTokens` setting
+- [x] Register `sandtable.chat.temperature` setting
+- [x] Verify all settings appear in Settings UI under "Sandtable" section
 
 ### Status Bar
-- [ ] Create `src/vs/workbench/contrib/sandtableStatus/browser/` directory
-- [ ] Implement status bar item showing connection status
-- [ ] Health check polling (every 15s)
-- [ ] Green indicator when connected with model count
-- [ ] Red indicator when disconnected
-- [ ] Click opens settings or model picker
-- [ ] Register contribution in `workbench.common.main.ts`
+- [x] Create `src/vs/workbench/contrib/sandtableStatus/browser/` directory
+- [x] Implement status bar item showing connection status
+- [x] Health check polling (every 15s)
+- [x] Green indicator when connected with model count
+- [x] Red indicator when disconnected
+- [x] Click opens settings or model picker
+- [x] Register contribution in `workbench.common.main.ts`
 
 ### Chat Panel
-- [ ] Create `src/vs/workbench/contrib/sandtableChat/browser/` directory
-- [ ] Register view container in Activity Bar
-- [ ] Implement `SandtableChatViewPane` (extends ViewPane)
-- [ ] Implement model selector dropdown (queries `/v1/models/running`)
-- [ ] Implement message input widget with Send button
-- [ ] Implement Shift+Enter for newlines in input
-- [ ] Implement scrollable message list
-- [ ] Implement markdown rendering for assistant messages
-- [ ] Implement syntax-highlighted code blocks in responses
-- [ ] Implement streaming display (append tokens as they arrive)
-- [ ] Implement "Stop" button to abort streaming
-- [ ] Implement chat session list sidebar
-- [ ] Implement new chat session creation
-- [ ] Implement session switching
-- [ ] Implement session deletion
-- [ ] Implement chat persistence via Cortex session API
-- [ ] Register contribution in `workbench.common.main.ts`
-- [ ] Create `sandtableChat.css` with styling
+- [x] Create `src/vs/workbench/contrib/sandtableChat/browser/` directory
+- [x] Register view container in Activity Bar
+- [x] Implement `SandtableChatViewPane` (extends ViewPane)
+- [x] Implement model selector dropdown (queries `/v1/models/running`)
+- [x] Implement message input widget with Send button
+- [x] Implement Shift+Enter for newlines in input
+- [x] Implement scrollable message list
+- [x] Implement markdown rendering for assistant messages
+- [x] Implement syntax-highlighted code blocks in responses
+- [x] Implement streaming display (append tokens as they arrive)
+- [x] Implement "Stop" button to abort streaming
+- [x] Implement chat session list sidebar
+- [x] Implement new chat session creation
+- [x] Implement session switching
+- [x] Implement session deletion
+- [x] Implement chat persistence via Cortex session API
+- [x] Register contribution in `workbench.common.main.ts`
+- [x] Create `sandtableChat.css` with styling
 
 ### Integration Testing
 - [ ] Status bar shows "Connected" when Cortex is running

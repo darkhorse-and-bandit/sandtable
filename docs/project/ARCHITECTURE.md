@@ -79,9 +79,10 @@ src/vs/
   workbench/     Full IDE shell -- panels, activity bar, sidebar, status bar
     contrib/     Feature contributions (extensions, git, terminal, etc.)
       sandtableChat/       ** NEW: Chat panel **
-      sandtableCompletion/ ** NEW: Inline code completion **
-      sandtableModels/     ** NEW: Model manager panel **
-      sandtableAgent/      ** NEW: Agent mode **
+      sandtableCompletion/ ** NEW: Inline code completion (Phase 2) **
+      sandtableModels/     ** NEW: Model manager panel (Phase 3) **
+      sandtableAgent/      ** NEW: Agent mode (Phase 4) **
+      sandtableSettings/   ** NEW: Custom settings page **
       sandtableStatus/     ** NEW: Status bar indicator **
   code/          Electron desktop app entry point
   server/        Remote development server entry point
@@ -605,6 +606,13 @@ src/vs/workbench/contrib/sandtableStatus/
   browser/
     sandtableStatus.contribution.ts        # Status bar item registration
     sandtableStatusBarItem.ts              # Connection status indicator
+
+src/vs/workbench/contrib/sandtableSettings/
+  browser/
+    sandtableSettings.contribution.ts      # EditorPane + EditorInput + menu entry + resolver
+    sandtableSettingsPage.ts               # Custom settings page (EditorPane, DOM-based UI)
+    sandtableSettingsInput.ts              # Singleton EditorInput with sandtable:// URI
+    sandtableSettings.css                  # Two-column settings layout styling
 ```
 
 ### Phase 2 Files
@@ -653,12 +661,16 @@ src/vs/workbench/contrib/sandtableAgent/
 All contributions are registered by importing them in `src/vs/workbench/workbench.common.main.ts`:
 
 ```typescript
-// Sandtable contributions
-import './contrib/sandtableChat/browser/sandtableChat.contribution';
-import './contrib/sandtableStatus/browser/sandtableStatus.contribution';
-import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution';
-import './contrib/sandtableModels/browser/sandtableModels.contribution';
-import './contrib/sandtableAgent/browser/sandtableAgent.contribution';
+// Sandtable -- Cortex platform service + chat + status + settings
+import '../platform/cortex/browser/cortexService.js';
+import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
+import './contrib/sandtableStatus/browser/sandtableStatus.contribution.js';
+import './contrib/sandtableSettings/browser/sandtableSettings.contribution.js';
+
+// Future phases (not yet implemented):
+// import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.js';
+// import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
+// import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';
 ```
 
-The platform service is registered in the workbench's service initialization.
+The `cortexService.js` import triggers the `registerSingleton()` call that registers `ICortexService` with the DI system. The platform service is then available to any workbench contribution via constructor injection.

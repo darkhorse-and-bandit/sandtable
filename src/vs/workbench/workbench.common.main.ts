@@ -434,4 +434,10 @@ import './contrib/editTelemetry/browser/editTelemetry.contribution.js';
 // Opener
 import './contrib/opener/browser/opener.contribution.js';
 
+// Sandtable -- Cortex platform service + chat + status + settings
+import '../platform/cortex/browser/cortexService.js';
+import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
+import './contrib/sandtableStatus/browser/sandtableStatus.contribution.js';
+import './contrib/sandtableSettings/browser/sandtableSettings.contribution.js';
+
 //#endregion

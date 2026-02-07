@@ -1,0 +1,382 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Sandtable Contributors. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* ─── Root Layout ──────────────────────────────────────────────────────────── */
+
+.sandtable-chat-root {
+	display: flex;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* ─── Session Sidebar ──────────────────────────────────────────────────────── */
+
+.sandtable-chat-session-sidebar {
+	width: 200px;
+	min-width: 160px;
+	border-right: 1px solid var(--vscode-panel-border, #333);
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+	background: var(--vscode-sideBar-background, #1e1e1e);
+}
+
+.sandtable-chat-new-session-btn {
+	margin: 8px;
+	padding: 6px 12px;
+	background: var(--vscode-button-background, #0e639c);
+	color: var(--vscode-button-foreground, #ffffff);
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 12px;
+	font-family: var(--vscode-font-family);
+	text-align: center;
+}
+
+.sandtable-chat-new-session-btn:hover {
+	background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+.sandtable-chat-session-list {
+	flex: 1;
+	overflow-y: auto;
+}
+
+.sandtable-chat-session-item {
+	display: flex;
+	align-items: center;
+	padding: 6px 8px;
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--vscode-foreground, #cccccc);
+	border-left: 3px solid transparent;
+}
+
+.sandtable-chat-session-item:hover {
+	background: var(--vscode-list-hoverBackground, #2a2d2e);
+}
+
+.sandtable-chat-session-item.active {
+	background: var(--vscode-list-activeSelectionBackground, #094771);
+	color: var(--vscode-list-activeSelectionForeground, #ffffff);
+	border-left-color: var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-chat-session-title {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sandtable-chat-session-delete {
+	background: none;
+	border: none;
+	color: var(--vscode-foreground, #cccccc);
+	cursor: pointer;
+	opacity: 0;
+	font-size: 14px;
+	padding: 0 4px;
+	line-height: 1;
+}
+
+.sandtable-chat-session-item:hover .sandtable-chat-session-delete {
+	opacity: 0.6;
+}
+
+.sandtable-chat-session-delete:hover {
+	opacity: 1 !important;
+	color: var(--vscode-errorForeground, #f44747);
+}
+
+/* ─── Chat Container ───────────────────────────────────────────────────────── */
+
+.sandtable-chat-container {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	min-width: 0;
+}
+
+/* ─── Model Selector ───────────────────────────────────────────────────────── */
+
+.sandtable-chat-model-selector {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--vscode-panel-border, #333);
+	background: var(--vscode-editor-background, #1e1e1e);
+}
+
+.sandtable-chat-model-label {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground, #999);
+	white-space: nowrap;
+}
+
+.sandtable-chat-model-select {
+	flex: 1;
+	padding: 4px 8px;
+	background: var(--vscode-input-background, #3c3c3c);
+	color: var(--vscode-input-foreground, #cccccc);
+	border: 1px solid var(--vscode-input-border, #555);
+	border-radius: 4px;
+	font-size: 12px;
+	font-family: var(--vscode-font-family);
+	outline: none;
+}
+
+.sandtable-chat-model-select:focus {
+	border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-chat-model-select:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ─── Message List ─────────────────────────────────────────────────────────── */
+
+.sandtable-chat-messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px 0;
+	scroll-behavior: smooth;
+}
+
+.sandtable-chat-message {
+	padding: 8px 16px;
+	margin: 4px 0;
+}
+
+.sandtable-chat-message-user {
+	background: var(--vscode-editor-background, #1e1e1e);
+}
+
+.sandtable-chat-message-assistant {
+	background: var(--vscode-editorWidget-background, #252526);
+}
+
+.sandtable-chat-message-system {
+	background: transparent;
+	text-align: center;
+	font-style: italic;
+	opacity: 0.7;
+}
+
+.sandtable-chat-message-role {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin-bottom: 4px;
+	color: var(--vscode-descriptionForeground, #999);
+}
+
+.sandtable-chat-message-user .sandtable-chat-message-role {
+	color: var(--vscode-textLink-foreground, #3794ff);
+}
+
+.sandtable-chat-message-assistant .sandtable-chat-message-role {
+	color: var(--vscode-terminal-ansiGreen, #23d18b);
+}
+
+.sandtable-chat-message-content {
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--vscode-foreground, #cccccc);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+/* Markdown rendering styles */
+.sandtable-chat-message-content p {
+	margin: 0 0 8px 0;
+}
+
+.sandtable-chat-message-content p:last-child {
+	margin-bottom: 0;
+}
+
+.sandtable-chat-message-content code {
+	background: var(--vscode-textCodeBlock-background, #2d2d2d);
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 12px;
+}
+
+.sandtable-chat-message-content pre {
+	background: var(--vscode-textCodeBlock-background, #2d2d2d);
+	padding: 12px;
+	border-radius: 6px;
+	overflow-x: auto;
+	margin: 8px 0;
+}
+
+.sandtable-chat-message-content pre code {
+	background: none;
+	padding: 0;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.sandtable-chat-message-content ul,
+.sandtable-chat-message-content ol {
+	margin: 4px 0;
+	padding-left: 24px;
+}
+
+.sandtable-chat-message-content li {
+	margin: 2px 0;
+}
+
+.sandtable-chat-message-content blockquote {
+	border-left: 3px solid var(--vscode-textBlockQuote-border, #555);
+	padding-left: 12px;
+	margin: 8px 0;
+	opacity: 0.85;
+}
+
+.sandtable-chat-message-content a {
+	color: var(--vscode-textLink-foreground, #3794ff);
+	text-decoration: none;
+}
+
+.sandtable-chat-message-content a:hover {
+	text-decoration: underline;
+}
+
+/* ─── Typing Indicator ─────────────────────────────────────────────────────── */
+
+.sandtable-chat-typing-indicator {
+	display: inline-flex;
+	gap: 4px;
+	padding: 4px 0;
+}
+
+.sandtable-chat-typing-indicator span {
+	width: 6px;
+	height: 6px;
+	background: var(--vscode-descriptionForeground, #999);
+	border-radius: 50%;
+	animation: sandtable-typing-bounce 1.4s infinite ease-in-out;
+}
+
+.sandtable-chat-typing-indicator span:nth-child(2) {
+	animation-delay: 0.2s;
+}
+
+.sandtable-chat-typing-indicator span:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+@keyframes sandtable-typing-bounce {
+	0%, 60%, 100% {
+		transform: translateY(0);
+		opacity: 0.4;
+	}
+	30% {
+		transform: translateY(-4px);
+		opacity: 1;
+	}
+}
+
+/* ─── Message Metrics ──────────────────────────────────────────────────────── */
+
+.sandtable-chat-message-metrics {
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground, #666);
+	margin-top: 6px;
+	padding-top: 4px;
+	border-top: 1px solid var(--vscode-panel-border, #333);
+}
+
+/* ─── Streaming State ──────────────────────────────────────────────────────── */
+
+.sandtable-chat-message-streaming {
+	border-left: 2px solid var(--vscode-progressBar-background, #0e70c0);
+}
+
+/* ─── Input Container ──────────────────────────────────────────────────────── */
+
+.sandtable-chat-input-container {
+	padding: 8px 12px;
+	border-top: 1px solid var(--vscode-panel-border, #333);
+	background: var(--vscode-editor-background, #1e1e1e);
+}
+
+.sandtable-chat-input-textarea {
+	width: 100%;
+	min-height: 48px;
+	max-height: 150px;
+	padding: 8px 10px;
+	background: var(--vscode-input-background, #3c3c3c);
+	color: var(--vscode-input-foreground, #cccccc);
+	border: 1px solid var(--vscode-input-border, #555);
+	border-radius: 6px;
+	font-size: 13px;
+	font-family: var(--vscode-font-family);
+	line-height: 1.4;
+	resize: none;
+	outline: none;
+	box-sizing: border-box;
+}
+
+.sandtable-chat-input-textarea:focus {
+	border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.sandtable-chat-input-textarea:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.sandtable-chat-input-textarea::placeholder {
+	color: var(--vscode-input-placeholderForeground, #888);
+}
+
+.sandtable-chat-input-buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 6px;
+}
+
+.sandtable-chat-send-button,
+.sandtable-chat-stop-button {
+	padding: 5px 16px;
+	border: none;
+	border-radius: 4px;
+	font-size: 12px;
+	font-family: var(--vscode-font-family);
+	cursor: pointer;
+}
+
+.sandtable-chat-send-button {
+	background: var(--vscode-button-background, #0e639c);
+	color: var(--vscode-button-foreground, #ffffff);
+}
+
+.sandtable-chat-send-button:hover:not(:disabled) {
+	background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+.sandtable-chat-send-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.sandtable-chat-stop-button {
+	background: var(--vscode-button-secondaryBackground, #3a3d41);
+	color: var(--vscode-button-secondaryForeground, #ffffff);
+}
+
+.sandtable-chat-stop-button:hover {
+	background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
