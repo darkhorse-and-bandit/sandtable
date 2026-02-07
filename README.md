@@ -1,6 +1,10 @@
-# Sandtable
+<p align="center">
+  <img src="assets/sandtableLogoNoBackground.png" alt="Sandtable" width="200">
+</p>
 
-**A research and scenario simulation environment powered by local LLMs.**
+<h1 align="center">Sandtable</h1>
+
+<p align="center"><strong>A research and scenario simulation environment powered by local LLMs.</strong></p>
 
 Sandtable is a fork of [VS Code](https://github.com/microsoft/vscode) rebuilt as an intelligent workspace for research, roleplay, and scenario experimentation. It connects to [Cortex](https://github.com/AulendurForge/Cortex), a self-hosted OpenAI-compatible inference gateway, giving you direct access to locally hosted LLM models -- fully offline, fully private, fully under your control.
 
