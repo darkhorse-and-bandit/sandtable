@@ -90,8 +90,8 @@ import { Registry } from 'vs/platform/registry/common/platform';
 const configurationRegistry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration);
 
 configurationRegistry.registerConfiguration({
-    id: 'mage',
-    title: 'MAGE',
+    id: 'sandtable',
+    title: 'Sandtable',
     type: 'object',
     properties: {
         'sandtable.cortex.endpoint': {
@@ -234,11 +234,11 @@ The chat panel registers as a view in the Activity Bar sidebar:
 ```typescript
 // sandtableChat.contribution.ts
 
-const MAGE_CHAT_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
+const SANDTABLE_CHAT_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
     ViewExtensions.ViewContainersRegistry
 ).registerViewContainer({
-    id: 'mage-chat',
-    title: 'MAGE Chat',
+    id: 'sandtable-chat',
+    title: 'Sandtable Chat',
     icon: Codicon.commentDiscussion,  // Use built-in icon initially
     order: 100,
 }, ViewContainerLocation.Sidebar);
@@ -250,7 +250,7 @@ Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry).registerViews([{
     canToggleVisibility: true,
     canMoveView: true,
     ctorDescriptor: new SyncDescriptor(SandtableChatViewPane),
-}], MAGE_CHAT_VIEW_CONTAINER);
+}], SANDTABLE_CHAT_VIEW_CONTAINER);
 ```
 
 #### Chat View Pane

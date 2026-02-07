@@ -613,8 +613,8 @@ src/vs/workbench/contrib/sandtableStatus/
 src/vs/workbench/contrib/sandtableCompletion/
   browser/
     sandtableCompletion.contribution.ts    # Registers InlineCompletionItemProvider
-    mageInlineCompletionProvider.ts   # Core provider implementation
-    mageFimPromptBuilder.ts           # Prefix/suffix extraction from editor
+    sandtableInlineCompletionProvider.ts   # Core provider implementation
+    sandtableFimPromptBuilder.ts           # Prefix/suffix extraction from editor
     sandtableCompletionCache.ts            # LRU cache for recent completions
 ```
 

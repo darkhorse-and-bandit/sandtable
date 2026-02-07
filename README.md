@@ -1,78 +1,150 @@
-# Visual Studio Code - Open Source ("Code - OSS")
-[![Feature Requests](https://img.shields.io/github/issues/microsoft/vscode/feature-request.svg)](https://github.com/microsoft/vscode/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
-[![Bugs](https://img.shields.io/github/issues/microsoft/vscode/bug.svg)](https://github.com/microsoft/vscode/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Abug)
-[![Gitter](https://img.shields.io/badge/chat-on%20gitter-yellow.svg)](https://gitter.im/Microsoft/vscode)
+# Sandtable
 
-## The Repository
+**A research and scenario simulation environment powered by local LLMs.**
 
-This repository ("`Code - OSS`") is where we (Microsoft) develop the [Visual Studio Code](https://code.visualstudio.com) product together with the community. Not only do we work on code and issues here, we also publish our [roadmap](https://github.com/microsoft/vscode/wiki/Roadmap), [monthly iteration plans](https://github.com/microsoft/vscode/wiki/Iteration-Plans), and our [endgame plans](https://github.com/microsoft/vscode/wiki/Running-the-Endgame). This source code is available to everyone under the standard [MIT license](https://github.com/microsoft/vscode/blob/main/LICENSE.txt).
+Sandtable is a fork of [VS Code](https://github.com/microsoft/vscode) rebuilt as an intelligent workspace for research, roleplay, and scenario experimentation. It connects to [Cortex](https://github.com/AulendurForge/Cortex), a self-hosted OpenAI-compatible inference gateway, giving you direct access to locally hosted LLM models -- fully offline, fully private, fully under your control.
 
-## Visual Studio Code
+## What Is Sandtable?
 
-<p align="center">
-  <img alt="VS Code in action" src="https://user-images.githubusercontent.com/35271042/118224532-3842c400-b438-11eb-923d-a5f66fa6785a.png">
-</p>
+In military tradition, a **sand table** is a physical terrain model used for planning, wargaming, and rehearsal. Commanders gather around it to explore scenarios, test strategies, and prepare for what lies ahead.
 
-[Visual Studio Code](https://code.visualstudio.com) is a distribution of the `Code - OSS` repository with Microsoft-specific customizations released under a traditional [Microsoft product license](https://code.visualstudio.com/License/).
+Sandtable brings that concept into a digital workspace. It's an environment where researchers, analysts, and teams can:
 
-[Visual Studio Code](https://code.visualstudio.com) combines the simplicity of a code editor with what developers need for their core edit-build-debug cycle. It provides comprehensive code editing, navigation, and understanding support along with lightweight debugging, a rich extensibility model, and lightweight integration with existing tools.
+- **Chat with AI agents** backed by powerful open-source models running on your own hardware
+- **Upload and analyze documents** -- PDFs, presentations, spreadsheets, reports -- and have AI agents reason over them
+- **Create specialized agent personas** -- subject matter experts, roleplaying participants, analysts, facilitators -- each with tailored system prompts and knowledge bases
+- **Connect to external data sources** via the Model Context Protocol (MCP) for live database access, API integration, and tool use
+- **Write, edit, and generate documents** with AI assistance in a full-featured editor
+- **Run autonomous agent workflows** that can read files, execute commands, search across documents, and produce structured outputs
 
-Visual Studio Code is updated monthly with new features and bug fixes. You can download it for Windows, macOS, and Linux on [Visual Studio Code's website](https://code.visualstudio.com/Download). To get the latest releases every day, install the [Insiders build](https://code.visualstudio.com/insiders).
+All of this happens locally. No data leaves your network. No cloud API calls. No vendor lock-in.
 
-## Contributing
+## Use Cases
 
-There are many ways in which you can participate in this project, for example:
+### Wargaming and Defense
 
-* [Submit bugs and feature requests](https://github.com/microsoft/vscode/issues), and help us verify as they are checked in
-* Review [source code changes](https://github.com/microsoft/vscode/pulls)
-* Review the [documentation](https://github.com/microsoft/vscode-docs) and make pull requests for anything from typos to additional and new content
+Sandtable's namesake use case. Design wargames, spin up AI participants and adjudicators, upload doctrine and scenario documents, connect to game databases, and run exercises with AI-powered red teams, blue teams, and analysts.
 
-If you are interested in fixing issues and contributing directly to the code base,
-please see the document [How to Contribute](https://github.com/microsoft/vscode/wiki/How-to-Contribute), which covers the following:
+### Research and Analysis
 
-* [How to build and run from source](https://github.com/microsoft/vscode/wiki/How-to-Contribute)
-* [The development workflow, including debugging and running tests](https://github.com/microsoft/vscode/wiki/How-to-Contribute#debugging)
-* [Coding guidelines](https://github.com/microsoft/vscode/wiki/Coding-Guidelines)
-* [Submitting pull requests](https://github.com/microsoft/vscode/wiki/How-to-Contribute#pull-requests)
-* [Finding an issue to work on](https://github.com/microsoft/vscode/wiki/How-to-Contribute#where-to-contribute)
-* [Contributing to translations](https://aka.ms/vscodeloc)
+Upload academic papers, reports, and datasets. Create agent personas that specialize in specific domains. Have agents synthesize findings, identify patterns, and generate structured research outputs.
 
-## Feedback
+### Scenario Planning and Tabletop Exercises
 
-* Ask a question on [Stack Overflow](https://stackoverflow.com/questions/tagged/vscode)
-* [Request a new feature](CONTRIBUTING.md)
-* Upvote [popular feature requests](https://github.com/microsoft/vscode/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
-* [File an issue](https://github.com/microsoft/vscode/issues)
-* Connect with the extension author community on [GitHub Discussions](https://github.com/microsoft/vscode-discussions/discussions) or [Slack](https://aka.ms/vscode-dev-community)
-* Follow [@code](https://x.com/code) and let us know what you think!
+Model complex scenarios -- from business continuity planning to crisis response to policy analysis. Create agents representing different stakeholders, run through decision trees, and explore second- and third-order effects.
 
-See our [wiki](https://github.com/microsoft/vscode/wiki/Feedback-Channels) for a description of each of these channels and information on some other available community-driven channels.
+### Training and Education
 
-## Related Projects
+Build interactive learning environments where AI agents play roles in simulated scenarios. Students interact with realistic personas, make decisions, and see consequences unfold.
 
-Many of the core components and extensions to VS Code live in their own repositories on GitHub. For example, the [node debug adapter](https://github.com/microsoft/vscode-node-debug) and the [mono debug adapter](https://github.com/microsoft/vscode-mono-debug) repositories are separate from each other. For a complete list, please visit the [Related Projects](https://github.com/microsoft/vscode/wiki/Related-Projects) page on our [wiki](https://github.com/microsoft/vscode/wiki).
+### Creative and Narrative Work
 
-## Bundled Extensions
+Develop characters, worlds, and storylines with AI collaborators. Use agent personas for dialogue, world-building, and narrative testing.
 
-VS Code includes a set of built-in extensions located in the [extensions](extensions) folder, including grammars and snippets for many languages. Extensions that provide rich language support (inline suggestions, Go to Definition) for a language have the suffix `language-features`. For example, the `json` extension provides coloring for `JSON` and the `json-language-features` extension provides rich language support for `JSON`.
+## Architecture
 
-## Development Container
+Sandtable is built on three layers:
 
-This repository includes a Visual Studio Code Dev Containers / GitHub Codespaces development container.
+```
+┌─────────────────────────────────────────────┐
+│  Sandtable (VS Code Fork - Electron App)    │
+│  ─────────────────────────────────────────── │
+│  Chat Panel · Agent Mode · Model Manager    │
+│  Document Viewer · Code Editor · Terminal    │
+│  Inline Completion · MCP Client             │
+├─────────────────────────────────────────────┤
+│  Cortex Gateway (FastAPI - Port 8084)       │
+│  ─────────────────────────────────────────── │
+│  OpenAI-compatible API · Auth · Routing     │
+│  Health Checks · Usage Metering · Sessions  │
+├─────────────────────────────────────────────┤
+│  Inference Engines                          │
+│  ─────────────────────────────────────────── │
+│  vLLM (GPU-optimized) · llama.cpp (GGUF)   │
+│  Local models · No cloud dependencies       │
+└─────────────────────────────────────────────┘
+```
 
-* For [Dev Containers](https://aka.ms/vscode-remote/download/containers), use the **Dev Containers: Clone Repository in Container Volume...** command which creates a Docker volume for better disk I/O on macOS and Windows.
-  * If you already have VS Code and Docker installed, you can also click [here](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode) to get started. This will cause VS Code to automatically install the Dev Containers extension if needed, clone the source code into a container volume, and spin up a dev container for use.
+- **Sandtable** is where you work -- the editor, chat panels, agent interfaces, and document tools
+- **Cortex** manages model lifecycle, authentication, GPU allocation, and provides a unified API
+- **Inference engines** (vLLM and llama.cpp) run the actual models on your GPUs
 
-* For Codespaces, install the [GitHub Codespaces](https://marketplace.visualstudio.com/items?itemName=GitHub.codespaces) extension in VS Code, and use the **Codespaces: Create New Codespace** command.
+## Key Principles
 
-Docker / the Codespace should have at least **4 Cores and 6 GB of RAM (8 GB recommended)** to run a full build. See the [development container README](.devcontainer/README.md) for more information.
+- **Offline-first.** The entire stack runs on local infrastructure. Air-gapped and classified environments are a first-class use case.
+- **No telemetry.** All Microsoft telemetry is stripped. Your data stays on your machines.
+- **Open models only.** Designed for open-source and open-weight models served through Cortex. No cloud provider lock-in.
+- **Core-level integration.** AI features are built into the IDE platform, not bolted on as extensions. This means lower latency, tighter UX, and capabilities that extensions cannot provide.
+- **Self-hosted everything.** You own the models, the infrastructure, the data, and the tool.
 
-## Code of Conduct
+## Current Status
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+Sandtable is in active development. See [docs/project/PROGRESS.md](docs/project/PROGRESS.md) for the latest status.
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 0 - Fork and Build | **Complete** | VS Code forked, rebranded, building from source |
+| 1 - Cortex Connection + Chat | In Progress | Platform service layer, streaming chat panel |
+| 2 - Inline Code Completion | Planned | Ghost text suggestions via Fill-in-the-Middle |
+| 3 - Model Manager | Planned | GPU dashboard, model start/stop, system monitoring |
+| 4 - Agent Mode | Planned | Autonomous file editing, tool use, terminal execution |
+| 5+ - Research Features | Planned | Document ingestion, agent personas, MCP integration |
+
+## Building from Source
+
+### Prerequisites
+
+- **OS:** Linux (Arch Linux is the primary development environment)
+- **Node.js:** v22.x (see `.nvmrc` for exact version)
+- **Python:** 3.x (required for node-gyp)
+- **GCC:** For native module compilation
+- **System libraries:** `libx11`, `libxkbfile`, `libsecret`, `krb5`
+
+### Build
+
+```bash
+# Clone the repository
+git clone git@github.com:darkhorse-and-bandit/sandtable.git
+cd sandtable
+
+# Install the correct Node.js version (using mise, fnm, or nvm)
+mise use node@22.21.1   # or: fnm use / nvm use
+
+# Install dependencies (~10-15 minutes on first run)
+npm install
+
+# Build
+npm run compile
+
+# Launch
+./scripts/code.sh
+```
+
+See [docs/project/phases/PHASE-0-FORK-AND-BUILD.md](docs/project/phases/PHASE-0-FORK-AND-BUILD.md) for detailed build instructions and troubleshooting.
+
+## Project Documentation
+
+Detailed planning and architecture documents live in [`docs/project/`](docs/project/README.md):
+
+| Document | Description |
+|----------|-------------|
+| [Project Charter](docs/project/PROJECT-CHARTER.md) | Vision, scope, goals, and constraints |
+| [Architecture](docs/project/ARCHITECTURE.md) | Technical architecture, interfaces, data flows |
+| [Milestones](docs/project/MILESTONES.md) | Phase overview with deliverables and timelines |
+| [Progress](docs/project/PROGRESS.md) | Living checklist -- single source of truth for status |
+| [Phase Plans](docs/project/phases/) | Detailed task breakdowns for each implementation phase |
+
+## Technology
+
+- **Editor:** [VS Code](https://github.com/microsoft/vscode) (MIT License) -- Electron + TypeScript
+- **LLM Backend:** [Cortex](https://github.com/AulendurForge/Cortex) (Apache 2.0) -- FastAPI + PostgreSQL + Redis
+- **Inference:** [vLLM](https://github.com/vllm-project/vllm) and [llama.cpp](https://github.com/ggerganov/llama.cpp)
+- **Protocol:** [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) for external tool integration
 
 ## License
 
 Copyright (c) Microsoft Corporation. All rights reserved.
 
 Licensed under the [MIT](LICENSE.txt) license.
+
+Sandtable modifications are also MIT licensed. Cortex is licensed under Apache 2.0.

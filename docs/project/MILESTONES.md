@@ -136,12 +136,67 @@ Note: Phases 2, 3, and 4 all depend on Phase 1 (the platform service layer) but 
 
 ## Post-MVP Roadmap (Future Phases)
 
-These are not planned in detail but represent the natural next steps after Phase 4:
+Phases 5+ extend Sandtable from a developer tool into a full research and scenario simulation platform. These phases are where the wargaming, research, and roleplay capabilities come to life. They build on the foundation of Phases 1-4 (Cortex connectivity, chat, agent mode).
 
-| Phase | Name | Description |
-|-------|------|-------------|
-| 5 | RAG / Codebase Indexing | Index workspace files as embeddings via Cortex's `/v1/embeddings`, use for context-aware chat and completions |
-| 6 | MCP Integration | Model Context Protocol client for connecting to external tool servers |
-| 7 | Multi-file Agent | Agent can work across multiple files, understand project structure, run tests |
-| 8 | Collaborative Features | Multiple users sharing a Cortex instance with isolated chat sessions |
-| 9 | Custom Branding / Packaging | Proper installer, custom icons, splash screen, about dialog |
+### Phase 5: Document Ingestion and Knowledge Base
+
+| Milestone | Description |
+|-----------|-------------|
+| Document upload panel | Drag-and-drop or file picker for PDF, PPTX, XLSX, DOCX, and plain text files |
+| Document parsing pipeline | Extract text content from uploaded documents using server-side parsers via Cortex |
+| RAG / embedding indexing | Index document content as vector embeddings via Cortex's `/v1/embeddings` for semantic search |
+| Context-aware chat | Chat agents can reference and cite uploaded documents when answering questions |
+| Document viewer | In-editor preview for uploaded documents with AI-annotated highlights |
+
+### Phase 6: Agent Personas and Roleplay System
+
+| Milestone | Description |
+|-----------|-------------|
+| Persona configuration schema | Define agent personas with name, role, system prompt, knowledge sources, and behavioral parameters |
+| Persona manager panel | Create, edit, save, and organize agent persona configurations |
+| Persona-bound chat sessions | Start chat sessions with a specific persona active (system prompt, temperature, model selection) |
+| Persona templates | Pre-built templates for common roles: researcher, analyst, red team, blue team, facilitator, subject matter expert |
+| Multi-agent conversations | Multiple personas interacting in a single session -- useful for wargaming exercises and structured debates |
+| Persona sharing | Export/import persona configurations as JSON files for team collaboration |
+
+### Phase 7: MCP Integration and External Data
+
+| Milestone | Description |
+|-----------|-------------|
+| MCP client implementation | Model Context Protocol client for connecting to external tool servers |
+| Database connectors | Connect agents to wargame databases, research repositories, and structured data sources via MCP |
+| Live data access | Agents can query external systems in real-time during conversations and analysis |
+| Custom tool registration | Users can register custom MCP tool servers for domain-specific integrations |
+
+### Phase 8: Workspace Templates and Structured Workflows
+
+| Milestone | Description |
+|-----------|-------------|
+| Workspace templates | Pre-configured project layouts for common use cases: wargame exercise, research analysis, scenario planning |
+| Structured output generation | Agents produce formatted deliverables: after-action reports, research summaries, decision matrices |
+| Multi-file agent workflows | Agent can work across multiple documents, cross-reference sources, and maintain coherent analysis |
+| Session recording and playback | Record scenario sessions for review, training, and after-action analysis |
+
+### Phase 9: Collaboration and Distribution
+
+| Milestone | Description |
+|-----------|-------------|
+| Multi-user sessions | Multiple users sharing a Cortex instance with isolated or collaborative chat sessions |
+| Role-based access | Different permissions for participants, facilitators, observers, and administrators |
+| Custom branding and packaging | Proper installer, custom icons, splash screen, about dialog |
+| Cross-platform builds | macOS and Windows support alongside Linux |
+
+### Example Use Cases by Phase
+
+| Use Case | Required Phases |
+|----------|----------------|
+| Chat with AI about code or documents | Phase 1 |
+| AI-assisted code completion while writing scripts | Phase 2 |
+| Monitor and manage running models from within the workspace | Phase 3 |
+| Have an AI agent edit files and run commands autonomously | Phase 4 |
+| Upload a PDF doctrine document and ask questions about it | Phase 5 |
+| Create a "Red Team Commander" persona with specific doctrine knowledge | Phase 5 + 6 |
+| Run a tabletop exercise with multiple AI personas debating a scenario | Phase 6 |
+| Connect an agent to a wargame database to pull live game state | Phase 7 |
+| Generate a structured after-action report from a completed exercise | Phase 8 |
+| Run a multi-user wargame with AI adjudicators and human participants | Phase 9 |

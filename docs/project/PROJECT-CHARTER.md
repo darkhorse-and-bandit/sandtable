@@ -11,19 +11,25 @@
 
 ## Mission Statement
 
-Sandtable is a fork of Microsoft's VS Code with core-level LLM integration powered by Cortex, capable of running fully offline on self-hosted infrastructure. It provides AI-assisted coding -- chat, inline code completion, model management, and autonomous agent capabilities -- all connected to locally hosted open source LLM models served through Cortex's inference gateway.
+Sandtable is a research and scenario simulation environment built as a fork of Microsoft's VS Code with core-level LLM integration powered by Cortex. It runs fully offline on self-hosted infrastructure, providing an intelligent workspace where researchers, analysts, and teams can chat with AI agents, ingest documents, create specialized agent personas, connect to external data sources, and conduct structured research, roleplay, and scenario experimentation -- all powered by locally hosted open-source LLM models.
+
+The name comes from the military tradition of the **sand table** -- a physical terrain model used for planning, wargaming, and rehearsal. Sandtable brings that concept into a digital workspace applicable to any domain that benefits from AI-assisted research, analysis, and simulation.
 
 ## Goals
 
-1. **Core-level LLM integration:** LLM features are built into the IDE's platform and workbench layers, not bolted on as extensions. This provides tighter integration, lower latency, and a more cohesive user experience.
+1. **Intelligent research workspace:** Go beyond code editing to become a general-purpose environment for document analysis, scenario planning, and structured research. Users can upload documents, create agent personas, connect to databases, and produce analytical outputs.
 
-2. **Cortex as the backend:** All LLM inference routes through Cortex's OpenAI-compatible gateway, which manages vLLM and llama.cpp engine containers. This gives us dual-engine support (GPU-optimized vLLM for standard models, llama.cpp for GGUF/exotic architectures like GPT-OSS Harmony).
+2. **Core-level LLM integration:** AI features are built into the IDE's platform and workbench layers, not bolted on as extensions. This provides tighter integration, lower latency, and a more cohesive user experience than extension-based approaches.
 
-3. **Fully offline capable:** The entire stack -- IDE, Cortex, models -- runs on local infrastructure with zero cloud dependencies. Suitable for air-gapped, classified, and restricted network environments.
+3. **Cortex as the backend:** All LLM inference routes through Cortex's OpenAI-compatible gateway, which manages vLLM and llama.cpp engine containers. This gives us dual-engine support (GPU-optimized vLLM for standard models, llama.cpp for GGUF/exotic architectures like GPT-OSS Harmony).
 
-4. **Internal team tool:** Built for our team that already runs Cortex with GPT-OSS 20B and 120B models. Setup assumes familiarity with Cortex deployment and local LLM operations.
+4. **Fully offline capable:** The entire stack -- IDE, Cortex, models -- runs on local infrastructure with zero cloud dependencies. Suitable for air-gapped, classified, and restricted network environments. This is critical for defense, intelligence, and sensitive research applications.
 
-5. **Progressive capability:** Start with a working chat to prove connectivity, then layer on code completion, model management, and agent mode -- always keeping the full vision in sight.
+5. **Agent personas and roleplay:** Support creating and managing specialized AI agent configurations -- each with tailored system prompts, knowledge bases, and behavioral parameters. Agents can serve as subject matter experts, roleplaying participants, facilitators, analysts, or adversarial thinkers.
+
+6. **Document-first workflows:** Ingest and reason over real-world documents (PDFs, PowerPoints, spreadsheets, Word documents) as first-class workspace artifacts. Agents can reference, summarize, compare, and synthesize information from uploaded materials.
+
+7. **Progressive capability:** Start with a working chat to prove connectivity, then layer on code completion, model management, agent mode, and research-specific features -- always keeping the full vision in sight.
 
 ## Non-Goals
 
@@ -32,16 +38,30 @@ Sandtable is a fork of Microsoft's VS Code with core-level LLM integration power
 - **Extension marketplace:** We will not build or host a custom extension marketplace. Extensions can be side-loaded or sourced from Open VSX Registry.
 - **Mobile/tablet support:** Desktop only (Linux primary, with potential for macOS/Windows later).
 - **Replacing Cortex's Admin UI:** The IDE's model manager panel complements Cortex's web admin UI -- it does not replace it. Full model configuration and administrative tasks still happen in Cortex's frontend.
+- **Full simulation engine:** Sandtable provides the workspace and AI agent layer for scenario work, but it is not a physics engine, map renderer, or standalone simulation platform. It integrates with external systems via MCP.
 
 ## Target Audience
 
-The internal engineering team at Aulendur Labs, specifically:
+### Primary: Development Team
+
+The developers building Sandtable and Cortex, who also serve as the first users:
 
 - Developers who use VS Code daily and have Cortex running on the local network
 - The Cortex development team (who will also be developing Sandtable and its Cortex-side enhancements)
 - Infrastructure team managing GPU servers running vLLM and llama.cpp model containers
 
-**Assumptions about the audience:**
+### Secondary: Research and Wargaming Practitioners
+
+The intended end-user community once the platform matures:
+
+- **Wargame designers and facilitators** who need AI-powered participants, adjudicators, and analysts for exercises
+- **Defense researchers and analysts** working in air-gapped or restricted environments who need AI tools that never phone home
+- **Policy analysts and scenario planners** exploring complex decision spaces with AI-assisted roleplay
+- **Academic researchers** who want to run structured AI-assisted analysis over document collections
+- **Training developers** building interactive learning scenarios with AI personas
+
+### Audience Assumptions (Development Phase)
+
 - Comfortable building software from source
 - Already have Cortex deployed and running with models loaded
 - Have access to GPU servers with NVIDIA GPUs
@@ -91,8 +111,9 @@ The internal engineering team at Aulendur Labs, specifically:
 | 2 | Inline Code Completion | Days 15-28 | Week 5 |
 | 3 | Model Manager Panel | Days 29-42 | Week 7 |
 | 4 | Agent Mode | Days 43-63 | Week 10 |
+| 5+ | Research & Scenario Features | Ongoing | Post-MVP |
 
-Total estimated duration: **10 weeks** from start to full feature set.
+Total estimated duration: **10 weeks** from start to core feature set, with research and scenario features developed iteratively afterward.
 
 Note: These are working-day estimates. Actual calendar time depends on team allocation and competing priorities.
 
@@ -132,10 +153,16 @@ In practice, roles overlap significantly given the small team size.
 - Can view container logs for a selected model
 
 ### Phase 4: Agent Mode
-- Agent panel accepts natural language coding instructions
+- Agent panel accepts natural language instructions
 - Agent can read files, edit files, and run terminal commands
 - All destructive actions require user confirmation before execution
 - Changes are shown as diffs that can be accepted or rejected
+
+### Phase 5+: Research and Scenario Features
+- Document ingestion panel supports PDF, PPTX, XLSX, DOCX upload and AI-assisted analysis
+- Agent persona system allows creating, saving, and sharing configured AI agents with custom prompts and knowledge
+- MCP integration connects to external databases, APIs, and tool servers
+- Workspace templates support structured research and wargaming project layouts
 
 ## Constraints
 
@@ -149,7 +176,7 @@ In practice, roles overlap significantly given the small team size.
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| VS Code rebase breaks our modifications | High | Medium | Pin to release tag, rebase quarterly, keep modifications isolated in clearly marked directories (`mage*` prefix) |
+| VS Code rebase breaks our modifications | High | Medium | Pin to release tag, rebase quarterly, keep modifications isolated in clearly marked directories (`sandtable*` prefix) |
 | GPT-OSS models don't support tool calling well | Medium | Medium | Test tool calling per model, designate specific models for agent vs. chat roles, fall back to prompt-based tool use |
 | Build system too complex for team | Medium | Low | Use VS Code's dev container as fallback, document every step in Phase 0 doc |
 | Inline completion latency exceeds 200ms | Medium | Low | FIM endpoint optimization, debounce tuning, completion caching, Cortex on localhost eliminates network latency |
