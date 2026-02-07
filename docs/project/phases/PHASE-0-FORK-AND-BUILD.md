@@ -6,7 +6,7 @@
 
 ## Objective
 
-Clone Microsoft's VS Code source, install build dependencies, rebrand as MAGE IDE, and produce a working build that launches on Arch Linux.
+Clone Microsoft's VS Code source, install build dependencies, rebrand as Sandtable, and produce a working build that launches on Arch Linux.
 
 ## Prerequisites
 
@@ -56,7 +56,7 @@ fnm use
 
 ### Step 0.1: Clone VS Code Source
 
-Clone directly into the MAGEIDE workspace directory:
+Clone directly into the Sandtable workspace directory:
 
 ```bash
 cd /home/mage/repos/MAGEIDE
@@ -84,10 +84,10 @@ Rather than tracking the `main` branch (which may have in-progress changes), pin
 git tag --sort=-v:refname | head -20
 
 # Checkout a stable release (example -- use the latest stable)
-git checkout tags/1.96.0 -b mage-ide/main
+git checkout tags/1.96.0 -b sandtable/main
 ```
 
-This creates a `mage-ide/main` branch based on the release tag. All our changes will be made on this branch.
+This creates a `sandtable/main` branch based on the release tag. All our changes will be made on this branch.
 
 ### Step 0.3: Disable GitHub Actions
 
@@ -97,7 +97,7 @@ Prevent Microsoft's CI workflows from running on our fork:
 # Remove or disable all GitHub Actions
 rm -rf .github/workflows/
 mkdir -p .github
-echo "# GitHub Actions disabled for MAGE IDE fork" > .github/README.md
+echo "# GitHub Actions disabled for Sandtable fork" > .github/README.md
 ```
 
 ### Step 0.4: Rebrand via product.json
@@ -108,16 +108,16 @@ Edit `product.json` in the repo root. This is the central configuration file for
 
 | Field | Original Value | New Value |
 |-------|---------------|-----------|
-| `nameShort` | `"Code - OSS"` | `"MAGE IDE"` |
-| `nameLong` | `"Code - OSS"` | `"MAGE IDE"` |
-| `applicationName` | `"code-oss"` | `"mage-ide"` |
-| `dataFolderName` | `".vscode-oss"` | `".mage-ide"` |
-| `urlProtocol` | `"code-oss"` | `"mage-ide"` |
-| `serverApplicationName` | `"code-server-oss"` | `"mage-ide-server"` |
-| `serverDataFolderName` | `".vscode-server-oss"` | `".mage-ide-server"` |
-| `tunnelApplicationName` | `"code-tunnel-oss"` | `"mage-ide-tunnel"` |
-| `linuxIconName` | `"com.visualstudio.code.oss"` | `"com.aulendur.mage-ide"` |
-| `reportIssueUrl` | (Microsoft URL) | `"https://github.com/AulendurForge/MAGEIDE/issues"` |
+| `nameShort` | `"Code - OSS"` | `"Sandtable"` |
+| `nameLong` | `"Code - OSS"` | `"Sandtable"` |
+| `applicationName` | `"code-oss"` | `"sandtable"` |
+| `dataFolderName` | `".vscode-oss"` | `".sandtable"` |
+| `urlProtocol` | `"code-oss"` | `"sandtable"` |
+| `serverApplicationName` | `"code-server-oss"` | `"sandtable-server"` |
+| `serverDataFolderName` | `".vscode-server-oss"` | `".sandtable-server"` |
+| `tunnelApplicationName` | `"code-tunnel-oss"` | `"sandtable-tunnel"` |
+| `linuxIconName` | `"com.visualstudio.code.oss"` | `"com.sandtable.ide"` |
+| `reportIssueUrl` | (Microsoft URL) | `"https://github.com/darkhorse-and-bandit/Sandtable/issues"` |
 
 **Fields to remove or clear (telemetry):**
 
@@ -187,7 +187,7 @@ Alternatively, for a one-time build:
 npm run compile
 ```
 
-### Step 0.8: Launch MAGE IDE
+### Step 0.8: Launch Sandtable
 
 ```bash
 # Launch the development build
@@ -197,7 +197,7 @@ npm run compile
 **What to verify:**
 
 - [ ] Application window opens
-- [ ] Title bar shows "MAGE IDE" (or "Code - OSS" if product.json changes haven't taken effect -- rebuild may be needed)
+- [ ] Title bar shows "Sandtable" (or "Code - OSS" if product.json changes haven't taken effect -- rebuild may be needed)
 - [ ] File editing works (open any file, type, save)
 - [ ] Terminal works (open integrated terminal, run a command)
 - [ ] Extensions panel works (side panel opens, can search)
@@ -211,12 +211,12 @@ Create the initial commit with our branding changes and project docs:
 
 ```bash
 git add -A
-git commit -m "Initial MAGE IDE fork: rebrand product.json, add project documentation
+git commit -m "Initial Sandtable fork: rebrand product.json, add project documentation
 
-- Rebrand all product.json fields from Code-OSS to MAGE IDE
+- Rebrand all product.json fields from Code-OSS to Sandtable
 - Add docs/project/ with full project planning documentation
 - Remove GitHub Actions workflows (not needed for fork)
-- Pin to VS Code release tag as mage-ide/main branch"
+- Pin to VS Code release tag as sandtable/main branch"
 ```
 
 ## Build Verification Checklist
@@ -305,8 +305,8 @@ Phase 0 is complete when:
 
 1. All prerequisites are installed and verified
 2. VS Code source is cloned and pinned to a release tag
-3. `product.json` is rebranded with all MAGE IDE fields
+3. `product.json` is rebranded with all Sandtable fields
 4. The project builds without errors
-5. MAGE IDE launches and all standard features work
+5. Sandtable launches and all standard features work
 6. Project documentation is in place under `docs/project/`
-7. Initial commit is made on the `mage-ide/main` branch
+7. Initial commit is made on the `sandtable/main` branch

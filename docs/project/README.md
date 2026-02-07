@@ -1,6 +1,6 @@
-# MAGE IDE -- Project Documentation
+# Sandtable -- Project Documentation
 
-This directory contains the comprehensive planning and reference documentation for the MAGE IDE project: a fork of Microsoft's VS Code with core-level LLM integration powered by [Cortex](https://github.com/AulendurForge/Cortex).
+This directory contains the comprehensive planning and reference documentation for the Sandtable project: a fork of Microsoft's VS Code with core-level LLM integration powered by [Cortex](https://github.com/AulendurForge/Cortex).
 
 ## Document Index
 
@@ -35,4 +35,4 @@ Detailed task breakdowns for each implementation phase:
 
 ## Directory Note
 
-This `docs/project/` directory lives at the root of the MAGEIDE repository. VS Code's source tree does not contain a root-level `docs/` folder (Microsoft's VS Code documentation lives in their GitHub wiki), so these files will not conflict with any upstream source files when the VS Code fork is cloned into this workspace.
+This `docs/project/` directory lives at the root of the Sandtable repository. VS Code's source tree does not contain a root-level `docs/` folder (Microsoft's VS Code documentation lives in their GitHub wiki), so these files will not conflict with any upstream source files when the VS Code fork is cloned into this workspace.

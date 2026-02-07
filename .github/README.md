@@ -1,1 +1,1 @@
-# GitHub Actions disabled for MAGE IDE fork
+# GitHub Actions disabled for Sandtable fork

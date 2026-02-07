@@ -1,12 +1,12 @@
 # Phase 1: Cortex Connection + Chat Panel
 
 **Duration:** 10-14 days
-**Dependencies:** Phase 0 complete (MAGE IDE builds and launches)
+**Dependencies:** Phase 0 complete (Sandtable builds and launches)
 **Cortex changes required:** CORS configuration for Electron origin
 
 ## Objective
 
-Build the platform service layer that connects MAGE IDE to Cortex, then create a native chat panel in the workbench sidebar that supports streaming conversations with models running on Cortex.
+Build the platform service layer that connects Sandtable to Cortex, then create a native chat panel in the workbench sidebar that supports streaming conversations with models running on Cortex.
 
 ## Task Breakdown
 
@@ -94,52 +94,52 @@ configurationRegistry.registerConfiguration({
     title: 'MAGE',
     type: 'object',
     properties: {
-        'mage.cortex.endpoint': {
+        'sandtable.cortex.endpoint': {
             type: 'string',
             default: 'http://localhost:8084',
             description: 'URL of the Cortex gateway (e.g., http://192.168.1.100:8084)',
         },
-        'mage.cortex.apiKey': {
+        'sandtable.cortex.apiKey': {
             type: 'string',
             default: '',
             description: 'API key for authenticating with Cortex inference endpoints',
         },
-        'mage.cortex.username': {
+        'sandtable.cortex.username': {
             type: 'string',
             default: 'admin',
             description: 'Username for Cortex admin session authentication',
         },
-        'mage.cortex.password': {
+        'sandtable.cortex.password': {
             type: 'string',
             default: '',
             description: 'Password for Cortex admin session authentication',
         },
-        'mage.cortex.healthCheckIntervalMs': {
+        'sandtable.cortex.healthCheckIntervalMs': {
             type: 'number',
             default: 15000,
             description: 'How often to poll Cortex health status (in milliseconds)',
         },
-        'mage.chat.defaultModel': {
+        'sandtable.chat.defaultModel': {
             type: 'string',
             default: '',
             description: 'Default model for chat (empty = auto-detect first running model)',
         },
-        'mage.chat.streamingEnabled': {
+        'sandtable.chat.streamingEnabled': {
             type: 'boolean',
             default: true,
             description: 'Enable streaming responses in chat',
         },
-        'mage.chat.systemPrompt': {
+        'sandtable.chat.systemPrompt': {
             type: 'string',
             default: 'You are a helpful coding assistant.',
             description: 'System prompt sent with every chat request',
         },
-        'mage.chat.maxTokens': {
+        'sandtable.chat.maxTokens': {
             type: 'number',
             default: 2048,
             description: 'Maximum tokens in chat responses',
         },
-        'mage.chat.temperature': {
+        'sandtable.chat.temperature': {
             type: 'number',
             default: 0.7,
             description: 'Temperature for chat responses (0.0 = deterministic, 1.0 = creative)',
@@ -174,22 +174,22 @@ The service is registered with `InstantiationType.Delayed` so it only instantiat
 ### Task 1.6: Build Status Bar Indicator
 
 Files:
-- `src/vs/workbench/contrib/mageStatus/browser/mageStatus.contribution.ts`
-- `src/vs/workbench/contrib/mageStatus/browser/mageStatusBarItem.ts`
+- `src/vs/workbench/contrib/sandtableStatus/browser/sandtableStatus.contribution.ts`
+- `src/vs/workbench/contrib/sandtableStatus/browser/sandtableStatusBarItem.ts`
 
 The status bar item shows Cortex connection status in the bottom bar:
 
 | State | Display | Click Action |
 |-------|---------|-------------|
 | Connected | "Cortex: Connected (3 models)" with green indicator | Opens model selector quick pick |
-| Disconnected | "Cortex: Disconnected" with red indicator | Opens settings to `mage.cortex.endpoint` |
+| Disconnected | "Cortex: Disconnected" with red indicator | Opens settings to `sandtable.cortex.endpoint` |
 | Connecting | "Cortex: Connecting..." with spinning indicator | No action |
 
 Implementation uses VS Code's `IStatusbarService`:
 
 ```typescript
-class MageStatusBarContribution extends Disposable implements IWorkbenchContribution {
-    static readonly ID = 'workbench.contrib.mageStatus';
+class SandtableStatusBarContribution extends Disposable implements IWorkbenchContribution {
+    static readonly ID = 'workbench.contrib.sandtableStatus';
 
     private statusBarItem: IStatusbarEntryAccessor;
 
@@ -200,7 +200,7 @@ class MageStatusBarContribution extends Disposable implements IWorkbenchContribu
         super();
         this.statusBarItem = this.statusbarService.addEntry(
             this.getEntry(),
-            'mage.status',
+            'sandtable.status',
             StatusbarAlignment.LEFT,
             100
         );
@@ -212,27 +212,27 @@ class MageStatusBarContribution extends Disposable implements IWorkbenchContribu
 }
 ```
 
-Register in `mageStatus.contribution.ts`:
+Register in `sandtableStatus.contribution.ts`:
 ```typescript
-registerWorkbenchContribution2('workbench.contrib.mageStatus', MageStatusBarContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2('workbench.contrib.sandtableStatus', SandtableStatusBarContribution, WorkbenchPhase.AfterRestored);
 ```
 
 ### Task 1.7: Build Chat Panel
 
 Files:
-- `src/vs/workbench/contrib/mageChat/browser/mageChat.contribution.ts`
-- `src/vs/workbench/contrib/mageChat/browser/mageChatViewPane.ts`
-- `src/vs/workbench/contrib/mageChat/browser/mageChatInput.ts`
-- `src/vs/workbench/contrib/mageChat/browser/mageChatMessageList.ts`
-- `src/vs/workbench/contrib/mageChat/browser/mageChatModelSelector.ts`
-- `src/vs/workbench/contrib/mageChat/browser/mageChat.css`
+- `src/vs/workbench/contrib/sandtableChat/browser/sandtableChat.contribution.ts`
+- `src/vs/workbench/contrib/sandtableChat/browser/sandtableChatViewPane.ts`
+- `src/vs/workbench/contrib/sandtableChat/browser/sandtableChatInput.ts`
+- `src/vs/workbench/contrib/sandtableChat/browser/sandtableChatMessageList.ts`
+- `src/vs/workbench/contrib/sandtableChat/browser/sandtableChatModelSelector.ts`
+- `src/vs/workbench/contrib/sandtableChat/browser/sandtableChat.css`
 
 #### View Container Registration
 
 The chat panel registers as a view in the Activity Bar sidebar:
 
 ```typescript
-// mageChat.contribution.ts
+// sandtableChat.contribution.ts
 
 const MAGE_CHAT_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
     ViewExtensions.ViewContainersRegistry
@@ -244,18 +244,18 @@ const MAGE_CHAT_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
 }, ViewContainerLocation.Sidebar);
 
 Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry).registerViews([{
-    id: 'mage.chatView',
+    id: 'sandtable.chatView',
     name: 'Chat',
     containerIcon: Codicon.commentDiscussion,
     canToggleVisibility: true,
     canMoveView: true,
-    ctorDescriptor: new SyncDescriptor(MageChatViewPane),
+    ctorDescriptor: new SyncDescriptor(SandtableChatViewPane),
 }], MAGE_CHAT_VIEW_CONTAINER);
 ```
 
 #### Chat View Pane
 
-`MageChatViewPane` extends `ViewPane` and composes:
+`SandtableChatViewPane` extends `ViewPane` and composes:
 
 1. **Model Selector** (top) -- dropdown showing running models from Cortex
 2. **Message List** (middle, scrollable) -- displays conversation with markdown rendering
@@ -292,9 +292,9 @@ This means chat history survives IDE restarts and is accessible from any device 
 Add imports to `src/vs/workbench/workbench.common.main.ts`:
 
 ```typescript
-// MAGE IDE contributions
-import './contrib/mageChat/browser/mageChat.contribution';
-import './contrib/mageStatus/browser/mageStatus.contribution';
+// Sandtable contributions
+import './contrib/sandtableChat/browser/sandtableChat.contribution';
+import './contrib/sandtableStatus/browser/sandtableStatus.contribution';
 ```
 
 ### Task 1.9: Cortex CORS Configuration
@@ -309,7 +309,7 @@ CORS_ALLOW_ORIGINS: "http://localhost:3001,http://127.0.0.1:3001,file://,null"
 
 The `file://` and `null` origins cover Electron's renderer process which may send requests with a `null` or `file://` origin depending on the protocol.
 
-Alternatively, if using a custom protocol (e.g., `mage-ide://`), add that to the CORS list.
+Alternatively, if using a custom protocol (e.g., `sandtable://`), add that to the CORS list.
 
 ## Testing Plan
 
@@ -323,8 +323,8 @@ Alternatively, if using a custom protocol (e.g., `mage-ide://`), add that to the
 
 | Test | Steps | Expected Result |
 |------|-------|-----------------|
-| Connection status | Start MAGE IDE with Cortex running | Status bar shows "Connected" with model count |
-| Connection failure | Start MAGE IDE without Cortex | Status bar shows "Disconnected" |
+| Connection status | Start Sandtable with Cortex running | Status bar shows "Connected" with model count |
+| Connection failure | Start Sandtable without Cortex | Status bar shows "Disconnected" |
 | Model discovery | Open chat panel | Model selector populated with running models |
 | Basic chat | Send "Hello" to GPT-OSS 120B | Streaming response appears in chat |
 | Markdown rendering | Ask model to write code | Code block renders with syntax highlighting |
@@ -352,7 +352,7 @@ Phase 1 is complete when:
 
 1. `ICortexService` is fully implemented and registered as a platform service
 2. `CortexClient` handles both request/response and SSE streaming
-3. All `mage.cortex.*` and `mage.chat.*` settings are registered and functional
+3. All `sandtable.cortex.*` and `sandtable.chat.*` settings are registered and functional
 4. Status bar indicator shows real-time Cortex connection status
 5. Chat panel opens from Activity Bar with model selector
 6. Streaming chat conversation works with GPT-OSS 120B via Cortex

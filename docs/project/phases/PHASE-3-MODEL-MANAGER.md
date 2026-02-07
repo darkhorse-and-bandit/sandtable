@@ -50,12 +50,12 @@ See [CORTEX-ENHANCEMENTS.md](../CORTEX-ENHANCEMENTS.md) for the full specificati
 
 ### Task 3.2: Model Manager Contribution
 
-File: `src/vs/workbench/contrib/mageModels/browser/mageModels.contribution.ts`
+File: `src/vs/workbench/contrib/sandtableModels/browser/sandtableModels.contribution.ts`
 
 Registers:
 - A view container in the Activity Bar (with a server/database icon)
 - The Model Manager view within that container
-- Commands: `mage.models.refresh`, `mage.models.startModel`, `mage.models.stopModel`
+- Commands: `sandtable.models.refresh`, `sandtable.models.startModel`, `sandtable.models.stopModel`
 
 ```typescript
 const MAGE_MODELS_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
@@ -70,7 +70,7 @@ const MAGE_MODELS_VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(
 
 ### Task 3.3: Models List
 
-File: `src/vs/workbench/contrib/mageModels/browser/mageModelsList.ts`
+File: `src/vs/workbench/contrib/sandtableModels/browser/sandtableModelsList.ts`
 
 Displays all models from Cortex with:
 
@@ -106,7 +106,7 @@ stateDiagram-v2
 
 ### Task 3.4: GPU Dashboard
 
-File: `src/vs/workbench/contrib/mageModels/browser/mageGpuDashboard.ts`
+File: `src/vs/workbench/contrib/sandtableModels/browser/sandtableGpuDashboard.ts`
 
 Displays a card per GPU with:
 
@@ -120,7 +120,7 @@ Displays a card per GPU with:
 | Flash Attention | `gpu.flash_attention_supported` | Badge (supported / not supported) |
 
 **Polling strategy:**
-- Uses `GET /v1/ide/status` (combined endpoint) every 5 seconds (configurable via `mage.models.gpuPollIntervalMs`)
+- Uses `GET /v1/ide/status` (combined endpoint) every 5 seconds (configurable via `sandtable.models.gpuPollIntervalMs`)
 - Falls back to `GET /admin/system/gpus` if the IDE status endpoint is not available
 - Pauses polling when the Model Manager panel is not visible (performance optimization)
 
@@ -128,7 +128,7 @@ Displays a card per GPU with:
 
 ### Task 3.5: System Summary
 
-File: `src/vs/workbench/contrib/mageModels/browser/mageSystemSummary.ts`
+File: `src/vs/workbench/contrib/sandtableModels/browser/sandtableSystemSummary.ts`
 
 Compact bar showing:
 - CPU utilization percentage with progress bar
@@ -139,7 +139,7 @@ Data from `GET /v1/ide/status` (system field) or `GET /admin/system/summary`.
 
 ### Task 3.6: Model Log Viewer
 
-File: `src/vs/workbench/contrib/mageModels/browser/mageModelLogs.ts`
+File: `src/vs/workbench/contrib/sandtableModels/browser/sandtableModelLogs.ts`
 
 When a model is selected in the model list, shows its container logs:
 
@@ -179,8 +179,8 @@ The Model Manager uses admin endpoints that require session cookie authenticatio
 4. If a 401 response is received, re-authenticate and retry
 
 Settings used:
-- `mage.cortex.username` (default: "admin")
-- `mage.cortex.password` (stored securely -- see note below)
+- `sandtable.cortex.username` (default: "admin")
+- `sandtable.cortex.password` (stored securely -- see note below)
 
 **Security note:** The password setting should ideally use VS Code's `ISecretStorageService` rather than plain settings. For the initial implementation (internal team use), storing in settings is acceptable. A follow-up task should migrate to secret storage.
 

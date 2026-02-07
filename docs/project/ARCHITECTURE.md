@@ -1,12 +1,12 @@
-# MAGE IDE -- Technical Architecture
+# Sandtable -- Technical Architecture
 
 ## System Architecture Overview
 
-MAGE IDE is a desktop application built on Electron (via the VS Code fork) that communicates with Cortex over HTTP/REST on the local network. Cortex manages the LLM inference engines (vLLM and llama.cpp containers) and provides an OpenAI-compatible API.
+Sandtable is a desktop application built on Electron (via the VS Code fork) that communicates with Cortex over HTTP/REST on the local network. Cortex manages the LLM inference engines (vLLM and llama.cpp containers) and provides an OpenAI-compatible API.
 
 ```mermaid
 flowchart TD
-    subgraph mageIde [MAGE IDE - Electron App]
+    subgraph sandtableIde [Sandtable - Electron App]
         WorkbenchUI[Workbench UI Layer]
         ChatPanel[Chat Panel]
         CompletionProvider[Inline Completion Provider]
@@ -78,11 +78,11 @@ src/vs/
   editor/        Monaco Editor core
   workbench/     Full IDE shell -- panels, activity bar, sidebar, status bar
     contrib/     Feature contributions (extensions, git, terminal, etc.)
-      mageChat/       ** NEW: Chat panel **
-      mageCompletion/ ** NEW: Inline code completion **
-      mageModels/     ** NEW: Model manager panel **
-      mageAgent/      ** NEW: Agent mode **
-      mageStatus/     ** NEW: Status bar indicator **
+      sandtableChat/       ** NEW: Chat panel **
+      sandtableCompletion/ ** NEW: Inline code completion **
+      sandtableModels/     ** NEW: Model manager panel **
+      sandtableAgent/      ** NEW: Agent mode **
+      sandtableStatus/     ** NEW: Status bar indicator **
   code/          Electron desktop app entry point
   server/        Remote development server entry point
 ```
@@ -297,7 +297,7 @@ registerSingleton(ICortexService, CortexService, InstantiationType.Delayed);
 Any workbench contribution can then inject it:
 
 ```typescript
-class MageChatViewPane extends ViewPane {
+class SandtableChatViewPane extends ViewPane {
     constructor(
         @ICortexService private readonly cortexService: ICortexService,
         // ... other injected services
@@ -410,7 +410,7 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Editor as Monaco Editor
-    participant Provider as MageInlineCompletionProvider
+    participant Provider as SandtableInlineCompletionProvider
     participant Cache as CompletionCache
     participant CortexService as ICortexService
     participant Gateway as Cortex Gateway
@@ -524,7 +524,7 @@ Every endpoint the IDE calls, organized by feature.
 
 The IDE uses two authentication mechanisms to match Cortex's existing auth model:
 
-1. **API Key** -- For inference endpoints (`/v1/*`). Stored in VS Code settings (`mage.cortex.apiKey`). Sent as `Authorization: Bearer <key>` header.
+1. **API Key** -- For inference endpoints (`/v1/*`). Stored in VS Code settings (`sandtable.cortex.apiKey`). Sent as `Authorization: Bearer <key>` header.
 
 2. **Session Cookie** -- For admin endpoints (`/admin/*`) and chat session endpoints. The IDE performs a login request to get a `cortex_session` cookie, then includes it in subsequent admin requests.
 
@@ -537,43 +537,43 @@ The `ConnectionManager` handles:
 
 ## Settings Schema
 
-All new settings registered under the `mage` namespace:
+All new settings registered under the `sandtable` namespace:
 
 ```typescript
 // src/vs/platform/cortex/common/cortexConfiguration.ts
 
 // Connection
-'mage.cortex.endpoint'               // type: string,  default: 'http://localhost:8084'
-'mage.cortex.apiKey'                  // type: string,  default: ''
-'mage.cortex.username'                // type: string,  default: 'admin'
-'mage.cortex.password'                // type: string,  default: '' (for session auth)
-'mage.cortex.healthCheckIntervalMs'   // type: number,  default: 15000
+'sandtable.cortex.endpoint'               // type: string,  default: 'http://localhost:8084'
+'sandtable.cortex.apiKey'                  // type: string,  default: ''
+'sandtable.cortex.username'                // type: string,  default: 'admin'
+'sandtable.cortex.password'                // type: string,  default: '' (for session auth)
+'sandtable.cortex.healthCheckIntervalMs'   // type: number,  default: 15000
 
 // Chat
-'mage.chat.defaultModel'             // type: string,  default: '' (auto-detect)
-'mage.chat.streamingEnabled'         // type: boolean, default: true
-'mage.chat.systemPrompt'             // type: string,  default: 'You are a helpful coding assistant.'
-'mage.chat.maxTokens'                // type: number,  default: 2048
-'mage.chat.temperature'              // type: number,  default: 0.7
+'sandtable.chat.defaultModel'             // type: string,  default: '' (auto-detect)
+'sandtable.chat.streamingEnabled'         // type: boolean, default: true
+'sandtable.chat.systemPrompt'             // type: string,  default: 'You are a helpful coding assistant.'
+'sandtable.chat.maxTokens'                // type: number,  default: 2048
+'sandtable.chat.temperature'              // type: number,  default: 0.7
 
 // Inline Completion
-'mage.completion.enabled'            // type: boolean, default: true
-'mage.completion.model'              // type: string,  default: '' (auto-detect)
-'mage.completion.debounceMs'         // type: number,  default: 350
-'mage.completion.maxTokens'          // type: number,  default: 128
-'mage.completion.temperature'        // type: number,  default: 0.2
-'mage.completion.contextLines'       // type: number,  default: 50 (lines of prefix/suffix)
+'sandtable.completion.enabled'            // type: boolean, default: true
+'sandtable.completion.model'              // type: string,  default: '' (auto-detect)
+'sandtable.completion.debounceMs'         // type: number,  default: 350
+'sandtable.completion.maxTokens'          // type: number,  default: 128
+'sandtable.completion.temperature'        // type: number,  default: 0.2
+'sandtable.completion.contextLines'       // type: number,  default: 50 (lines of prefix/suffix)
 
 // Agent
-'mage.agent.enabled'                 // type: boolean, default: true
-'mage.agent.model'                   // type: string,  default: '' (auto-detect)
-'mage.agent.confirmDestructive'      // type: boolean, default: true
-'mage.agent.maxIterations'           // type: number,  default: 25
-'mage.agent.maxTokens'              // type: number,  default: 4096
+'sandtable.agent.enabled'                 // type: boolean, default: true
+'sandtable.agent.model'                   // type: string,  default: '' (auto-detect)
+'sandtable.agent.confirmDestructive'      // type: boolean, default: true
+'sandtable.agent.maxIterations'           // type: number,  default: 25
+'sandtable.agent.maxTokens'              // type: number,  default: 4096
 
 // Model Manager
-'mage.models.showInActivityBar'      // type: boolean, default: true
-'mage.models.gpuPollIntervalMs'      // type: number,  default: 5000
+'sandtable.models.showInActivityBar'      // type: boolean, default: true
+'sandtable.models.gpuPollIntervalMs'      // type: number,  default: 5000
 ```
 
 ## New File Structure Map
@@ -592,60 +592,60 @@ src/vs/platform/cortex/
   browser/
     cortexService.ts                  # Browser-side service implementation
 
-src/vs/workbench/contrib/mageChat/
+src/vs/workbench/contrib/sandtableChat/
   browser/
-    mageChat.contribution.ts          # Registers view container, panel, commands
-    mageChatViewPane.ts               # Main chat view pane (extends ViewPane)
-    mageChatInput.ts                  # Message input widget with send button
-    mageChatMessageList.ts            # Scrollable message list with markdown
-    mageChatModelSelector.ts          # Model dropdown (queries running models)
-    mageChat.css                      # Chat panel styling
+    sandtableChat.contribution.ts          # Registers view container, panel, commands
+    sandtableChatViewPane.ts               # Main chat view pane (extends ViewPane)
+    sandtableChatInput.ts                  # Message input widget with send button
+    sandtableChatMessageList.ts            # Scrollable message list with markdown
+    sandtableChatModelSelector.ts          # Model dropdown (queries running models)
+    sandtableChat.css                      # Chat panel styling
 
-src/vs/workbench/contrib/mageStatus/
+src/vs/workbench/contrib/sandtableStatus/
   browser/
-    mageStatus.contribution.ts        # Status bar item registration
-    mageStatusBarItem.ts              # Connection status indicator
+    sandtableStatus.contribution.ts        # Status bar item registration
+    sandtableStatusBarItem.ts              # Connection status indicator
 ```
 
 ### Phase 2 Files
 
 ```
-src/vs/workbench/contrib/mageCompletion/
+src/vs/workbench/contrib/sandtableCompletion/
   browser/
-    mageCompletion.contribution.ts    # Registers InlineCompletionItemProvider
+    sandtableCompletion.contribution.ts    # Registers InlineCompletionItemProvider
     mageInlineCompletionProvider.ts   # Core provider implementation
     mageFimPromptBuilder.ts           # Prefix/suffix extraction from editor
-    mageCompletionCache.ts            # LRU cache for recent completions
+    sandtableCompletionCache.ts            # LRU cache for recent completions
 ```
 
 ### Phase 3 Files
 
 ```
-src/vs/workbench/contrib/mageModels/
+src/vs/workbench/contrib/sandtableModels/
   browser/
-    mageModels.contribution.ts        # Registers model manager panel
-    mageModelsPanel.ts                # Main panel with tabs/sections
-    mageModelsList.ts                 # Model list with state indicators
-    mageGpuDashboard.ts              # GPU cards with utilization bars
-    mageModelLogs.ts                  # Log viewer for selected model
-    mageSystemSummary.ts              # CPU/RAM/disk overview
-    mageModels.css                    # Styling
+    sandtableModels.contribution.ts        # Registers model manager panel
+    sandtableModelsPanel.ts                # Main panel with tabs/sections
+    sandtableModelsList.ts                 # Model list with state indicators
+    sandtableGpuDashboard.ts              # GPU cards with utilization bars
+    sandtableModelLogs.ts                  # Log viewer for selected model
+    sandtableSystemSummary.ts              # CPU/RAM/disk overview
+    sandtableModels.css                    # Styling
 ```
 
 ### Phase 4 Files
 
 ```
-src/vs/workbench/contrib/mageAgent/
+src/vs/workbench/contrib/sandtableAgent/
   browser/
-    mageAgent.contribution.ts         # Registers agent panel and commands
-    mageAgentPanel.ts                 # Agent conversation UI
-    mageAgentDiffView.ts              # Inline diff display for proposed changes
+    sandtableAgent.contribution.ts         # Registers agent panel and commands
+    sandtableAgentPanel.ts                 # Agent conversation UI
+    sandtableAgentDiffView.ts              # Inline diff display for proposed changes
 
   common/
-    mageAgentLoop.ts                  # Core agent loop (message -> tool -> repeat)
-    mageAgentTools.ts                 # Tool definitions and executors
-    mageAgentSafety.ts                # Confirmation logic for destructive ops
-    mageAgentContext.ts               # Token budget and context management
+    sandtableAgentLoop.ts                  # Core agent loop (message -> tool -> repeat)
+    sandtableAgentTools.ts                 # Tool definitions and executors
+    sandtableAgentSafety.ts                # Confirmation logic for destructive ops
+    sandtableAgentContext.ts               # Token budget and context management
 ```
 
 ### Registration Entry Points
@@ -653,12 +653,12 @@ src/vs/workbench/contrib/mageAgent/
 All contributions are registered by importing them in `src/vs/workbench/workbench.common.main.ts`:
 
 ```typescript
-// MAGE IDE contributions
-import './contrib/mageChat/browser/mageChat.contribution';
-import './contrib/mageStatus/browser/mageStatus.contribution';
-import './contrib/mageCompletion/browser/mageCompletion.contribution';
-import './contrib/mageModels/browser/mageModels.contribution';
-import './contrib/mageAgent/browser/mageAgent.contribution';
+// Sandtable contributions
+import './contrib/sandtableChat/browser/sandtableChat.contribution';
+import './contrib/sandtableStatus/browser/sandtableStatus.contribution';
+import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution';
+import './contrib/sandtableModels/browser/sandtableModels.contribution';
+import './contrib/sandtableAgent/browser/sandtableAgent.contribution';
 ```
 
 The platform service is registered in the workbench's service initialization.

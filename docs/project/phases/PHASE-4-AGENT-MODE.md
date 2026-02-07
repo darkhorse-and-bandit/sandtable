@@ -6,7 +6,7 @@
 
 ## Objective
 
-Build an autonomous coding agent within MAGE IDE that can read files, write code, run terminal commands, and perform multi-step coding tasks based on natural language instructions -- all powered by models running on Cortex.
+Build an autonomous coding agent within Sandtable that can read files, write code, run terminal commands, and perform multi-step coding tasks based on natural language instructions -- all powered by models running on Cortex.
 
 ## Agent Architecture
 
@@ -209,7 +209,7 @@ The agent has access to these tools, sent as the `tools` parameter in chat compl
 
 ## Agent Loop Algorithm
 
-File: `src/vs/workbench/contrib/mageAgent/common/mageAgentLoop.ts`
+File: `src/vs/workbench/contrib/sandtableAgent/common/sandtableAgentLoop.ts`
 
 ```
 FUNCTION runAgent(userMessage, tools, maxIterations = 25):
@@ -272,7 +272,7 @@ FUNCTION runAgent(userMessage, tools, maxIterations = 25):
 ### Agent System Prompt
 
 ```
-You are MAGE, an AI coding agent integrated into the MAGE IDE. You help developers by reading, writing, and modifying code in their workspace.
+You are MAGE, an AI coding agent integrated into the Sandtable. You help developers by reading, writing, and modifying code in their workspace.
 
 Rules:
 1. Always read a file before editing it to understand the current state.
@@ -286,7 +286,7 @@ Rules:
 
 ## Safety Confirmation System
 
-File: `src/vs/workbench/contrib/mageAgent/common/mageAgentSafety.ts`
+File: `src/vs/workbench/contrib/sandtableAgent/common/sandtableAgentSafety.ts`
 
 ### Confirmation Rules
 
@@ -295,8 +295,8 @@ File: `src/vs/workbench/contrib/mageAgent/common/mageAgentSafety.ts`
 | `read_file` | No | Show "Reading {path}..." in agent panel |
 | `list_directory` | No | Show "Listing {path}..." in agent panel |
 | `search_files` | No | Show "Searching for {pattern}..." in agent panel |
-| `edit_file` | Yes (if `mage.agent.confirmDestructive` is true) | Show diff of old_text vs new_text |
-| `create_file` | Yes (if `mage.agent.confirmDestructive` is true) | Show file contents preview |
+| `edit_file` | Yes (if `sandtable.agent.confirmDestructive` is true) | Show diff of old_text vs new_text |
+| `create_file` | Yes (if `sandtable.agent.confirmDestructive` is true) | Show file contents preview |
 | `run_command` | Yes (always for terminal commands) | Show command to be executed |
 
 ### Confirmation Dialog
@@ -333,7 +333,7 @@ For terminal commands:
 
 ### Diff View Integration
 
-File: `src/vs/workbench/contrib/mageAgent/browser/mageAgentDiffView.ts`
+File: `src/vs/workbench/contrib/sandtableAgent/browser/sandtableAgentDiffView.ts`
 
 For `edit_file` confirmations, use VS Code's built-in diff editor:
 
@@ -355,7 +355,7 @@ await this.editorService.openEditor({
 
 ## Agent Panel UI
 
-File: `src/vs/workbench/contrib/mageAgent/browser/mageAgentPanel.ts`
+File: `src/vs/workbench/contrib/sandtableAgent/browser/sandtableAgentPanel.ts`
 
 The agent panel reuses much of the chat panel's rendering (markdown, code blocks) but adds:
 
@@ -414,13 +414,13 @@ If a model doesn't support tool calling (or `supports_tool_calling` is false on 
 
 1. **Prompt-based approach:** Instead of OpenAI-style tool calling, embed tool descriptions in the system prompt and parse structured output (JSON blocks) from the model's response.
 
-2. **Model switching:** If the user's preferred chat model doesn't support tools, automatically switch to a designated "agent model" that does. This is configured via `mage.agent.model`.
+2. **Model switching:** If the user's preferred chat model doesn't support tools, automatically switch to a designated "agent model" that does. This is configured via `sandtable.agent.model`.
 
 3. **Degraded mode:** If no tool-capable model is available, disable agent mode and show a message explaining which models are needed.
 
 ## Context Management
 
-File: `src/vs/workbench/contrib/mageAgent/common/mageAgentContext.ts`
+File: `src/vs/workbench/contrib/sandtableAgent/common/sandtableAgentContext.ts`
 
 The agent loop accumulates messages (user messages, assistant responses, tool calls, tool results). This can grow large quickly.
 
@@ -428,7 +428,7 @@ The agent loop accumulates messages (user messages, assistant responses, tool ca
 
 ```
 Total context budget: model's max_model_len (from constraints)
-Reserved for response: mage.agent.maxTokens (default 4096)
+Reserved for response: sandtable.agent.maxTokens (default 4096)
 Available for context: max_model_len - maxTokens
 
 Example with GPT-OSS 120B (8K context):
@@ -453,11 +453,11 @@ When the message history exceeds the token budget:
 ## Settings
 
 ```
-mage.agent.enabled                (boolean, default: true)
-mage.agent.model                  (string, default: '')       -- Empty = use chat model
-mage.agent.confirmDestructive     (boolean, default: true)    -- Require approval for edits/commands
-mage.agent.maxIterations          (number, default: 25)       -- Max tool call rounds
-mage.agent.maxTokens              (number, default: 4096)     -- Max tokens per agent response
+sandtable.agent.enabled                (boolean, default: true)
+sandtable.agent.model                  (string, default: '')       -- Empty = use chat model
+sandtable.agent.confirmDestructive     (boolean, default: true)    -- Require approval for edits/commands
+sandtable.agent.maxIterations          (number, default: 25)       -- Max tool call rounds
+sandtable.agent.maxTokens              (number, default: 4096)     -- Max tokens per agent response
 ```
 
 ## Testing Plan

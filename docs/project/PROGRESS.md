@@ -1,6 +1,6 @@
-# MAGE IDE -- Progress Tracker
+# Sandtable -- Progress Tracker
 
-This is the living checklist for the MAGE IDE project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
+This is the living checklist for the Sandtable project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
 
 **Last updated:** 2026-02-07
 **Current phase:** Phase 0 (Complete)
@@ -24,25 +24,25 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 ### Fork and Clone
 - [x] Clone microsoft/vscode into `/home/mage/repos/MAGEIDE`
 - [x] Pin to a stable release tag (`1.109.0`)
-- [x] Create `mage-ide/main` branch from release tag
+- [x] Create `sandtable/main` branch from release tag
 - [x] Disable GitHub Actions (remove `.github/workflows/`)
 
 ### Rebrand
-- [x] Update `product.json` field: `nameShort` -> "MAGE IDE"
-- [x] Update `product.json` field: `nameLong` -> "MAGE IDE"
-- [x] Update `product.json` field: `applicationName` -> "mage-ide"
-- [x] Update `product.json` field: `dataFolderName` -> ".mage-ide"
-- [x] Update `product.json` field: `urlProtocol` -> "mage-ide"
-- [x] Update `product.json` field: `serverApplicationName` -> "mage-ide-server"
-- [x] Update `product.json` field: `linuxIconName` -> "com.aulendur.mage-ide"
+- [x] Update `product.json` field: `nameShort` -> "Sandtable"
+- [x] Update `product.json` field: `nameLong` -> "Sandtable"
+- [x] Update `product.json` field: `applicationName` -> "sandtable"
+- [x] Update `product.json` field: `dataFolderName` -> ".sandtable"
+- [x] Update `product.json` field: `urlProtocol` -> "sandtable"
+- [x] Update `product.json` field: `serverApplicationName` -> "sandtable-server"
+- [x] Update `product.json` field: `linuxIconName` -> "com.sandtable.ide"
 - [x] Remove/update telemetry-related fields
-- [x] Update `reportIssueUrl` to MAGE IDE repo
+- [x] Update `reportIssueUrl` to Sandtable repo
 
 ### Build and Verify
 - [x] Run `npm install` successfully
 - [x] Run `npm run compile` successfully (0 errors)
 - [x] Launch with `./scripts/code.sh`
-- [x] Verify title bar shows "MAGE IDE"
+- [x] Verify title bar shows "Sandtable"
 - [x] Verify file editing works
 - [x] Verify integrated terminal works
 - [x] Verify extensions panel works
@@ -53,7 +53,7 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 ### Finalize
 - [x] Ensure `docs/project/` directory is preserved
 - [x] Increase inotify watchers if needed (`fs.inotify.max_user_watches=524288`)
-- [x] Create initial commit on `mage-ide/main` branch
+- [x] Create initial commit on `sandtable/main` branch
 
 ---
 
@@ -79,20 +79,20 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 - [ ] Register `CortexService` as singleton with DI system
 
 ### Settings
-- [ ] Register `mage.cortex.endpoint` setting
-- [ ] Register `mage.cortex.apiKey` setting
-- [ ] Register `mage.cortex.username` setting
-- [ ] Register `mage.cortex.password` setting
-- [ ] Register `mage.cortex.healthCheckIntervalMs` setting
-- [ ] Register `mage.chat.defaultModel` setting
-- [ ] Register `mage.chat.streamingEnabled` setting
-- [ ] Register `mage.chat.systemPrompt` setting
-- [ ] Register `mage.chat.maxTokens` setting
-- [ ] Register `mage.chat.temperature` setting
-- [ ] Verify all settings appear in Settings UI under "MAGE" section
+- [ ] Register `sandtable.cortex.endpoint` setting
+- [ ] Register `sandtable.cortex.apiKey` setting
+- [ ] Register `sandtable.cortex.username` setting
+- [ ] Register `sandtable.cortex.password` setting
+- [ ] Register `sandtable.cortex.healthCheckIntervalMs` setting
+- [ ] Register `sandtable.chat.defaultModel` setting
+- [ ] Register `sandtable.chat.streamingEnabled` setting
+- [ ] Register `sandtable.chat.systemPrompt` setting
+- [ ] Register `sandtable.chat.maxTokens` setting
+- [ ] Register `sandtable.chat.temperature` setting
+- [ ] Verify all settings appear in Settings UI under "Sandtable" section
 
 ### Status Bar
-- [ ] Create `src/vs/workbench/contrib/mageStatus/browser/` directory
+- [ ] Create `src/vs/workbench/contrib/sandtableStatus/browser/` directory
 - [ ] Implement status bar item showing connection status
 - [ ] Health check polling (every 15s)
 - [ ] Green indicator when connected with model count
@@ -101,9 +101,9 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 - [ ] Register contribution in `workbench.common.main.ts`
 
 ### Chat Panel
-- [ ] Create `src/vs/workbench/contrib/mageChat/browser/` directory
+- [ ] Create `src/vs/workbench/contrib/sandtableChat/browser/` directory
 - [ ] Register view container in Activity Bar
-- [ ] Implement `MageChatViewPane` (extends ViewPane)
+- [ ] Implement `SandtableChatViewPane` (extends ViewPane)
 - [ ] Implement model selector dropdown (queries `/v1/models/running`)
 - [ ] Implement message input widget with Send button
 - [ ] Implement Shift+Enter for newlines in input
@@ -118,7 +118,7 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 - [ ] Implement session deletion
 - [ ] Implement chat persistence via Cortex session API
 - [ ] Register contribution in `workbench.common.main.ts`
-- [ ] Create `mageChat.css` with styling
+- [ ] Create `sandtableChat.css` with styling
 
 ### Integration Testing
 - [ ] Status bar shows "Connected" when Cortex is running
@@ -153,26 +153,26 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 - [ ] Test FIM streaming responses
 
 ### IDE Side
-- [ ] Create `src/vs/workbench/contrib/mageCompletion/browser/` directory
-- [ ] Implement `mageFimPromptBuilder.ts` -- prefix/suffix extraction
+- [ ] Create `src/vs/workbench/contrib/sandtableCompletion/browser/` directory
+- [ ] Implement `sandtableFimPromptBuilder.ts` -- prefix/suffix extraction
 - [ ] Implement file path hint in prefix
 - [ ] Implement import context inclusion
-- [ ] Implement `mageCompletionCache.ts` -- LRU cache
+- [ ] Implement `sandtableCompletionCache.ts` -- LRU cache
 - [ ] Cache key based on prefix/suffix hash
 - [ ] Cache hit detection for cursor-forward movement
 - [ ] Cache invalidation on non-matching input
 - [ ] 30-second TTL
-- [ ] Implement `mageInlineCompletionProvider.ts`
+- [ ] Implement `sandtableInlineCompletionProvider.ts`
 - [ ] Provider triggers after debounce period
 - [ ] Cancels previous request on new keystroke
 - [ ] Returns `InlineCompletionItem` with ghost text
 - [ ] Tab accepts, Escape dismisses
-- [ ] Register `mage.completion.enabled` setting
-- [ ] Register `mage.completion.model` setting
-- [ ] Register `mage.completion.debounceMs` setting
-- [ ] Register `mage.completion.maxTokens` setting
-- [ ] Register `mage.completion.temperature` setting
-- [ ] Register `mage.completion.contextLines` setting
+- [ ] Register `sandtable.completion.enabled` setting
+- [ ] Register `sandtable.completion.model` setting
+- [ ] Register `sandtable.completion.debounceMs` setting
+- [ ] Register `sandtable.completion.maxTokens` setting
+- [ ] Register `sandtable.completion.temperature` setting
+- [ ] Register `sandtable.completion.contextLines` setting
 - [ ] Register contribution in `workbench.common.main.ts`
 
 ### Testing
@@ -203,24 +203,24 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 - [ ] Test endpoint returns all sections
 
 ### IDE Side
-- [ ] Create `src/vs/workbench/contrib/mageModels/browser/` directory
+- [ ] Create `src/vs/workbench/contrib/sandtableModels/browser/` directory
 - [ ] Register view container in Activity Bar
-- [ ] Implement `mageModelsPanel.ts` -- main panel
-- [ ] Implement `mageModelsList.ts` -- model list with state indicators
+- [ ] Implement `sandtableModelsPanel.ts` -- main panel
+- [ ] Implement `sandtableModelsList.ts` -- model list with state indicators
 - [ ] Green dot for running models
 - [ ] Gray dot for stopped models
 - [ ] Yellow dot for starting/loading models
 - [ ] Red dot for failed models
 - [ ] Start button for stopped models
 - [ ] Stop button for running models
-- [ ] Implement `mageGpuDashboard.ts` -- GPU metric cards
+- [ ] Implement `sandtableGpuDashboard.ts` -- GPU metric cards
 - [ ] GPU name display
 - [ ] VRAM usage progress bar
 - [ ] Utilization percentage
 - [ ] Temperature with color coding
 - [ ] Flash attention badge
-- [ ] Implement `mageSystemSummary.ts` -- CPU/RAM/disk bars
-- [ ] Implement `mageModelLogs.ts` -- container log viewer
+- [ ] Implement `sandtableSystemSummary.ts` -- CPU/RAM/disk bars
+- [ ] Implement `sandtableModelLogs.ts` -- container log viewer
 - [ ] Auto-scrolling log display
 - [ ] Diagnostic severity indicators
 - [ ] Copy button
@@ -231,10 +231,10 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 - [ ] Session cookie storage
 - [ ] Auto re-auth on 401
 - [ ] Implement polling with pause when panel not visible
-- [ ] Register `mage.models.showInActivityBar` setting
-- [ ] Register `mage.models.gpuPollIntervalMs` setting
+- [ ] Register `sandtable.models.showInActivityBar` setting
+- [ ] Register `sandtable.models.gpuPollIntervalMs` setting
 - [ ] Register contribution in `workbench.common.main.ts`
-- [ ] Create `mageModels.css` with styling
+- [ ] Create `sandtableModels.css` with styling
 
 ### Testing
 - [ ] Panel opens from Activity Bar
@@ -262,44 +262,44 @@ This is the living checklist for the MAGE IDE project. Update checkboxes as task
 - [ ] Test with known tool-calling models
 
 ### IDE Side
-- [ ] Create `src/vs/workbench/contrib/mageAgent/browser/` directory
-- [ ] Create `src/vs/workbench/contrib/mageAgent/common/` directory
-- [ ] Implement `mageAgentTools.ts` -- tool definitions
+- [ ] Create `src/vs/workbench/contrib/sandtableAgent/browser/` directory
+- [ ] Create `src/vs/workbench/contrib/sandtableAgent/common/` directory
+- [ ] Implement `sandtableAgentTools.ts` -- tool definitions
 - [ ] `read_file` tool
 - [ ] `edit_file` tool
 - [ ] `create_file` tool
 - [ ] `run_command` tool
 - [ ] `search_files` tool
 - [ ] `list_directory` tool
-- [ ] Implement `mageAgentLoop.ts` -- core agent loop
+- [ ] Implement `sandtableAgentLoop.ts` -- core agent loop
 - [ ] Message -> tool_call -> execute -> repeat cycle
 - [ ] Max iteration guard (default 25)
 - [ ] Cancellation support (stop button)
 - [ ] Context pruning when token budget exceeded
-- [ ] Implement `mageAgentSafety.ts` -- confirmation system
+- [ ] Implement `sandtableAgentSafety.ts` -- confirmation system
 - [ ] Confirmation for `edit_file`
 - [ ] Confirmation for `create_file`
 - [ ] Confirmation for `run_command`
 - [ ] No confirmation for read-only tools
-- [ ] Respect `mage.agent.confirmDestructive` setting
-- [ ] Implement `mageAgentPanel.ts` -- agent conversation UI
+- [ ] Respect `sandtable.agent.confirmDestructive` setting
+- [ ] Implement `sandtableAgentPanel.ts` -- agent conversation UI
 - [ ] Message display (reuses chat rendering)
 - [ ] Tool execution indicators
 - [ ] Iteration counter
 - [ ] Stop button
-- [ ] Implement `mageAgentDiffView.ts` -- inline diff display
+- [ ] Implement `sandtableAgentDiffView.ts` -- inline diff display
 - [ ] Show old_text vs new_text for edit_file
 - [ ] Accept/Reject buttons on diffs
 - [ ] Use VS Code's native diff editor
-- [ ] Implement `mageAgentContext.ts` -- token budget management
+- [ ] Implement `sandtableAgentContext.ts` -- token budget management
 - [ ] Calculate available context from model constraints
 - [ ] Summarize old tool results when budget is tight
 - [ ] Always preserve system prompt and latest user message
-- [ ] Register `mage.agent.enabled` setting
-- [ ] Register `mage.agent.model` setting
-- [ ] Register `mage.agent.confirmDestructive` setting
-- [ ] Register `mage.agent.maxIterations` setting
-- [ ] Register `mage.agent.maxTokens` setting
+- [ ] Register `sandtable.agent.enabled` setting
+- [ ] Register `sandtable.agent.model` setting
+- [ ] Register `sandtable.agent.confirmDestructive` setting
+- [ ] Register `sandtable.agent.maxIterations` setting
+- [ ] Register `sandtable.agent.maxTokens` setting
 - [ ] Register contribution in `workbench.common.main.ts`
 
 ### Testing

@@ -1,9 +1,9 @@
-# MAGE IDE -- Project Charter
+# Sandtable -- Project Charter
 
 ## Project Identity
 
-- **Project Name:** MAGE IDE
-- **Codename:** MAGEIDE
+- **Project Name:** Sandtable
+- **Codename:** Sandtable
 - **Repository:** `/home/mage/repos/MAGEIDE`
 - **License:** MIT (inherited from VS Code OSS)
 - **Parent Project:** [Microsoft VS Code](https://github.com/microsoft/vscode) (MIT License)
@@ -11,7 +11,7 @@
 
 ## Mission Statement
 
-MAGE IDE is a fork of Microsoft's VS Code with core-level LLM integration powered by Cortex, capable of running fully offline on self-hosted infrastructure. It provides AI-assisted coding -- chat, inline code completion, model management, and autonomous agent capabilities -- all connected to locally hosted open source LLM models served through Cortex's inference gateway.
+Sandtable is a fork of Microsoft's VS Code with core-level LLM integration powered by Cortex, capable of running fully offline on self-hosted infrastructure. It provides AI-assisted coding -- chat, inline code completion, model management, and autonomous agent capabilities -- all connected to locally hosted open source LLM models served through Cortex's inference gateway.
 
 ## Goals
 
@@ -38,7 +38,7 @@ MAGE IDE is a fork of Microsoft's VS Code with core-level LLM integration powere
 The internal engineering team at Aulendur Labs, specifically:
 
 - Developers who use VS Code daily and have Cortex running on the local network
-- The Cortex development team (who will also be developing MAGE IDE and its Cortex-side enhancements)
+- The Cortex development team (who will also be developing Sandtable and its Cortex-side enhancements)
 - Infrastructure team managing GPU servers running vLLM and llama.cpp model containers
 
 **Assumptions about the audience:**
@@ -109,8 +109,8 @@ In practice, roles overlap significantly given the small team size.
 ## Success Criteria
 
 ### Phase 0: Fork and Build
-- MAGE IDE builds from source on Arch Linux without errors
-- Application launches and shows "MAGE IDE" in the title bar
+- Sandtable builds from source on Arch Linux without errors
+- Application launches and shows "Sandtable" in the title bar
 - All standard VS Code functionality works (editing, terminal, extensions, git)
 
 ### Phase 1: Cortex Connection + Chat

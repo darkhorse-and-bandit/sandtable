@@ -1,10 +1,10 @@
-# MAGE IDE -- Milestones
+# Sandtable -- Milestones
 
 ## Phase Overview
 
 | Phase | Name | Duration | Days | Key Deliverable | Cortex Changes | Risk |
 |-------|------|----------|------|----------------|----------------|------|
-| 0 | Fork and Build | 1-3 days | 1-3 | MAGE IDE builds and launches from source | None | Low |
+| 0 | Fork and Build | 1-3 days | 1-3 | Sandtable builds and launches from source | None | Low |
 | 1 | Cortex Connection + Chat | 10-14 days | 4-17 | Streaming chat with GPT-OSS models | CORS for Electron | Low |
 | 2 | Inline Code Completion | 10-14 days | 18-31 | Ghost text suggestions while typing | FIM endpoint | Medium |
 | 3 | Model Manager Panel | 10-14 days | 32-45 | GPU dashboard, start/stop models | IDE status endpoint | Low |
@@ -38,10 +38,10 @@ Note: Phases 2, 3, and 4 all depend on Phase 1 (the platform service layer) but 
 | Milestone | Definition of Done |
 |-----------|-------------------|
 | Build prerequisites installed | `node --version` shows v20+, `gcc --version` works, all system libs present |
-| VS Code source cloned | `git log --oneline -1` shows latest VS Code commit in MAGEIDE workspace |
-| `product.json` rebranded | All MAGE IDE fields updated (nameShort, applicationName, dataFolderName, etc.) |
+| VS Code source cloned | `git log --oneline -1` shows latest VS Code commit in Sandtable workspace |
+| `product.json` rebranded | All Sandtable fields updated (nameShort, applicationName, dataFolderName, etc.) |
 | First successful build | `npm install` and `npm run watch` complete without errors |
-| MAGE IDE launches | `./scripts/code.sh` opens the application with "MAGE IDE" in title bar |
+| Sandtable launches | `./scripts/code.sh` opens the application with "Sandtable" in title bar |
 | Standard features verified | File editing, terminal, git, extensions panel all functional |
 
 **Risk assessment:** LOW -- well-documented process, multiple reference implementations (VSCodium build scripts).
@@ -58,7 +58,7 @@ Note: Phases 2, 3, and 4 all depend on Phase 1 (the platform service layer) but 
 |-----------|-------------------|
 | `ICortexService` interface defined | All types and interface methods in `src/vs/platform/cortex/common/cortex.ts` |
 | `CortexClient` HTTP client working | Can make requests to Cortex gateway and parse SSE streaming responses |
-| Settings schema registered | `mage.cortex.*` settings appear in VS Code Settings UI |
+| Settings schema registered | `sandtable.cortex.*` settings appear in VS Code Settings UI |
 | Connection status polling | Status bar item shows connected/disconnected with model count |
 | Chat panel renders | Chat panel appears in Activity Bar sidebar, opens on click |
 | Model selector works | Dropdown populated from `GET /v1/models/running` |

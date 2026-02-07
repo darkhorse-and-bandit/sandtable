@@ -1,6 +1,6 @@
-# MAGE IDE -- Cortex Enhancements
+# Sandtable -- Cortex Enhancements
 
-All Cortex-side changes needed to support MAGE IDE integration. These are modifications to the [AulendurForge/Cortex](https://github.com/AulendurForge/Cortex) codebase.
+All Cortex-side changes needed to support Sandtable integration. These are modifications to the [AulendurForge/Cortex](https://github.com/AulendurForge/Cortex) codebase.
 
 ## Enhancement Summary
 
@@ -23,7 +23,7 @@ All Cortex-side changes needed to support MAGE IDE integration. These are modifi
 
 ### Problem
 
-MAGE IDE runs in Electron. When the renderer process makes fetch requests to Cortex, the `Origin` header may be `file://` or `null` (depending on Electron's security settings and the protocol used). Cortex's CORS configuration needs to accept these origins.
+Sandtable runs in Electron. When the renderer process makes fetch requests to Cortex, the `Origin` header may be `file://` or `null` (depending on Electron's security settings and the protocol used). Cortex's CORS configuration needs to accept these origins.
 
 ### Implementation
 
@@ -39,7 +39,7 @@ environment:
     http://${HOST_IP}:3001,
     file://,
     null,
-    mage-ide://
+    sandtable://
 ```
 
 Alternatively, in `backend/src/main.py`, update the CORS middleware to handle these origins:
@@ -49,8 +49,8 @@ Alternatively, in `backend/src/main.py`, update the CORS middleware to handle th
 origins = os.getenv("CORS_ALLOW_ORIGINS", "").split(",")
 origins = [o.strip() for o in origins if o.strip()]
 
-# Always allow Electron origins for MAGE IDE
-origins.extend(["file://", "null", "mage-ide://"])
+# Always allow Electron origins for Sandtable
+origins.extend(["file://", "null", "sandtable://"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,7 +81,7 @@ curl -H "Origin: file://" -H "Authorization: Bearer $TOKEN" \
 
 ### Problem
 
-MAGE IDE's inline code completion needs Fill-in-the-Middle (FIM) support. The current `/v1/completions` endpoint requires the IDE to build model-specific FIM prompts. A dedicated endpoint abstracts this complexity.
+Sandtable's inline code completion needs Fill-in-the-Middle (FIM) support. The current `/v1/completions` endpoint requires the IDE to build model-specific FIM prompts. A dedicated endpoint abstracts this complexity.
 
 ### Endpoint Specification
 
@@ -348,7 +348,7 @@ def get_fim_stop_tokens(model_name: str, repo_id: Optional[str] = None) -> list[
 
 ### Problem
 
-The MAGE IDE Model Manager panel needs to poll multiple pieces of information (running models, GPU metrics, system health). Making 4 separate API calls every 5 seconds is inefficient. A combined endpoint solves this.
+The Sandtable Model Manager panel needs to poll multiple pieces of information (running models, GPU metrics, system health). Making 4 separate API calls every 5 seconds is inefficient. A combined endpoint solves this.
 
 ### Endpoint Specification
 
@@ -414,7 +414,7 @@ router = APIRouter()
 @router.get("/v1/ide/status")
 async def ide_status(api_key_data=Depends(verify_api_key)):
     """
-    Combined status endpoint for MAGE IDE.
+    Combined status endpoint for Sandtable.
     Returns running models, system health, and GPU metrics in one call.
     """
     running_models = await get_running_models()
@@ -459,7 +459,7 @@ Total expected latency: < 100ms. Safe to poll every 5 seconds.
 
 ### Problem
 
-MAGE IDE's agent mode needs to know which models support function/tool calling. Currently, the model constraints endpoint doesn't include this information.
+Sandtable's agent mode needs to know which models support function/tool calling. Currently, the model constraints endpoint doesn't include this information.
 
 ### Implementation
 

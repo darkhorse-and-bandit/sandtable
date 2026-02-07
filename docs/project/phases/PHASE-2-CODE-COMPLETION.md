@@ -38,7 +38,7 @@ See [CORTEX-ENHANCEMENTS.md](../CORTEX-ENHANCEMENTS.md) for the complete specifi
 
 ### Task 2.2: FIM Prompt Builder
 
-File: `src/vs/workbench/contrib/mageCompletion/browser/mageFimPromptBuilder.ts`
+File: `src/vs/workbench/contrib/sandtableCompletion/browser/sandtableFimPromptBuilder.ts`
 
 Extracts prefix and suffix from the editor document around the cursor position.
 
@@ -65,14 +65,14 @@ function extractFimContext(
 ```
 
 **Context extraction strategy:**
-- **Prefix:** Up to 50 lines before the cursor (configurable via `mage.completion.contextLines`)
+- **Prefix:** Up to 50 lines before the cursor (configurable via `sandtable.completion.contextLines`)
 - **Suffix:** Up to 20 lines after the cursor
 - **File path hint:** Prepend `// filepath: src/utils/auth.ts` as the first line of prefix (helps model understand context)
 - **Import context:** If cursor is deep in a file, include the file's import statements at the top of prefix even if they're beyond the line window
 
 ### Task 2.3: Completion Cache
 
-File: `src/vs/workbench/contrib/mageCompletion/browser/mageCompletionCache.ts`
+File: `src/vs/workbench/contrib/sandtableCompletion/browser/sandtableCompletionCache.ts`
 
 LRU cache that avoids redundant API calls:
 
@@ -96,12 +96,12 @@ interface CachedCompletion {
 
 ### Task 2.4: InlineCompletionItemProvider
 
-File: `src/vs/workbench/contrib/mageCompletion/browser/mageInlineCompletionProvider.ts`
+File: `src/vs/workbench/contrib/sandtableCompletion/browser/sandtableInlineCompletionProvider.ts`
 
 The core provider that VS Code calls to get inline completions:
 
 ```typescript
-class MageInlineCompletionProvider implements InlineCompletionItemProvider {
+class SandtableInlineCompletionProvider implements InlineCompletionItemProvider {
 
     private pendingRequest: AbortController | null = null;
 
@@ -113,7 +113,7 @@ class MageInlineCompletionProvider implements InlineCompletionItemProvider {
     ): Promise<InlineCompletionItem[]> {
 
         // 0. Check if completion is enabled
-        if (!this.configService.getValue('mage.completion.enabled')) {
+        if (!this.configService.getValue('sandtable.completion.enabled')) {
             return [];
         }
 
@@ -132,7 +132,7 @@ class MageInlineCompletionProvider implements InlineCompletionItemProvider {
 
         // 4. Call Cortex FIM endpoint
         try {
-            const completionModel = this.configService.getValue('mage.completion.model')
+            const completionModel = this.configService.getValue('sandtable.completion.model')
                 || await this.getDefaultCompletionModel();
 
             let completionText = '';
@@ -141,8 +141,8 @@ class MageInlineCompletionProvider implements InlineCompletionItemProvider {
                     model: completionModel,
                     prefix: fimContext.prefix,
                     suffix: fimContext.suffix,
-                    max_tokens: this.configService.getValue('mage.completion.maxTokens'),
-                    temperature: this.configService.getValue('mage.completion.temperature'),
+                    max_tokens: this.configService.getValue('sandtable.completion.maxTokens'),
+                    temperature: this.configService.getValue('sandtable.completion.temperature'),
                     stream: true,
                 },
                 (text: string) => { completionText += text; },
@@ -165,7 +165,7 @@ class MageInlineCompletionProvider implements InlineCompletionItemProvider {
         return {
             insertText: text,
             range: new Range(position.lineNumber, position.column, position.lineNumber, position.column),
-            command: { id: 'mage.completion.accepted', title: 'Completion Accepted' },
+            command: { id: 'sandtable.completion.accepted', title: 'Completion Accepted' },
         };
     }
 }
@@ -175,7 +175,7 @@ class MageInlineCompletionProvider implements InlineCompletionItemProvider {
 
 The `InlineCompletionItemProvider` is called by VS Code's editor after a configurable debounce period. Key behaviors:
 
-1. **Debounce:** VS Code has built-in debounce for inline completions. We configure this through the provider's behavior -- only respond after the debounce period (controlled by `mage.completion.debounceMs`, default 350ms).
+1. **Debounce:** VS Code has built-in debounce for inline completions. We configure this through the provider's behavior -- only respond after the debounce period (controlled by `sandtable.completion.debounceMs`, default 350ms).
 
 2. **Cancellation:** When the user types another character before the previous completion returns:
    - VS Code passes a new `CancellationToken` (the old one is cancelled)
@@ -186,13 +186,13 @@ The `InlineCompletionItemProvider` is called by VS Code's editor after a configu
 
 ### Task 2.6: Register the Provider
 
-File: `src/vs/workbench/contrib/mageCompletion/browser/mageCompletion.contribution.ts`
+File: `src/vs/workbench/contrib/sandtableCompletion/browser/sandtableCompletion.contribution.ts`
 
 ```typescript
 import { registerWorkbenchContribution2, WorkbenchPhase } from 'vs/workbench/common/contributions';
 
-class MageCompletionContribution extends Disposable implements IWorkbenchContribution {
-    static readonly ID = 'workbench.contrib.mageCompletion';
+class SandtableCompletionContribution extends Disposable implements IWorkbenchContribution {
+    static readonly ID = 'workbench.contrib.sandtableCompletion';
 
     constructor(
         @ILanguageFeaturesService private readonly languageFeatures: ILanguageFeaturesService,
@@ -201,7 +201,7 @@ class MageCompletionContribution extends Disposable implements IWorkbenchContrib
     ) {
         super();
 
-        const provider = new MageInlineCompletionProvider(cortexService, configService);
+        const provider = new SandtableInlineCompletionProvider(cortexService, configService);
 
         // Register for all languages
         this._register(
@@ -214,8 +214,8 @@ class MageCompletionContribution extends Disposable implements IWorkbenchContrib
 }
 
 registerWorkbenchContribution2(
-    'workbench.contrib.mageCompletion',
-    MageCompletionContribution,
+    'workbench.contrib.sandtableCompletion',
+    SandtableCompletionContribution,
     WorkbenchPhase.AfterRestored
 );
 ```
@@ -223,7 +223,7 @@ registerWorkbenchContribution2(
 Register in `src/vs/workbench/workbench.common.main.ts`:
 
 ```typescript
-import './contrib/mageCompletion/browser/mageCompletion.contribution';
+import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution';
 ```
 
 ## Performance Targets
@@ -238,12 +238,12 @@ import './contrib/mageCompletion/browser/mageCompletion.contribution';
 ## Settings
 
 ```
-mage.completion.enabled        (boolean, default: true)   -- Master toggle
-mage.completion.model          (string, default: '')       -- Model name (empty = auto-detect)
-mage.completion.debounceMs     (number, default: 350)      -- Delay after typing stops
-mage.completion.maxTokens      (number, default: 128)      -- Max tokens per completion
-mage.completion.temperature    (number, default: 0.2)      -- Low temp = more deterministic
-mage.completion.contextLines   (number, default: 50)       -- Lines of prefix context
+sandtable.completion.enabled        (boolean, default: true)   -- Master toggle
+sandtable.completion.model          (string, default: '')       -- Model name (empty = auto-detect)
+sandtable.completion.debounceMs     (number, default: 350)      -- Delay after typing stops
+sandtable.completion.maxTokens      (number, default: 128)      -- Max tokens per completion
+sandtable.completion.temperature    (number, default: 0.2)      -- Low temp = more deterministic
+sandtable.completion.contextLines   (number, default: 50)       -- Lines of prefix context
 ```
 
 ## Testing Plan

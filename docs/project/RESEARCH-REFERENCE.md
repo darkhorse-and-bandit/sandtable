@@ -1,4 +1,4 @@
-# MAGE IDE -- Research Reference
+# Sandtable -- Research Reference
 
 Compiled research from the project's initial investigation phase. This document serves as a reference for technical decisions and implementation details.
 
@@ -6,11 +6,11 @@ Compiled research from the project's initial investigation phase. This document 
 
 ### Existing Forks
 
-| Project | Stars | License | What It Does | Lessons for MAGE IDE |
+| Project | Stars | License | What It Does | Lessons for Sandtable |
 |---------|-------|---------|-------------|---------------------|
 | [VSCodium](https://github.com/VSCodium/vscodium) | 29.8k | MIT | Clean VS Code builds without telemetry | Reference for `product.json` rebranding and telemetry stripping |
 | [code-server](https://github.com/coder/code-server) | 76k | MIT | VS Code in the browser, self-hosted | Proves server-side VS Code fork is viable at scale |
-| [Void Editor](https://github.com/voideditor/void) | 28.2k | -- | AI-first VS Code fork with multi-model LLM support | Closest precedent to MAGE IDE; Y Combinator backed; development currently paused |
+| [Void Editor](https://github.com/voideditor/void) | 28.2k | -- | AI-first VS Code fork with multi-model LLM support | Closest precedent to Sandtable; Y Combinator backed; development currently paused |
 | [Eclipse Theia](https://theia-ide.org/) | -- | EPL-2.0 | Open source IDE framework with native AI ("Theia AI") | Alternative approach; supports any LLM, but smaller ecosystem |
 
 ### VS Code Source Code Organization
@@ -238,7 +238,7 @@ Cortex provides the management layer on top of vLLM and llama.cpp:
 - TypeScript SDK: `@modelcontextprotocol/sdk`
 - Python SDK: `mcp`
 
-**Relevance to MAGE IDE:** MCP could be used in a future phase to allow the agent to connect to external tool servers (databases, APIs, deployment services) beyond the built-in file/terminal tools.
+**Relevance to Sandtable:** MCP could be used in a future phase to allow the agent to connect to external tool servers (databases, APIs, deployment services) beyond the built-in file/terminal tools.
 
 **Specification:** https://modelcontextprotocol.io/specification/latest
 
