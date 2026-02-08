@@ -296,18 +296,20 @@ registerAction2(class GoToDefinitionAction extends DefinitionAction {
 				primary: KeyMod.CtrlCmd | KeyCode.F12,
 				weight: KeybindingWeight.EditorContrib
 			}],
-			menu: [{
-				id: MenuId.EditorContext,
-				group: 'navigation',
-				order: 1.1
-			}, {
-				id: MenuId.MenubarGoMenu,
-				precondition: null,
-				group: '4_symbol_nav',
-				order: 2,
-			}]
-		});
-		CommandsRegistry.registerCommandAlias('editor.action.goToDeclaration', GoToDefinitionAction.id);
+		menu: [{
+			id: MenuId.EditorContext,
+			group: 'navigation',
+			order: 1.1,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}, {
+			id: MenuId.MenubarGoMenu,
+			precondition: null,
+			group: '4_symbol_nav',
+			order: 2,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}]
+	});
+	CommandsRegistry.registerCommandAlias('editor.action.goToDeclaration', GoToDefinitionAction.id);
 	}
 });
 
@@ -417,17 +419,19 @@ registerAction2(class GoToDeclarationAction extends DeclarationAction {
 				EditorContextKeys.hasDeclarationProvider,
 				EditorContextKeys.isInEmbeddedEditor.toNegated()
 			),
-			menu: [{
-				id: MenuId.EditorContext,
-				group: 'navigation',
-				order: 1.3
-			}, {
-				id: MenuId.MenubarGoMenu,
-				precondition: null,
-				group: '4_symbol_nav',
-				order: 3,
-			}],
-		});
+		menu: [{
+			id: MenuId.EditorContext,
+			group: 'navigation',
+			order: 1.3,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}, {
+			id: MenuId.MenubarGoMenu,
+			precondition: null,
+			group: '4_symbol_nav',
+			order: 3,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}],
+	});
 	}
 
 	protected override _getNoResultFoundMessage(info: IWordAtPosition | null): string {
@@ -506,17 +510,19 @@ registerAction2(class GoToTypeDefinitionAction extends TypeDefinitionAction {
 				primary: 0,
 				weight: KeybindingWeight.EditorContrib
 			},
-			menu: [{
-				id: MenuId.EditorContext,
-				group: 'navigation',
-				order: 1.4
-			}, {
-				id: MenuId.MenubarGoMenu,
-				precondition: null,
-				group: '4_symbol_nav',
-				order: 3,
-			}]
-		});
+		menu: [{
+			id: MenuId.EditorContext,
+			group: 'navigation',
+			order: 1.4,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}, {
+			id: MenuId.MenubarGoMenu,
+			precondition: null,
+			group: '4_symbol_nav',
+			order: 3,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}]
+	});
 	}
 });
 
@@ -592,17 +598,19 @@ registerAction2(class GoToImplementationAction extends ImplementationAction {
 				primary: KeyMod.CtrlCmd | KeyCode.F12,
 				weight: KeybindingWeight.EditorContrib
 			},
-			menu: [{
-				id: MenuId.EditorContext,
-				group: 'navigation',
-				order: 1.45
-			}, {
-				id: MenuId.MenubarGoMenu,
-				precondition: null,
-				group: '4_symbol_nav',
-				order: 4,
-			}]
-		});
+		menu: [{
+			id: MenuId.EditorContext,
+			group: 'navigation',
+			order: 1.45,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}, {
+			id: MenuId.MenubarGoMenu,
+			precondition: null,
+			group: '4_symbol_nav',
+			order: 4,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}]
+	});
 	}
 });
 
@@ -681,17 +689,19 @@ registerAction2(class GoToReferencesAction extends ReferencesAction {
 				primary: KeyMod.Shift | KeyCode.F12,
 				weight: KeybindingWeight.EditorContrib
 			},
-			menu: [{
-				id: MenuId.EditorContext,
-				group: 'navigation',
-				order: 1.45
-			}, {
-				id: MenuId.MenubarGoMenu,
-				precondition: null,
-				group: '4_symbol_nav',
-				order: 5,
-			}]
-		});
+		menu: [{
+			id: MenuId.EditorContext,
+			group: 'navigation',
+			order: 1.45,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}, {
+			id: MenuId.MenubarGoMenu,
+			precondition: null,
+			group: '4_symbol_nav',
+			order: 5,
+			when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
+		}]
+	});
 	}
 
 	protected async _getLocationModel(languageFeaturesService: ILanguageFeaturesService, model: ITextModel, position: corePosition.Position, token: CancellationToken): Promise<ReferencesModel> {

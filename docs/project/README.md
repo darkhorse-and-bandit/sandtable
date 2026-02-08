@@ -24,6 +24,7 @@ Detailed task breakdowns for each implementation phase:
 | Phase 2 | [PHASE-2-CODE-COMPLETION.md](phases/PHASE-2-CODE-COMPLETION.md) | FIM endpoint in Cortex, InlineCompletionProvider, ghost text |
 | Phase 3 | [PHASE-3-MODEL-MANAGER.md](phases/PHASE-3-MODEL-MANAGER.md) | GPU dashboard, model start/stop, logs viewer, system monitor |
 | Phase 4 | [PHASE-4-AGENT-MODE.md](phases/PHASE-4-AGENT-MODE.md) | Agent loop, tool calling, file edits, terminal execution |
+| Phase 4.5 | [PHASE-4.5-MULTI-PROVIDER.md](phases/PHASE-4.5-MULTI-PROVIDER.md) | Multi-provider routing, unified model list, OpenAI-compatible endpoints |
 
 ## Funspace -- Non-Core Fun Features
 
@@ -31,7 +32,8 @@ The [funspace/](funspace/) directory documents optional, non-core features built
 
 | Feature | Document | Description |
 |---------|----------|-------------|
-| Editor Background Image | [funspace/EDITOR-BACKGROUND-IMAGE.md](funspace/EDITOR-BACKGROUND-IMAGE.md) | Custom background images behind code with opacity, blur, and overlay controls |
+| Editor Background Image | [funspace/custom_editor_background/EDITOR-BACKGROUND-IMAGE.md](funspace/custom_editor_background/EDITOR-BACKGROUND-IMAGE.md) | Custom background images behind code with opacity, blur, and overlay controls |
+| Sandtable UX Overhaul | [funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md](funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md) | Code Mode toggle, research-first identity, welcome page, terminology, menu curation |
 
 ## How to Use These Documents
 

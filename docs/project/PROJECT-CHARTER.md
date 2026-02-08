@@ -21,7 +21,7 @@ The name comes from the military tradition of the **sand table** -- a physical t
 
 2. **Core-level LLM integration:** AI features are built into the IDE's platform and workbench layers, not bolted on as extensions. This provides tighter integration, lower latency, and a more cohesive user experience than extension-based approaches.
 
-3. **Cortex as the backend:** All LLM inference routes through Cortex's OpenAI-compatible gateway, which manages vLLM and llama.cpp engine containers. This gives us dual-engine support (GPU-optimized vLLM for standard models, llama.cpp for GGUF/exotic architectures like GPT-OSS Harmony).
+3. **Cortex as the primary backend:** Cortex is the recommended and richest backend, providing model lifecycle management, GPU monitoring, dual-engine support (vLLM + llama.cpp), FIM completion, and admin APIs. Starting with Phase 4.5, Sandtable supports multi-provider connections -- administrators can configure additional OpenAI-compatible endpoints (Ollama, LM Studio, cloud APIs) alongside Cortex for expanded model access and redundancy, while Cortex retains exclusive admin capabilities.
 
 4. **Fully offline capable:** The entire stack -- IDE, Cortex, models -- runs on local infrastructure with zero cloud dependencies. Suitable for air-gapped, classified, and restricted network environments. This is critical for defense, intelligence, and sensitive research applications.
 
@@ -34,7 +34,7 @@ The name comes from the military tradition of the **sand table** -- a physical t
 ## Non-Goals
 
 - **Public distribution (for now):** This is not a product for general public download. No installer wizard, no onboarding tutorial for non-technical users.
-- **Cloud LLM support:** We are not building integration with OpenAI, Anthropic, or other cloud providers. All inference is local via Cortex.
+- **Cloud LLM as primary:** Sandtable is designed for self-hosted, offline-capable operation with Cortex as the primary backend. While Phase 4.5 enables connections to cloud providers (OpenAI, DeepSeek API, Together AI, etc.) as supplementary inference sources, cloud-dependent features (authentication flows, billing management, provider-specific optimizations) are out of scope. The cloud provider support uses the standard OpenAI-compatible API -- no provider-specific SDKs or integrations.
 - **Extension marketplace:** We will not build or host a custom extension marketplace. Extensions can be side-loaded or sourced from Open VSX Registry.
 - **Mobile/tablet support:** Desktop only (Linux primary, with potential for macOS/Windows later).
 - **Replacing Cortex's Admin UI:** The IDE's model manager panel complements Cortex's web admin UI -- it does not replace it. Full model configuration and administrative tasks still happen in Cortex's frontend.
@@ -111,6 +111,7 @@ The intended end-user community once the platform matures:
 | 2 | Inline Code Completion | Days 15-28 | Week 5 |
 | 3 | Model Manager Panel | Days 29-42 | Week 7 |
 | 4 | Agent Mode | Days 43-63 | Week 10 |
+| 4.5 | Multi-Provider LLM System | Days 64-84 | Week 12-14 |
 | 5+ | Research & Scenario Features | Ongoing | Post-MVP |
 
 Total estimated duration: **10 weeks** from start to core feature set, with research and scenario features developed iteratively afterward.
@@ -168,7 +169,7 @@ In practice, roles overlap significantly given the small team size.
 
 1. **Offline operation is mandatory.** The IDE must function with zero internet connectivity when Cortex and models are running locally.
 2. **No telemetry.** Following VSCodium's approach, all Microsoft telemetry is stripped from the build.
-3. **Cortex is the only LLM backend.** The IDE does not support direct connections to Ollama, raw llama.cpp, or cloud providers. Everything goes through Cortex's gateway.
+3. **Cortex is the primary LLM backend.** Cortex remains the recommended and most capable backend, providing full admin capabilities (model lifecycle, GPU monitoring, system metrics, FIM completion, chat session persistence). Starting with Phase 4.5, Sandtable also supports connections to additional OpenAI-compatible endpoints (Ollama, vLLM, LM Studio, cloud APIs) as secondary inference-only providers. All Cortex-specific features (model management, GPU dashboard, container logs) require a Cortex backend.
 4. **Linux-first development.** The primary build and test platform is Arch Linux. macOS and Windows support are not priorities for the initial build.
 5. **Pin VS Code version.** We pin to a specific VS Code release tag and rebase quarterly (not monthly) to reduce maintenance burden.
 
@@ -181,3 +182,4 @@ In practice, roles overlap significantly given the small team size.
 | Build system too complex for team | Medium | Low | Use VS Code's dev container as fallback, document every step in Phase 0 doc |
 | Inline completion latency exceeds 200ms | Medium | Low | FIM endpoint optimization, debounce tuning, completion caching, Cortex on localhost eliminates network latency |
 | Extension marketplace access lost | Low | Certain | Use Open VSX Registry, pre-bundle essential extensions, side-load as needed |
+| Multi-provider routing complexity | Medium | Low | Facade pattern preserves ICortexService interface; compound model IDs are backward-compatible with bare names |

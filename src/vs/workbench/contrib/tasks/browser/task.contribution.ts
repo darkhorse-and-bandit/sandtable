@@ -49,13 +49,17 @@ const workbenchRegistry = Registry.as<IWorkbenchContributionsRegistry>(Workbench
 workbenchRegistry.registerWorkbenchContribution(RunAutomaticTasks, LifecyclePhase.Eventually);
 
 registerAction2(ManageAutomaticTaskRunning);
+
+// Sandtable: Task Command Palette items are gated behind Code Mode
+const sandtableTaskPaletteWhen = ContextKeyExpr.and(TaskExecutionSupportedContext, ContextKeyExpr.has('sandtable.codeModeEnabled'));
+
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
 		id: ManageAutomaticTaskRunning.ID,
 		title: ManageAutomaticTaskRunning.LABEL,
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 
 export class TaskStatusBarContributions extends Disposable implements IWorkbenchContribution {
@@ -162,6 +166,9 @@ export class TaskStatusBarContributions extends Disposable implements IWorkbench
 
 workbenchRegistry.registerWorkbenchContribution(TaskStatusBarContributions, LifecyclePhase.Restored);
 
+// Sandtable: Task menu items are gated behind Code Mode
+const sandtableTaskWhen = ContextKeyExpr.and(TaskExecutionSupportedContext, ContextKeyExpr.has('sandtable.codeModeEnabled'));
+
 MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 	group: TerminalMenuBarGroup.Run,
 	command: {
@@ -169,7 +176,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 		title: nls.localize({ key: 'miRunTask', comment: ['&& denotes a mnemonic'] }, "&&Run Task...")
 	},
 	order: 1,
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskWhen
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
@@ -179,7 +186,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 		title: nls.localize({ key: 'miBuildTask', comment: ['&& denotes a mnemonic'] }, "Run &&Build Task...")
 	},
 	order: 2,
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskWhen
 });
 
 // Manage Tasks
@@ -191,7 +198,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 		title: nls.localize({ key: 'miRunningTask', comment: ['&& denotes a mnemonic'] }, "Show Runnin&&g Tasks...")
 	},
 	order: 1,
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskWhen
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
@@ -202,7 +209,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 		title: nls.localize({ key: 'miRestartTask', comment: ['&& denotes a mnemonic'] }, "R&&estart Running Task...")
 	},
 	order: 2,
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskWhen
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
@@ -213,7 +220,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 		title: nls.localize({ key: 'miTerminateTask', comment: ['&& denotes a mnemonic'] }, "&&Terminate Task...")
 	},
 	order: 3,
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskWhen
 });
 
 // Configure Tasks
@@ -224,7 +231,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 		title: nls.localize({ key: 'miConfigureTask', comment: ['&& denotes a mnemonic'] }, "&&Configure Tasks...")
 	},
 	order: 1,
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskWhen
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
@@ -234,7 +241,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarTerminalMenu, {
 		title: nls.localize({ key: 'miConfigureBuildTask', comment: ['&& denotes a mnemonic'] }, "Configure De&&fault Build Task...")
 	},
 	order: 2,
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskWhen
 });
 
 
@@ -244,7 +251,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('workbench.action.tasks.openWorkspaceFileTasks', "Open Workspace Tasks"),
 		category: TASKS_CATEGORY
 	},
-	when: ContextKeyExpr.and(WorkbenchStateContext.isEqualTo('workspace'), TaskExecutionSupportedContext)
+	when: ContextKeyExpr.and(WorkbenchStateContext.isEqualTo('workspace'), sandtableTaskPaletteWhen)
 });
 
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
@@ -253,7 +260,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: ConfigureTaskAction.TEXT,
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -261,14 +268,15 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('ShowLogAction.label', "Show Task Log"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
 		id: 'workbench.action.tasks.runTask',
 		title: nls.localize2('RunTaskAction.label', "Run Task"),
 		category: TASKS_CATEGORY
-	}
+	},
+	when: sandtableTaskPaletteWhen // Sandtable: was ungated, now requires Code Mode
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -276,7 +284,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('ReRunTaskAction.label', "Rerun Last Task"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -284,7 +292,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('RestartTaskAction.label', "Restart Running Task"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -292,7 +300,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('RerunAllRunningTasksAction.label', "Rerun All Running Tasks"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -300,7 +308,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('ShowTasksAction.label', "Show Running Tasks"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -308,7 +316,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('TerminateAction.label', "Terminate Task"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -316,7 +324,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('BuildAction.label', "Run Build Task"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -324,7 +332,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('TestAction.label', "Run Test Task"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -332,7 +340,7 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('ConfigureDefaultBuildTask.label', "Configure Default Build Task"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
@@ -340,14 +348,14 @@ MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 		title: nls.localize2('ConfigureDefaultTestTask.label', "Configure Default Test Task"),
 		category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
 		id: 'workbench.action.tasks.openUserTasks',
 		title: nls.localize2('workbench.action.tasks.openUserTasks', "Open User Tasks"), category: TASKS_CATEGORY
 	},
-	when: TaskExecutionSupportedContext
+	when: sandtableTaskPaletteWhen
 });
 
 class UserTasksGlobalActionContribution extends Disposable implements IWorkbenchContribution {

@@ -17,7 +17,7 @@ import { EditorContextKeys } from '../../../common/editorContextKeys.js';
 import { IMarkerNavigationService, MarkerList } from './markerNavigationService.js';
 import * as nls from '../../../../nls.js';
 import { MenuId } from '../../../../platform/actions/common/actions.js';
-import { IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
+import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
 import { TextEditorSelectionRevealType } from '../../../../platform/editor/common/editor.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
@@ -253,7 +253,8 @@ export class NextMarkerInFilesAction extends MarkerNavigationAction {
 				menuId: MenuId.MenubarGoMenu,
 				title: nls.localize({ key: 'miGotoNextProblem', comment: ['&& denotes a mnemonic'] }, "Next &&Problem"),
 				group: '6_problem_nav',
-				order: 1
+				order: 1,
+				when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
 			}
 		});
 	}
@@ -275,7 +276,8 @@ export class PrevMarkerInFilesAction extends MarkerNavigationAction {
 				menuId: MenuId.MenubarGoMenu,
 				title: nls.localize({ key: 'miGotoPreviousProblem', comment: ['&& denotes a mnemonic'] }, "Previous &&Problem"),
 				group: '6_problem_nav',
-				order: 2
+				order: 2,
+				when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
 			}
 		});
 	}

@@ -218,32 +218,39 @@ export class SandtableInlineCompletionProvider implements InlineCompletionsProvi
 	/**
 	 * Resolves the model to use for FIM completions.
 	 * Uses the configured model if set, otherwise auto-detects from running models.
+	 *
+	 * Multi-provider aware: prefers Cortex models (which support FIM) over
+	 * external providers. Supports compound model names (e.g., "cortex::codestral").
 	 */
 	private async _resolveModel(): Promise<string | null> {
-		// Check if user explicitly configured a model
+		// Check if user explicitly configured a model (supports compound names)
 		const configuredModel = this._configService.getValue<string>(CompletionConfigKeys.Model);
 		if (configuredModel) {
 			return configuredModel;
 		}
 
-		// Auto-detect: pick the first running model
+		// Auto-detect: pick the best FIM-capable model across all providers
 		try {
 			const models = await this._cortexService.listRunningModels();
 			if (models.length === 0) {
 				return null;
 			}
 
+			// Prefer Cortex models (non-external) since they support the FIM endpoint
+			const cortexModels = models.filter(m => m.engine_type !== 'external');
+			const searchPool = cortexModels.length > 0 ? cortexModels : models;
+
 			// Prefer models that are likely FIM-capable (by name heuristic)
 			const fimPreferred = ['codestral', 'deepseek-coder', 'starcoder', 'qwen-coder', 'fim'];
-			for (const model of models) {
+			for (const model of searchPool) {
 				const name = model.served_model_name.toLowerCase();
 				if (fimPreferred.some(hint => name.includes(hint))) {
 					return model.served_model_name;
 				}
 			}
 
-			// Fallback to the first running model
-			return models[0].served_model_name;
+			// Fallback to the first model in the search pool
+			return searchPool[0].served_model_name;
 		} catch {
 			return null;
 		}

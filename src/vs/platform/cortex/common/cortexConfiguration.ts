@@ -37,6 +37,7 @@ export const enum CompletionConfigKeys {
 export const enum ModelsConfigKeys {
 	ShowInActivityBar = 'sandtable.models.showInActivityBar',
 	GpuPollIntervalMs = 'sandtable.models.gpuPollIntervalMs',
+	CuratedModels = 'sandtable.models.curated',
 }
 
 export const enum AgentConfigKeys {
@@ -45,6 +46,15 @@ export const enum AgentConfigKeys {
 	ConfirmDestructive = 'sandtable.agent.confirmDestructive',
 	MaxIterations = 'sandtable.agent.maxIterations',
 	MaxTokens = 'sandtable.agent.maxTokens',
+}
+
+export const enum CodeModeConfigKeys {
+	Enabled = 'sandtable.codeMode.enabled',
+}
+
+export const enum ProviderConfigKeys {
+	Providers = 'sandtable.providers',
+	DefaultProvider = 'sandtable.defaultProvider',
 }
 
 export const enum AppearanceConfigKeys {
@@ -201,6 +211,56 @@ configurationRegistry.registerConfiguration({
 			maximum: 60000,
 			description: nls.localize('sandtable.models.gpuPollIntervalMs', "How often to poll GPU and system metrics when the Model Manager is visible (in milliseconds)."),
 		},
+		[ModelsConfigKeys.CuratedModels]: {
+			type: 'array',
+			default: [],
+			description: nls.localize('sandtable.models.curated', "Curated list of models available in the chat panel. When empty, all models from all providers are shown. Each entry specifies a provider-qualified model name (e.g., 'openai::gpt-4o') with optional display name and parameter overrides."),
+			items: {
+				type: 'object',
+				required: ['qualifiedName', 'enabled'],
+				properties: {
+					qualifiedName: {
+						type: 'string',
+						description: nls.localize('sandtable.models.curated.qualifiedName', "Provider-qualified model name (e.g., 'openai::gpt-4o', 'cortex::deepseek-v3')."),
+					},
+					displayName: {
+						type: 'string',
+						description: nls.localize('sandtable.models.curated.displayName', "Optional display name override for the chat panel model picker."),
+					},
+					enabled: {
+						type: 'boolean',
+						default: true,
+						description: nls.localize('sandtable.models.curated.enabled', "Whether this model is available for selection in the chat panel."),
+					},
+					overrides: {
+						type: 'object',
+						description: nls.localize('sandtable.models.curated.overrides', "Per-model parameter overrides for inference requests."),
+						properties: {
+							dropParameters: {
+								type: 'array',
+								items: { type: 'string' },
+								description: nls.localize('sandtable.models.curated.overrides.drop', "Parameters to remove from requests to this model."),
+							},
+							renameParameters: {
+								type: 'object',
+								additionalProperties: { type: 'string' },
+								description: nls.localize('sandtable.models.curated.overrides.rename', "Parameters to rename (old_name: new_name)."),
+							},
+							forceParameters: {
+								type: 'object',
+								additionalProperties: { type: 'string' },
+								description: nls.localize('sandtable.models.curated.overrides.force', "Parameters to force to specific values (key: value)."),
+							},
+							extraParameters: {
+								type: 'object',
+								additionalProperties: { type: 'string' },
+								description: nls.localize('sandtable.models.curated.overrides.extra', "Additional parameters to include in requests to this model (key: value)."),
+							},
+						},
+					},
+				},
+			},
+		},
 
 		// ─── Agent Settings ─────────────────────────────────────────────
 		[AgentConfigKeys.Enabled]: {
@@ -231,6 +291,99 @@ configurationRegistry.registerConfiguration({
 			minimum: 256,
 			maximum: 32768,
 			description: nls.localize('sandtable.agent.maxTokens', "Maximum tokens per agent response."),
+		},
+
+		// ─── Code Mode Settings ─────────────────────────────────────────
+		[CodeModeConfigKeys.Enabled]: {
+			type: 'boolean',
+			default: false,
+			description: nls.localize('sandtable.codeMode.enabled', "Enable Code Mode to show coding-specific features: source control, debugger, testing, extensions, problems panel, language indicators, and code navigation tools. When disabled, Sandtable presents a streamlined research and analysis workspace."),
+		},
+
+		// ─── Provider Settings (Phase 4.5) ──────────────────────────────
+		[ProviderConfigKeys.Providers]: {
+			type: 'array',
+			default: [],
+			description: nls.localize('sandtable.providers', "LLM provider connections. Each entry configures a connection to an LLM inference endpoint. When empty, a default Cortex provider is created from the legacy sandtable.cortex.* settings."),
+			items: {
+				type: 'object',
+				required: ['id', 'displayName', 'type', 'endpoint'],
+				properties: {
+					id: {
+						type: 'string',
+						description: nls.localize('sandtable.providers.id', "Unique identifier for this provider."),
+					},
+					displayName: {
+						type: 'string',
+						description: nls.localize('sandtable.providers.displayName', "Human-readable name shown in the UI."),
+					},
+					type: {
+						type: 'string',
+						enum: ['cortex', 'openai-compatible'],
+						description: nls.localize('sandtable.providers.type', "Provider type. Use 'cortex' for Cortex gateways, 'openai-compatible' for any OpenAI-compatible endpoint."),
+					},
+					endpoint: {
+						type: 'string',
+						description: nls.localize('sandtable.providers.endpoint', "Base URL of the provider API (e.g., http://localhost:8084)."),
+					},
+					apiKey: {
+						type: 'string',
+						default: '',
+						description: nls.localize('sandtable.providers.apiKey', "API key for authentication. Leave empty if not required."),
+					},
+					enabled: {
+						type: 'boolean',
+						default: true,
+						description: nls.localize('sandtable.providers.enabled', "Whether this provider is active."),
+					},
+					priority: {
+						type: 'number',
+						default: 10,
+						description: nls.localize('sandtable.providers.priority', "Priority for model resolution (lower = higher priority)."),
+					},
+					username: {
+						type: 'string',
+						description: nls.localize('sandtable.providers.username', "Admin username (Cortex providers only)."),
+					},
+					password: {
+						type: 'string',
+						description: nls.localize('sandtable.providers.password', "Admin password (Cortex providers only)."),
+					},
+					modelOverrides: {
+						type: 'object',
+						default: {},
+						description: nls.localize('sandtable.providers.modelOverrides', "Per-model parameter overrides, keyed by model name or glob pattern (e.g., 'gpt-5*'). Each entry can drop, rename, force, or inject request parameters for matching models."),
+						additionalProperties: {
+							type: 'object',
+							properties: {
+								dropParams: {
+									type: 'array',
+									items: { type: 'string' },
+									description: nls.localize('sandtable.providers.modelOverrides.dropParams', "Parameters to remove from the request body before sending."),
+								},
+								renameParams: {
+									type: 'object',
+									additionalProperties: { type: 'string' },
+									description: nls.localize('sandtable.providers.modelOverrides.renameParams', "Parameters to rename (e.g., { \"max_tokens\": \"max_completion_tokens\" })."),
+								},
+								forceParams: {
+									type: 'object',
+									description: nls.localize('sandtable.providers.modelOverrides.forceParams', "Parameters to force to a specific value, overwriting the consumer's value."),
+								},
+								extraParams: {
+									type: 'object',
+									description: nls.localize('sandtable.providers.modelOverrides.extraParams', "Additional parameters to inject if not already present in the request."),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		[ProviderConfigKeys.DefaultProvider]: {
+			type: 'string',
+			default: '',
+			description: nls.localize('sandtable.defaultProvider', "ID of the default provider for model resolution when no provider prefix is specified. Empty = first enabled provider."),
 		},
 
 		// ─── Appearance Settings ─────────────────────────────────────────

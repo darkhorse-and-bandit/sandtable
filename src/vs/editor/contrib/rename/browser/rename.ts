@@ -372,7 +372,8 @@ export class RenameAction extends EditorAction {
 			},
 			contextMenuOpts: {
 				group: '1_modification',
-				order: 1.1
+				order: 1.1,
+				when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
 			},
 			canTriggerInlineEdits: true,
 		});

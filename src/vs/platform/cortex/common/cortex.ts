@@ -6,6 +6,7 @@
 import { Event } from '../../../base/common/event.js';
 import { CancellationToken } from '../../../base/common/cancellation.js';
 import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { IAggregateHealthResult, IProviderInfo } from './cortexProviderTypes.js';
 
 // ─── Service Decorator ────────────────────────────────────────────────────────
 
@@ -20,6 +21,11 @@ export interface ICortexService {
 	readonly onConnectionStatusChanged: Event<CortexConnectionStatus>;
 	checkHealth(): Promise<CortexHealthResult>;
 	getConnectionStatus(): CortexConnectionStatus;
+	getModelCount(): number;
+
+	// --- Multi-Provider (Phase 4.5) ---
+	listProviders(): IProviderInfo[];
+	getAggregateHealth(): IAggregateHealthResult;
 
 	// --- Inference ---
 	chatCompletion(request: ICortexChatRequest): Promise<ICortexChatResponse>;
@@ -174,7 +180,7 @@ export interface ICortexStreamResult {
 export interface ICortexModel {
 	served_model_name: string;
 	task: string;
-	engine_type: 'vllm' | 'llamacpp';
+	engine_type: 'vllm' | 'llamacpp' | 'external';
 	state: 'running' | 'stopped' | 'starting' | 'loading' | 'failed';
 }
 

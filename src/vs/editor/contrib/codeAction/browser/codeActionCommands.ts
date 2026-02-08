@@ -150,7 +150,8 @@ export class RefactorAction extends EditorAction {
 				order: 2,
 				when: ContextKeyExpr.and(
 					EditorContextKeys.writable,
-					contextKeyForSupportedActions(CodeActionKind.Refactor)),
+					contextKeyForSupportedActions(CodeActionKind.Refactor),
+					ContextKeyExpr.has('sandtable.codeModeEnabled')), // Sandtable: Code Mode only
 			},
 			metadata: {
 				description: 'Refactor...',
@@ -192,7 +193,8 @@ export class SourceAction extends EditorAction {
 				order: 2.1,
 				when: ContextKeyExpr.and(
 					EditorContextKeys.writable,
-					contextKeyForSupportedActions(CodeActionKind.Source)),
+					contextKeyForSupportedActions(CodeActionKind.Source),
+					ContextKeyExpr.has('sandtable.codeModeEnabled')), // Sandtable: Code Mode only
 			},
 			metadata: {
 				description: 'Source Action...',

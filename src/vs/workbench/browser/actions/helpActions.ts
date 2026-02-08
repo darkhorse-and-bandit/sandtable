@@ -70,11 +70,7 @@ class OpenIntroductoryVideosUrlAction extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '2_reference',
-				order: 2
-			}
+			// Sandtable: Removed from Help menu (VS Code-specific content)
 		});
 	}
 
@@ -102,11 +98,7 @@ class OpenTipsAndTricksUrlAction extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '2_reference',
-				order: 3
-			}
+			// Sandtable: Removed from Help menu (VS Code-specific content)
 		});
 	}
 
@@ -189,11 +181,7 @@ class OpenYouTubeUrlAction extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '3_feedback',
-				order: 1
-			}
+			// Sandtable: Removed from Help menu (VS Code YouTube link)
 		});
 	}
 
@@ -221,11 +209,7 @@ class OpenRequestFeatureUrlAction extends Action2 {
 			},
 			category: Categories.Help,
 			f1: true,
-			menu: {
-				id: MenuId.MenubarHelpMenu,
-				group: '3_feedback',
-				order: 2
-			}
+			// Sandtable: Removed from Help menu (VS Code feature requests link)
 		});
 	}
 
@@ -402,3 +386,13 @@ if (OpenPrivacyStatementUrlAction.AVAILABLE) {
 registerAction2(GetStartedWithAccessibilityFeatures);
 
 registerAction2(AskVSCodeCopilot);
+
+// Sandtable: Add "Sandtable Settings" to Help menu
+MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+	group: '1_welcome',
+	command: {
+		id: 'sandtable.openSettings',
+		title: localize('miSandtableSettings', "Sandtable Settings"),
+	},
+	order: 1
+});

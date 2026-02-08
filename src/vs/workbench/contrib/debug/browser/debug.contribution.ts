@@ -265,7 +265,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		...nls.localize2('runMenu', "Run"),
 		mnemonicTitle: nls.localize({ key: 'mRun', comment: ['&& denotes a mnemonic'] }, "&&Run")
 	},
-	order: 6
+	order: 6,
+	when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Hide Run menu when Code Mode is OFF
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarDebugMenu, {

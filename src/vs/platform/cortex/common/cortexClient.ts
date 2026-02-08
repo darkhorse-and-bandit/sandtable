@@ -51,14 +51,27 @@ export class CortexClient {
 	private _sessionCookie: string | undefined;
 
 	constructor(endpoint: string, apiKey: string) {
-		this._endpoint = endpoint.replace(/\/+$/, ''); // Strip trailing slashes
+		this._endpoint = CortexClient._normalizeEndpoint(endpoint);
 		this._apiKey = apiKey;
 	}
 
 	// ─── Configuration ────────────────────────────────────────────────────
 
 	updateEndpoint(endpoint: string): void {
-		this._endpoint = endpoint.replace(/\/+$/, '');
+		this._endpoint = CortexClient._normalizeEndpoint(endpoint);
+	}
+
+	/**
+	 * Normalizes an endpoint URL: strips trailing slashes and removes a
+	 * trailing /v1 path if present (since the client prepends /v1/ to all paths).
+	 * This prevents URL duplication like "http://host:8084/v1/v1/models/running".
+	 */
+	private static _normalizeEndpoint(endpoint: string): string {
+		let normalized = endpoint.replace(/\/+$/, '');
+		if (normalized.endsWith('/v1')) {
+			normalized = normalized.slice(0, -3);
+		}
+		return normalized;
 	}
 
 	updateApiKey(apiKey: string): void {
@@ -73,6 +86,19 @@ export class CortexClient {
 		return this._endpoint;
 	}
 
+	/**
+	 * Sets auth headers on a request. Prefers session cookie (if available from
+	 * a previous login()) over Bearer API key. Cortex requires session auth
+	 * for all endpoints including model discovery and inference.
+	 */
+	private _setAuthHeaders(headers: Record<string, string>): void {
+		if (this._sessionCookie) {
+			headers['Cookie'] = `cortex_session=${this._sessionCookie}`;
+		} else if (this._apiKey) {
+			headers['Authorization'] = `Bearer ${this._apiKey}`;
+		}
+	}
+
 	// ─── Generic Request ──────────────────────────────────────────────────
 
 	async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -81,7 +107,10 @@ export class CortexClient {
 			'Content-Type': 'application/json',
 		};
 
-		if (options.useSessionAuth && this._sessionCookie) {
+		// Auth priority: session cookie (if available) > API key > none.
+		// Cortex requires session auth for all endpoints including model discovery.
+		// The session cookie is set after a successful login() call.
+		if (this._sessionCookie) {
 			headers['Cookie'] = `cortex_session=${this._sessionCookie}`;
 		} else if (this._apiKey) {
 			headers['Authorization'] = `Bearer ${this._apiKey}`;
@@ -131,9 +160,7 @@ export class CortexClient {
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 		};
-		if (this._apiKey) {
-			headers['Authorization'] = `Bearer ${this._apiKey}`;
-		}
+		this._setAuthHeaders(headers);
 
 		const response = await fetch(url, {
 			method: 'POST',
@@ -166,9 +193,7 @@ export class CortexClient {
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 		};
-		if (this._apiKey) {
-			headers['Authorization'] = `Bearer ${this._apiKey}`;
-		}
+		this._setAuthHeaders(headers);
 
 		const response = await fetch(url, {
 			method: 'POST',
@@ -201,9 +226,7 @@ export class CortexClient {
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 		};
-		if (this._apiKey) {
-			headers['Authorization'] = `Bearer ${this._apiKey}`;
-		}
+		this._setAuthHeaders(headers);
 
 		const response = await fetch(url, {
 			method: 'POST',

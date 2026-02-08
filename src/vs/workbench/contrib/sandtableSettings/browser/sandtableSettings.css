@@ -89,6 +89,46 @@
 	white-space: nowrap;
 }
 
+/* ─── Category Headers ─────────────────────────────────────────────────────── */
+
+.sandtable-settings-category {
+	text-transform: uppercase;
+	font-size: 0.7em;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	color: var(--vscode-descriptionForeground, #999);
+	padding: 14px 20px 4px 20px;
+	margin-top: 4px;
+	user-select: none;
+}
+
+.sandtable-settings-category:first-child {
+	margin-top: 0;
+}
+
+/* Placeholder nav items (coming soon features) */
+.sandtable-settings-nav-placeholder {
+	opacity: 0.55;
+}
+
+.sandtable-settings-nav-placeholder:hover {
+	opacity: 0.8;
+}
+
+/* ─── Coming Soon Badge ────────────────────────────────────────────────────── */
+
+.sandtable-settings-coming-soon {
+	display: inline-block;
+	padding: 5px 14px;
+	border-radius: 4px;
+	font-size: 0.8em;
+	font-weight: 500;
+	letter-spacing: 0.05em;
+	color: var(--vscode-descriptionForeground, #999);
+	border: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.12));
+	background: var(--vscode-badge-background, rgba(255, 255, 255, 0.05));
+}
+
 /* ─── Content Area ─────────────────────────────────────────────────────────── */
 
 .sandtable-settings-content {
@@ -579,4 +619,392 @@
 .sandtable-bg-position-cell.selected .sandtable-bg-position-dot {
 	background: var(--vscode-button-foreground, #ffffff);
 	opacity: 1;
+}
+
+/* ─── Provider Cards (Phase 4.5) ───────────────────────────────────────────── */
+
+.sandtable-provider-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-top: 16px;
+}
+
+.sandtable-provider-card {
+	background: var(--vscode-editor-background, #1e1e1e);
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 8px;
+	padding: 14px 18px;
+}
+
+.sandtable-provider-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 6px;
+}
+
+.sandtable-provider-card-name {
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--vscode-foreground);
+}
+
+.sandtable-provider-card-toggle {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	cursor: pointer;
+}
+
+.sandtable-provider-card-toggle input[type="checkbox"] {
+	cursor: pointer;
+}
+
+.sandtable-provider-card-info {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.sandtable-provider-card-endpoint {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.sandtable-provider-card-status {
+	font-size: 11px;
+	padding: 2px 8px;
+	border-radius: 4px;
+}
+
+.sandtable-provider-status-healthy {
+	color: var(--vscode-testing-iconPassed, #73c991);
+	background: rgba(115, 201, 145, 0.1);
+}
+
+.sandtable-provider-status-unhealthy {
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+	background: rgba(241, 76, 76, 0.1);
+}
+
+.sandtable-provider-status-disabled {
+	color: var(--vscode-descriptionForeground, #999);
+	background: rgba(128, 128, 128, 0.1);
+}
+
+.sandtable-provider-card-overrides {
+	font-size: 11px;
+	padding: 2px 6px;
+	border-radius: 3px;
+	color: var(--vscode-textLink-foreground, #3794ff);
+	background: rgba(55, 148, 255, 0.1);
+}
+
+.sandtable-provider-card-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.sandtable-provider-card-edit,
+.sandtable-provider-card-remove {
+	font-size: 12px;
+	padding: 3px 10px;
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+}
+
+.sandtable-provider-card-edit:hover {
+	background: var(--vscode-list-hoverBackground, #2a2d2e);
+}
+
+.sandtable-provider-card-remove:hover {
+	background: rgba(241, 76, 76, 0.15);
+	border-color: var(--vscode-testing-iconFailed, #f14c4c);
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.sandtable-provider-add-container {
+	margin-top: 16px;
+}
+
+.sandtable-provider-add-btn {
+	padding: 8px 16px;
+	font-size: 13px;
+	border: 1px dashed var(--vscode-widget-border, #303030);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--vscode-textLink-foreground, #3794ff);
+	cursor: pointer;
+	width: 100%;
+}
+
+.sandtable-provider-add-btn:hover {
+	border-color: var(--vscode-textLink-foreground, #3794ff);
+	background: rgba(55, 148, 255, 0.08);
+}
+
+/* ─── Provider Editor Form ─────────────────────────────────────────────────── */
+
+.sandtable-provider-editor {
+	margin-top: 16px;
+	padding: 18px;
+	background: var(--vscode-editor-background, #1e1e1e);
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 8px;
+}
+
+.sandtable-provider-editor-title {
+	font-size: 16px;
+	font-weight: 600;
+	margin: 0 0 16px 0;
+	color: var(--vscode-foreground);
+}
+
+.sandtable-provider-editor-row {
+	margin-bottom: 12px;
+}
+
+.sandtable-provider-editor-row .sandtable-settings-label {
+	display: block;
+	margin-bottom: 4px;
+}
+
+.sandtable-provider-editor-row .sandtable-settings-input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.sandtable-provider-editor-cortex-fields {
+	margin: 12px 0;
+	padding: 12px;
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 6px;
+}
+
+.sandtable-provider-editor-cortex-header {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--vscode-descriptionForeground);
+	margin-bottom: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.sandtable-provider-editor-actions {
+	margin: 16px 0;
+}
+
+.sandtable-provider-editor-test-btn {
+	padding: 6px 14px;
+	font-size: 13px;
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+}
+
+.sandtable-provider-editor-test-btn:hover {
+	background: var(--vscode-list-hoverBackground, #2a2d2e);
+}
+
+.sandtable-provider-editor-test-results {
+	margin: 12px 0;
+	padding: 10px;
+	border-radius: 6px;
+	font-size: 13px;
+	min-height: 0;
+}
+
+.sandtable-provider-editor-test-results:empty {
+	display: none;
+}
+
+.sandtable-provider-test-success {
+	background: rgba(115, 201, 145, 0.1);
+	border: 1px solid rgba(115, 201, 145, 0.3);
+	color: var(--vscode-testing-iconPassed, #73c991);
+}
+
+.sandtable-provider-test-failure {
+	background: rgba(241, 76, 76, 0.1);
+	border: 1px solid rgba(241, 76, 76, 0.3);
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.sandtable-provider-test-header {
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.sandtable-provider-test-latency {
+	font-size: 12px;
+	opacity: 0.8;
+}
+
+.sandtable-provider-test-error {
+	font-size: 12px;
+	margin-top: 4px;
+	word-break: break-word;
+}
+
+.sandtable-provider-editor-buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-top: 16px;
+}
+
+.sandtable-provider-editor-cancel-btn {
+	padding: 6px 16px;
+	font-size: 13px;
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	cursor: pointer;
+}
+
+.sandtable-provider-editor-cancel-btn:hover {
+	background: var(--vscode-list-hoverBackground, #2a2d2e);
+}
+
+.sandtable-provider-editor-save-btn {
+	padding: 6px 16px;
+	font-size: 13px;
+	border: none;
+	border-radius: 4px;
+	background: var(--vscode-button-background, #0e639c);
+	color: var(--vscode-button-foreground, #ffffff);
+	cursor: pointer;
+}
+
+.sandtable-provider-editor-save-btn:hover {
+	background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+/* ─── External Models Section (Model Manager) ──────────────────────────────── */
+
+.sandtable-models-external-section {
+	margin-top: 16px;
+}
+
+.sandtable-models-external-group {
+	margin-bottom: 8px;
+}
+
+.sandtable-models-external-group-header {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--vscode-descriptionForeground);
+	margin-bottom: 4px;
+	padding: 2px 0;
+}
+
+.sandtable-models-external-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 8px;
+	font-size: 13px;
+	color: var(--vscode-foreground);
+}
+
+.sandtable-models-external-dot {
+	color: var(--vscode-testing-iconPassed, #73c991);
+	font-size: 10px;
+}
+
+.sandtable-models-external-name {
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 12px;
+}
+
+/* ─── Model Parameter Overrides ────────────────────────────────────────────── */
+
+.sandtable-provider-overrides-section {
+	margin: 16px 0;
+}
+
+.sandtable-provider-overrides-header {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--vscode-foreground);
+	margin-bottom: 4px;
+}
+
+.sandtable-provider-overrides-desc {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground);
+	margin: 0 0 12px 0;
+	line-height: 1.4;
+}
+
+.sandtable-provider-overrides-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.sandtable-provider-override-entry {
+	padding: 12px;
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 6px;
+	background: rgba(128, 128, 128, 0.04);
+}
+
+.sandtable-provider-override-row {
+	margin-bottom: 8px;
+}
+
+.sandtable-provider-override-row .sandtable-settings-label {
+	display: block;
+	margin-bottom: 3px;
+	font-size: 12px;
+}
+
+.sandtable-provider-override-row .sandtable-settings-input {
+	width: 100%;
+	box-sizing: border-box;
+	font-size: 12px;
+}
+
+.sandtable-provider-override-remove-btn {
+	font-size: 11px;
+	padding: 2px 8px;
+	margin-top: 4px;
+	border: 1px solid var(--vscode-widget-border, #303030);
+	border-radius: 3px;
+	background: transparent;
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+	cursor: pointer;
+}
+
+.sandtable-provider-override-remove-btn:hover {
+	background: rgba(241, 76, 76, 0.12);
+}
+
+.sandtable-provider-overrides-add-btn {
+	margin-top: 8px;
+	padding: 5px 12px;
+	font-size: 12px;
+	border: 1px dashed var(--vscode-widget-border, #303030);
+	border-radius: 4px;
+	background: transparent;
+	color: var(--vscode-textLink-foreground, #3794ff);
+	cursor: pointer;
+}
+
+.sandtable-provider-overrides-add-btn:hover {
+	border-color: var(--vscode-textLink-foreground, #3794ff);
+	background: rgba(55, 148, 255, 0.06);
 }

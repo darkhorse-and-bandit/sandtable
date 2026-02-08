@@ -47,17 +47,36 @@ export class SandtableStatusBarItem extends Disposable implements IWorkbenchCont
 
 	private _getEntry(): IStatusbarEntry {
 		const status = this.cortexService.getConnectionStatus();
+		const providers = this.cortexService.listProviders();
+		const totalProviders = providers.length;
+		const healthyProviders = providers.filter(p => p.healthy).length;
+		const modelCount = this.cortexService.getModelCount();
 
 		switch (status) {
 			case 'connected': {
-				const modelCount = (this.cortexService as any).getModelCount?.() ?? 0;
 				const modelsText = modelCount === 1
 					? nls.localize('sandtable.status.oneModel', "1 model")
 					: nls.localize('sandtable.status.nModels', "{0} models", modelCount);
-				const tooltip = nls.localize('sandtable.status.connectedTooltip', "Cortex is connected with {0}. Click to view models.", modelsText);
+
+				// Show provider info if more than one provider
+				let displayText: string;
+				let tooltip: string;
+				if (totalProviders > 1) {
+					if (healthyProviders === totalProviders) {
+						displayText = `$(check) ${nls.localize('sandtable.status.providersModels', "{0} providers, {1}", totalProviders, modelsText)}`;
+						tooltip = nls.localize('sandtable.status.allProvidersTooltip', "All {0} providers connected with {1}. Click to view models.", totalProviders, modelsText);
+					} else {
+						displayText = `$(warning) ${nls.localize('sandtable.status.partialProviders', "{0}/{1} providers, {2}", healthyProviders, totalProviders, modelsText)}`;
+						tooltip = nls.localize('sandtable.status.partialProvidersTooltip', "{0} of {1} providers connected with {2}. Click to view models.", healthyProviders, totalProviders, modelsText);
+					}
+				} else {
+					displayText = `$(check) Cortex: ${nls.localize('sandtable.status.connected', "Connected")} (${modelsText})`;
+					tooltip = nls.localize('sandtable.status.connectedTooltip', "Cortex is connected with {0}. Click to view models.", modelsText);
+				}
+
 				return {
 					name: nls.localize('sandtable.status.name', "Sandtable Cortex"),
-					text: `$(check) Cortex: ${nls.localize('sandtable.status.connected', "Connected")} (${modelsText})`,
+					text: displayText,
 					ariaLabel: tooltip,
 					tooltip,
 					command: 'sandtable.showRunningModels',
@@ -65,10 +84,18 @@ export class SandtableStatusBarItem extends Disposable implements IWorkbenchCont
 			}
 
 			case 'disconnected': {
-				const tooltip = nls.localize('sandtable.status.disconnectedTooltip', "Cortex is disconnected. Click to open connection settings.");
+				let displayText: string;
+				let tooltip: string;
+				if (totalProviders > 1) {
+					displayText = `$(error) ${nls.localize('sandtable.status.noProvidersConnected', "No providers connected")}`;
+					tooltip = nls.localize('sandtable.status.noProvidersTooltip', "All {0} providers are disconnected. Click to open connection settings.", totalProviders);
+				} else {
+					displayText = `$(error) Cortex: ${nls.localize('sandtable.status.disconnected', "Disconnected")}`;
+					tooltip = nls.localize('sandtable.status.disconnectedTooltip', "Cortex is disconnected. Click to open connection settings.");
+				}
 				return {
 					name: nls.localize('sandtable.status.name', "Sandtable Cortex"),
-					text: `$(error) Cortex: ${nls.localize('sandtable.status.disconnected', "Disconnected")}`,
+					text: displayText,
 					ariaLabel: tooltip,
 					tooltip,
 					command: {

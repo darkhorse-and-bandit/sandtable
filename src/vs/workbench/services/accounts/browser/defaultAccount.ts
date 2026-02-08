@@ -82,7 +82,31 @@ interface IMcpRegistryResponse {
 	readonly mcp_registries: ReadonlyArray<IMcpRegistryProvider>;
 }
 
-function toDefaultAccountConfig(defaultChatAgent: IDefaultChatAgent): IDefaultAccountConfig {
+/**
+ * Sandtable: Safe empty config returned when `defaultChatAgent` is missing or
+ * has empty stub values in product.json.  This prevents TypeError crashes in
+ * DefaultAccountService when Sandtable ships without a Copilot-style chat agent.
+ */
+const EMPTY_DEFAULT_ACCOUNT_CONFIG: IDefaultAccountConfig = Object.freeze({
+	preferredExtensions: [],
+	authenticationProvider: {
+		default: { id: '', name: '' },
+		enterprise: { id: '', name: '' },
+		enterpriseProviderConfig: '',
+		enterpriseProviderUriSetting: '',
+		scopes: [],
+	},
+	entitlementUrl: '',
+	tokenEntitlementUrl: '',
+	mcpRegistryDataUrl: '',
+});
+
+function toDefaultAccountConfig(defaultChatAgent: IDefaultChatAgent | undefined): IDefaultAccountConfig {
+	// Sandtable: guard against missing or stub-only defaultChatAgent
+	if (!defaultChatAgent || !defaultChatAgent.chatExtensionId) {
+		return EMPTY_DEFAULT_ACCOUNT_CONFIG;
+	}
+
 	return {
 		preferredExtensions: [
 			defaultChatAgent.chatExtensionId,
@@ -90,20 +114,20 @@ function toDefaultAccountConfig(defaultChatAgent: IDefaultChatAgent): IDefaultAc
 		],
 		authenticationProvider: {
 			default: {
-				id: defaultChatAgent.provider.default.id,
-				name: defaultChatAgent.provider.default.name,
+				id: defaultChatAgent.provider?.default?.id ?? '',
+				name: defaultChatAgent.provider?.default?.name ?? '',
 			},
 			enterprise: {
-				id: defaultChatAgent.provider.enterprise.id,
-				name: defaultChatAgent.provider.enterprise.name,
+				id: defaultChatAgent.provider?.enterprise?.id ?? '',
+				name: defaultChatAgent.provider?.enterprise?.name ?? '',
 			},
-			enterpriseProviderConfig: `${defaultChatAgent.completionsAdvancedSetting}.authProvider`,
-			enterpriseProviderUriSetting: defaultChatAgent.providerUriSetting,
-			scopes: defaultChatAgent.providerScopes,
+			enterpriseProviderConfig: `${defaultChatAgent.completionsAdvancedSetting ?? ''}.authProvider`,
+			enterpriseProviderUriSetting: defaultChatAgent.providerUriSetting ?? '',
+			scopes: defaultChatAgent.providerScopes ?? [],
 		},
-		entitlementUrl: defaultChatAgent.entitlementUrl,
-		tokenEntitlementUrl: defaultChatAgent.tokenEntitlementUrl,
-		mcpRegistryDataUrl: defaultChatAgent.mcpRegistryDataUrl,
+		entitlementUrl: defaultChatAgent.entitlementUrl ?? '',
+		tokenEntitlementUrl: defaultChatAgent.tokenEntitlementUrl ?? '',
+		mcpRegistryDataUrl: defaultChatAgent.mcpRegistryDataUrl ?? '',
 	};
 }
 

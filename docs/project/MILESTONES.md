@@ -9,8 +9,9 @@
 | 2 | Inline Code Completion | 10-14 days | 18-31 | Ghost text suggestions while typing | FIM endpoint | Medium |
 | 3 | Model Manager Panel | 10-14 days | 32-45 | GPU dashboard, start/stop models | IDE status endpoint | Low |
 | 4 | Agent Mode | 14-21 days | 46-66 | Autonomous file editing and terminal execution | Tool calling metadata | Medium |
+| 4.5 | Multi-Provider LLM System | 14-21 days | 64-84 | Multi-provider routing, unified model list, provider management UI | None (Cortex already exposes OpenAI-compatible API) | Low |
 
-**Total estimated duration:** 45-66 working days (~10-14 weeks)
+**Total estimated duration:** 45-84 working days (~10-17 weeks)
 
 ## Dependency Chain
 
@@ -20,12 +21,16 @@ flowchart LR
     P1 --> P2[Phase 2: Code Completion]
     P1 --> P3[Phase 3: Model Manager]
     P1 --> P4A[Phase 4: Agent Mode]
+    P1 --> P4_5[Phase 4.5: Multi-Provider]
     P2 -.->|FIM endpoint needed| CortexFIM[Cortex: FIM Endpoint]
     P3 -.->|IDE status needed| CortexIDE[Cortex: IDE Status API]
     P4A -.->|Tool calling metadata| CortexTool[Cortex: Tool Calling Field]
+    P4_5 -.->|Builds on all consumers| P2
+    P4_5 -.->|Builds on all consumers| P3
+    P4_5 -.->|Builds on all consumers| P4A
 ```
 
-Note: Phases 2, 3, and 4 all depend on Phase 1 (the platform service layer) but are independent of each other. They could theoretically be developed in parallel by different team members. The recommended serial order prioritizes the most impactful features first.
+Note: Phases 2, 3, and 4 all depend on Phase 1 (the platform service layer) but are independent of each other. Phase 4.5 depends on Phase 1 and benefits from having Phases 2-4 complete (so all consumers can be updated together), but does not require the Cortex-side changes from Phases 2-4. It is recommended to implement Phase 4.5 after the IDE-side work of Phases 2-4 is complete to minimize rework.
 
 ## Detailed Milestones
 
@@ -133,6 +138,33 @@ Note: Phases 2, 3, and 4 all depend on Phase 1 (the platform service layer) but 
 | Fallback for non-tool models | Graceful behavior when model doesn't support tool calling |
 
 **Risk assessment:** MEDIUM -- Tool calling quality depends heavily on the model. GPT-OSS 120B (Harmony architecture) may not have been trained for tool calling. DeepSeek V3 and Qwen3-Coder are more reliable for this. Plan for model-specific testing and possible prompt engineering for tool use.
+
+### Phase 4.5: Multi-Provider LLM Connection System
+
+**Duration:** 14-21 days
+**Dependencies:** Phase 1 complete (needs `ICortexService`), Phases 2-4 IDE-side complete (recommended)
+**Cortex changes:** None
+
+| Milestone | Definition of Done |
+|-----------|-------------------|
+| `ILLMProvider` interface defined | Base provider interface with health, model listing, and inference methods |
+| `OpenAICompatibleProvider` working | Can connect to Ollama and list its models |
+| `CortexLLMProvider` working | Wraps existing CortexClient, implements both base and admin interfaces |
+| `IProviderRegistryService` working | Manages multiple providers, aggregates models, independent health checking |
+| `CortexService` routes correctly | Inference requests dispatched to correct provider based on model identity |
+| Model selectors show grouped models | Chat, completion, and agent model selectors show provider-grouped dropdowns |
+| Status bar shows aggregate info | "N providers, M models" with per-provider health awareness |
+| Settings page has Providers section | Add/edit/remove providers with test-connection and model discovery |
+| Model Manager shows external models | Read-only section for external provider models alongside Cortex admin controls |
+| Backward compatibility verified | Single Cortex provider works identically to pre-4.5 behavior |
+| Legacy settings migration works | `sandtable.cortex.*` settings auto-create default Cortex provider |
+| Parameter compatibility system | Automatic reasoning model detection + per-model admin overrides for drop/rename/force/inject params |
+| CSP and auth fixes verified | `http://` allowed in connect-src, Cortex session auth works for all endpoints |
+| `npm run compile` passes | Zero TypeScript compilation errors |
+
+**Risk assessment:** LOW -- The facade pattern ensures all existing consumers work unchanged. The OpenAI chat completions API is a well-established standard, and most target servers (Ollama, vLLM, LM Studio) implement it reliably. No Cortex-side changes are required.
+
+---
 
 ## Post-MVP Roadmap (Future Phases)
 

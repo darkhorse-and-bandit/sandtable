@@ -918,7 +918,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
 		id: 'editor.action.dirtydiff.next',
 		title: nls.localize({ key: 'miGotoNextChange', comment: ['&& denotes a mnemonic'] }, "Next &&Change")
 	},
-	order: 1
+	order: 1,
+	when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
@@ -927,7 +928,8 @@ MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
 		id: 'editor.action.dirtydiff.previous',
 		title: nls.localize({ key: 'miGotoPreviousChange', comment: ['&& denotes a mnemonic'] }, "Previous &&Change")
 	},
-	order: 2
+	order: 2,
+	when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Code Mode only
 });
 
 KeybindingsRegistry.registerCommandAndKeybindingRule({

@@ -35,6 +35,7 @@ import { SUPPORTED_ENCODINGS } from '../../../services/textfile/common/encoding.
 import { ConfigurationChangedEvent, EditorOption } from '../../../../editor/common/config/editorOptions.js';
 import { ITextResourceConfigurationService } from '../../../../editor/common/services/textResourceConfiguration.js';
 import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { CodeModeConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
 import { deepClone } from '../../../../base/common/objects.js';
 import { ICodeEditor, getCodeEditor } from '../../../../editor/browser/editorBrowser.js';
 import { Schemas } from '../../../../base/common/network.js';
@@ -388,6 +389,13 @@ class EditorStatus extends Disposable {
 		this._register(this.editorService.onDidActiveEditorChange(() => this.updateStatusBar()));
 		this._register(this.textFileService.untitled.onDidChangeEncoding(model => this.onResourceEncodingChange(model.resource)));
 		this._register(this.textFileService.files.onDidChangeEncoding(model => this.onResourceEncodingChange((model.resource))));
+
+		// Sandtable: Re-render status bar when Code Mode is toggled
+		this._register(this.configurationService.onDidChangeConfiguration(e => {
+			if (e.affectsConfiguration(CodeModeConfigKeys.Enabled)) {
+				this.updateStatusBar();
+			}
+		}));
 		this._register(Event.runAndSubscribe(this.tabFocusMode.onDidChange, (tabFocusMode) => {
 			if (tabFocusMode !== undefined) {
 				this.onTabFocusModeChange(tabFocusMode);
@@ -518,6 +526,11 @@ class EditorStatus extends Disposable {
 	}
 
 	private updateIndentationElement(text: string | undefined): void {
+		// Sandtable: Hide indentation indicator when Code Mode is OFF
+		if (!this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled)) {
+			this.indentationElement.clear();
+			return;
+		}
 		if (!text) {
 			this.indentationElement.clear();
 			return;
@@ -541,6 +554,11 @@ class EditorStatus extends Disposable {
 	}
 
 	private updateEncodingElement(text: string | undefined): void {
+		// Sandtable: Hide encoding indicator when Code Mode is OFF
+		if (!this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled)) {
+			this.encodingElement.clear();
+			return;
+		}
 		if (!text) {
 			this.encodingElement.clear();
 			return;
@@ -558,6 +576,11 @@ class EditorStatus extends Disposable {
 	}
 
 	private updateEOLElement(text: string | undefined): void {
+		// Sandtable: Hide EOL indicator when Code Mode is OFF
+		if (!this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled)) {
+			this.eolElement.clear();
+			return;
+		}
 		if (!text) {
 			this.eolElement.clear();
 			return;
@@ -575,6 +598,11 @@ class EditorStatus extends Disposable {
 	}
 
 	private updateLanguageIdElement(text: string | undefined): void {
+		// Sandtable: Hide language mode indicator when Code Mode is OFF
+		if (!this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled)) {
+			this.languageElement.clear();
+			return;
+		}
 		if (!text) {
 			this.languageElement.clear();
 			return;

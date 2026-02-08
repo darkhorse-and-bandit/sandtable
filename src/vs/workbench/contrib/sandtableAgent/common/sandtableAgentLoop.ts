@@ -370,16 +370,17 @@ export class SandtableAgentLoop extends Disposable {
 
 	/**
 	 * Select a model for the agent. Uses the configured model if set,
-	 * otherwise scans running models for one that supports tool calling.
+	 * otherwise scans running models across all providers for one that
+	 * supports tool calling. Supports compound model names (e.g., "cortex::model").
 	 * Returns a result with the selected model and the reason for the selection.
 	 */
 	async selectModel(configuredModel: string): Promise<IModelSelectionResult> {
-		// If a specific model is configured, use it
+		// If a specific model is configured, use it (supports compound names)
 		if (configuredModel) {
 			return { model: configuredModel, reason: 'configured' };
 		}
 
-		// Otherwise, scan running models
+		// Otherwise, scan running models from all providers
 		try {
 			const runningModels = await this.cortexService.listRunningModels();
 			if (runningModels.length === 0) {
@@ -391,7 +392,7 @@ export class SandtableAgentLoop extends Disposable {
 				return { model: undefined, reason: 'no_running' };
 			}
 
-			// Try to find one that supports tool calling
+			// Try to find one that supports tool calling across all providers
 			for (const model of running) {
 				try {
 					const constraints = await this.cortexService.getModelConstraints(model.served_model_name);
@@ -399,11 +400,15 @@ export class SandtableAgentLoop extends Disposable {
 						return { model: model.served_model_name, reason: 'auto_tool' };
 					}
 				} catch {
-					// Skip if we can't get constraints
+					// Skip if we can't get constraints (e.g., external providers)
 				}
 			}
 
-			// Fallback: use the first running model (it may or may not support tools)
+			// Fallback: prefer Cortex models over external ones
+			const cortexModels = running.filter(m => m.engine_type !== 'external');
+			if (cortexModels.length > 0) {
+				return { model: cortexModels[0].served_model_name, reason: 'auto_fallback' };
+			}
 			return { model: running[0].served_model_name, reason: 'auto_fallback' };
 
 		} catch {

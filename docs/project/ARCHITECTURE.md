@@ -2,7 +2,7 @@
 
 ## System Architecture Overview
 
-Sandtable is a desktop application built on Electron (via the VS Code fork) that communicates with Cortex over HTTP/REST on the local network. Cortex manages the LLM inference engines (vLLM and llama.cpp containers) and provides an OpenAI-compatible API.
+Sandtable is a desktop application built on Electron (via the VS Code fork) that communicates with one or more LLM providers over HTTP/REST. The primary provider is Cortex, which manages inference engines (vLLM and llama.cpp containers) and provides an OpenAI-compatible API plus admin capabilities. Additional OpenAI-compatible providers (Ollama, vLLM direct, cloud APIs) can be configured as secondary inference-only endpoints. The `IProviderRegistryService` manages all providers, while `ICortexService` serves as a backward-compatible routing facade.
 
 ```mermaid
 flowchart TD
@@ -78,12 +78,15 @@ src/vs/
   editor/        Monaco Editor core
   workbench/     Full IDE shell -- panels, activity bar, sidebar, status bar
     contrib/     Feature contributions (extensions, git, terminal, etc.)
-      sandtableChat/       ** NEW: Chat panel **
+      sandtableLM/         ** NEW: Cortex LM provider + chat agent + tools (integrates with VS Code's built-in chat panel) **
       sandtableCompletion/ ** NEW: Inline code completion (Phase 2) **
       sandtableModels/     ** NEW: Model manager panel (Phase 3) **
-      sandtableAgent/      ** NEW: Agent mode (Phase 4) **
+      sandtableCodeMode/   ** NEW: Code Mode toggle (research vs coding UX) **
       sandtableSettings/   ** NEW: Custom settings page **
       sandtableStatus/     ** NEW: Status bar indicator **
+      sandtableAppearance/ ** NEW: Editor background images **
+      sandtableChat/       ** DEPRECATED: Custom chat panel (replaced by sandtableLM) **
+      sandtableAgent/      ** DEPRECATED: Custom agent panel (replaced by sandtableLM) **
   code/          Electron desktop app entry point
   server/        Remote development server entry point
 ```
@@ -307,6 +310,38 @@ class SandtableChatViewPane extends ViewPane {
     }
 }
 ```
+
+## Multi-Provider Architecture (Phase 4.5)
+
+### Provider Layer
+
+Below `ICortexService`, a provider abstraction layer handles the details of communicating with different LLM backends:
+
+- **`ILLMProvider`** -- Base interface for all providers. Covers health checking, model listing, and chat inference. Every provider (Cortex and external) implements this.
+- **`ICortexLLMProvider`** -- Extended interface for Cortex-specific capabilities: admin APIs, GPU monitoring, model lifecycle, FIM completion, chat sessions.
+- **`IProviderRegistryService`** -- Manages the provider collection, reads configuration, handles per-provider health polling, and provides unified model listing.
+
+### Provider Types
+
+| Type | Interface | Capabilities | Examples |
+|------|-----------|-------------|----------|
+| `cortex` | `ICortexLLMProvider` | Inference + Admin + Monitoring + FIM + Sessions | Cortex gateway |
+| `openai-compatible` | `ILLMProvider` | Inference only (chat completions + model listing) | Ollama, vLLM, LM Studio, DeepSeek API, Together AI |
+
+### Model Identity
+
+Models are identified by compound names: `"providerId::modelName"`. The `::` separator distinguishes the provider prefix from the model name. Bare model names (without `::`) are resolved against the default provider for backward compatibility.
+
+### Routing
+
+`ICortexService` acts as a routing facade:
+1. Receives an inference request with a model name
+2. Parses the model name to extract provider ID (or uses default)
+3. Looks up the provider via `IProviderRegistryService`
+4. Delegates the inference call to the correct provider
+5. Returns the result to the consumer
+
+Admin and monitoring methods are always delegated to the Cortex provider specifically.
 
 ## CortexClient Implementation
 
@@ -583,6 +618,10 @@ All new settings registered under the `sandtable` namespace:
 'sandtable.appearance.backgroundBlur'     // type: number,  default: 0
 'sandtable.appearance.backgroundSize'     // type: string,  default: 'cover'
 'sandtable.appearance.backgroundPosition' // type: string,  default: 'center'
+
+// Providers (Phase 4.5)
+'sandtable.providers'                    // type: array,   default: [] (auto-created from legacy settings)
+'sandtable.defaultProvider'              // type: string,  default: '' (first enabled provider)
 ```
 
 ## New File Structure Map
@@ -674,20 +713,48 @@ src/vs/workbench/contrib/sandtableAgent/
     sandtableAgentContext.ts               # Token budget and context management
 ```
 
+### Phase 4.5 Files
+
+```
+src/vs/platform/cortex/
+  common/
+    cortexProviderTypes.ts             # Provider config types, IUnifiedModel, IModelCapabilities
+    llmProvider.ts                     # ILLMProvider base interface
+    cortexLLMProvider.ts               # ICortexLLMProvider extended interface (Cortex-specific)
+    providerRegistry.ts                # IProviderRegistryService interface + DI decorator
+    openAICompatibleClient.ts          # HTTP client for OpenAI-compatible endpoints
+    modelResolver.ts                   # Compound model ID parsing and resolution
+
+  browser/
+    providerRegistryService.ts         # ProviderRegistryService implementation
+    cortexLLMProviderImpl.ts           # CortexLLMProvider wrapping existing CortexClient
+    openAICompatibleProviderImpl.ts    # OpenAICompatibleProvider implementation
+
+src/vs/workbench/contrib/sandtableSettings/
+  browser/
+    sandtableProviderEditor.ts         # Provider add/edit dialog
+```
+
 ### Registration Entry Points
 
 All contributions are registered by importing them in `src/vs/workbench/workbench.common.main.ts`:
 
 ```typescript
-// Sandtable -- Cortex platform service + chat + status + settings + completion + models + agent + appearance
+// Sandtable -- Platform services + LM integration + contributions
 import '../platform/cortex/browser/cortexService.js';
-import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
+import '../platform/cortex/browser/providerRegistryService.js';   // Phase 4.5
+import './contrib/sandtableCodeMode/browser/sandtableCodeMode.contribution.js';
+import './contrib/sandtableLM/browser/sandtableLM.contribution.js';       // Cortex language model provider
+import './contrib/sandtableLM/browser/sandtableChatAgent.js';             // Default chat agent
+import './contrib/sandtableLM/browser/sandtableTools.js';                 // Workspace tools
 import './contrib/sandtableStatus/browser/sandtableStatus.contribution.js';
 import './contrib/sandtableSettings/browser/sandtableSettings.contribution.js';
 import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.js';
 import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
-import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';
 import './contrib/sandtableAppearance/browser/sandtableAppearance.contribution.js';
+// DEPRECATED (replaced by sandtableLM integration with VS Code's built-in chat panel):
+// import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
+// import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';
 ```
 
-The `cortexService.js` import triggers the `registerSingleton()` call that registers `ICortexService` with the DI system. The platform service is then available to any workbench contribution via constructor injection.
+The `cortexService.js` import triggers the `registerSingleton()` call that registers `ICortexService` with the DI system. The `sandtableLM` imports register Cortex as a language model provider with VS Code's `ILanguageModelsService`, register the Sandtable default chat agent via `IChatAgentService`, and register 6 workspace tools via `ILanguageModelToolsService`. This integrates Cortex models into VS Code's built-in Chat panel (right-side Auxiliary Bar) rather than using custom sidebar panels.

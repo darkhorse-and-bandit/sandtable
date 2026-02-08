@@ -53,14 +53,16 @@ Sandtable is built on three layers:
 ┌─────────────────────────────────────────────┐
 │  Sandtable (VS Code Fork - Electron App)    │
 │  ─────────────────────────────────────────── │
-│  Chat Panel · Agent Mode · Model Manager    │
-│  Document Viewer · Code Editor · Terminal    │
-│  Inline Completion · MCP Client             │
+│  VS Code Chat Panel · Tool-Calling Agent    │
+│  Model Manager · Code Completion (FIM)      │
+│  Multi-Provider Model Picker · Settings     │
+│  Code Mode · Background Images · Terminal   │
 ├─────────────────────────────────────────────┤
-│  Cortex Gateway (FastAPI - Port 8084)       │
+│  Provider Layer (Multi-Provider)            │
 │  ─────────────────────────────────────────── │
-│  OpenAI-compatible API · Auth · Routing     │
-│  Health Checks · Usage Metering · Sessions  │
+│  Cortex Gateway · OpenAI-compatible APIs    │
+│  Ollama · vLLM · LM Studio · Cloud APIs    │
+│  Unified model routing and health checks    │
 ├─────────────────────────────────────────────┤
 │  Inference Engines                          │
 │  ─────────────────────────────────────────── │
@@ -69,8 +71,8 @@ Sandtable is built on three layers:
 └─────────────────────────────────────────────┘
 ```
 
-- **Sandtable** is where you work -- the editor, chat panels, agent interfaces, and document tools
-- **Cortex** manages model lifecycle, authentication, GPU allocation, and provides a unified API
+- **Sandtable** is where you work -- VS Code's built-in Chat panel with tool-calling agent, model manager, code completion, and research workspace features
+- **Provider Layer** routes to multiple LLM backends -- Cortex (primary, with admin capabilities) plus any OpenAI-compatible endpoint
 - **Inference engines** (vLLM and llama.cpp) run the actual models on your GPUs
 
 ## Key Principles
@@ -88,11 +90,13 @@ Sandtable is in active development. See [docs/project/PROGRESS.md](docs/project/
 | Phase | Status | Description |
 |-------|--------|-------------|
 | 0 - Fork and Build | **Complete** | VS Code forked, rebranded, building from source |
-| 1 - Cortex Connection + Chat | In Progress | Platform service layer, streaming chat panel |
-| 2 - Inline Code Completion | Planned | Ghost text suggestions via Fill-in-the-Middle |
-| 3 - Model Manager | Planned | GPU dashboard, model start/stop, system monitoring |
-| 4 - Agent Mode | Planned | Autonomous file editing, tool use, terminal execution |
-| 5+ - Research Features | Planned | Document ingestion, agent personas, MCP integration |
+| 1 - Cortex Connection + Chat | **Complete** (IDE) | Platform service, streaming chat integrated into VS Code's built-in Chat panel |
+| 2 - Inline Code Completion | **Complete** (IDE) | Ghost text suggestions via Fill-in-the-Middle (awaiting Cortex FIM endpoint) |
+| 3 - Model Manager | **Complete** (IDE) | GPU dashboard, model start/stop, system monitoring panel |
+| 4 - Agent Mode | **Complete** (IDE) | Tool-calling agent with read/edit/create/search/terminal tools |
+| 4.5 - Multi-Provider | **Complete** | Connect Cortex + OpenAI-compatible endpoints (Ollama, vLLM, cloud APIs) |
+| UX Overhaul | **In Progress** | Research-first identity, Code Mode toggle, settings reorganization |
+| 5+ - Research Features | Planned | Document ingestion, agent personas, MCP integration, exercises |
 
 ## Building from Source
 

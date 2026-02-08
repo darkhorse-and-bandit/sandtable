@@ -2,7 +2,7 @@
 
 This is the living checklist for the Sandtable project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
 
-**Last updated:** 2026-02-07
+**Last updated:** 2026-02-08
 **Current phase:** Phase 4 IDE Side Complete -- Awaiting Cortex Tool Calling Metadata
 
 ---
@@ -357,6 +357,71 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 
 ---
 
+## Phase 4.5: Multi-Provider LLM Connection System
+
+**Status:** Complete
+**Target:** Days 64-84
+**Docs:** [PHASE-4.5-MULTI-PROVIDER.md](phases/PHASE-4.5-MULTI-PROVIDER.md)
+
+### Sub-Phase 4.5.1: Provider Abstraction Layer
+- [x] Create `src/vs/platform/cortex/common/cortexProviderTypes.ts` -- provider config types, IUnifiedModel
+- [x] Create `src/vs/platform/cortex/common/llmProvider.ts` -- ILLMProvider base interface
+- [x] Create `src/vs/platform/cortex/common/cortexLLMProvider.ts` -- ICortexLLMProvider extended interface
+- [x] Create `src/vs/platform/cortex/common/openAICompatibleClient.ts` -- HTTP client for OpenAI-compatible endpoints
+- [x] Create `src/vs/platform/cortex/common/modelResolver.ts` -- compound model ID parsing
+- [x] Create `src/vs/platform/cortex/browser/cortexLLMProviderImpl.ts` -- wraps existing CortexClient
+- [x] Create `src/vs/platform/cortex/browser/openAICompatibleProviderImpl.ts` -- OpenAI-compatible provider
+- [x] `npm run compile` passes with 0 errors
+
+### Sub-Phase 4.5.2: Provider Registry Service
+- [x] Create `src/vs/platform/cortex/common/providerRegistry.ts` -- IProviderRegistryService interface
+- [x] Create `src/vs/platform/cortex/browser/providerRegistryService.ts` -- full implementation
+- [x] Add `sandtable.providers` array setting to `cortexConfiguration.ts`
+- [x] Add `sandtable.defaultProvider` setting to `cortexConfiguration.ts`
+- [x] Implement legacy settings migration (sandtable.cortex.* -> providers array)
+- [x] Register singleton in DI system
+- [x] `npm run compile` passes with 0 errors
+
+### Sub-Phase 4.5.3: Evolve ICortexService
+- [x] Add provider-aware methods to `ICortexService` interface in `cortex.ts`
+- [x] Inject `IProviderRegistryService` into `CortexService`
+- [x] Implement model routing in `chatCompletion()` and `chatCompletionStream()`
+- [x] Implement model routing in `fimCompletion()` and `fimCompletionStream()`
+- [x] Implement model routing in `textCompletion()` and `textCompletionStream()`
+- [x] Update `listRunningModels()` to aggregate from all providers
+- [x] Delegate admin methods to Cortex provider via registry
+- [x] Update health check to use aggregate provider health
+- [x] `npm run compile` passes with 0 errors
+
+### Sub-Phase 4.5.4: Update Consumers
+- [x] Update `sandtableChatModelSelector.ts` -- group models by provider in dropdown
+- [x] Update `sandtableStatusBarItem.ts` -- aggregate provider/model count
+- [x] Update `sandtableModelsPanel.ts` -- add external models read-only section
+- [x] Update `sandtableInlineCompletionProvider.ts` -- route FIM across providers
+- [x] Update `sandtableAgentLoop.ts` -- scan all providers for tool-calling models
+- [x] `npm run compile` passes with 0 errors
+
+### Sub-Phase 4.5.5: Settings Page Providers Section
+- [x] Add "Providers" to settings page navigation
+- [x] Implement provider list with status cards
+- [x] Create `sandtableProviderEditor.ts` -- add/edit provider dialog
+- [x] Implement "Test Connection" with model discovery preview
+- [x] Provider enable/disable toggle
+- [x] Provider remove with confirmation
+- [x] Styling for provider cards and dialog
+- [x] `npm run compile` passes with 0 errors
+
+### Sub-Phase 4.5.6: Documentation and Testing
+- [x] Update PROJECT-CHARTER.md for multi-provider support
+- [x] Update MILESTONES.md with Phase 4.5 section
+- [x] Update ARCHITECTURE.md with multi-provider architecture
+- [x] Update PROGRESS.md with Phase 4.5 checklist
+- [x] Update docs/project/README.md with Phase 4.5 link
+- [x] Register imports in `workbench.common.main.ts`
+- [x] Final `npm run compile` with 0 errors
+
+---
+
 ## Cortex Enhancements
 
 **Docs:** [CORTEX-ENHANCEMENTS.md](CORTEX-ENHANCEMENTS.md)
@@ -381,11 +446,14 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [x] `docs/project/phases/PHASE-2-CODE-COMPLETION.md` -- Phase 2 plan
 - [x] `docs/project/phases/PHASE-3-MODEL-MANAGER.md` -- Phase 3 plan
 - [x] `docs/project/phases/PHASE-4-AGENT-MODE.md` -- Phase 4 plan
+- [x] `docs/project/phases/PHASE-4.5-MULTI-PROVIDER.md` -- Phase 4.5 plan
 - [x] `docs/project/CORTEX-ENHANCEMENTS.md` -- Cortex changes
 - [x] `docs/project/RESEARCH-REFERENCE.md` -- Research reference
 - [x] `docs/project/PROGRESS.md` -- This file
 - [x] `docs/project/funspace/README.md` -- Funspace index (non-core fun features)
-- [x] `docs/project/funspace/EDITOR-BACKGROUND-IMAGE.md` -- Editor background image feature
+- [x] `docs/project/funspace/custom_editor_background/EDITOR-BACKGROUND-IMAGE.md` -- Editor background image feature
+- [x] `docs/project/funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md` -- UX overhaul & Code Mode documentation
+- [x] `docs/project/funspace/sandtable_ux_overhaul/NEXT-STEPS.md` -- Remaining work and follow-up tasks
 
 ---
 
@@ -404,3 +472,100 @@ Optional, self-contained features built by the dev team for fun. These don't blo
 - [x] Contribution registered in `workbench.common.main.ts`
 - [x] Auto-overlay derives color from theme (dark: 85% opacity, light: 90%)
 - [x] `npm run compile` passes with 0 errors
+
+### Sandtable UX Overhaul & Code Mode
+**Docs:** [funspace/sandtable_ux_overhaul/](funspace/sandtable_ux_overhaul/)
+**Next Steps:** [funspace/sandtable_ux_overhaul/NEXT-STEPS.md](funspace/sandtable_ux_overhaul/NEXT-STEPS.md)
+
+#### Code Mode Toggle (Phase 1 -- Complete)
+- [x] `CodeModeConfigKeys` enum and `sandtable.codeMode.enabled` setting registered in `cortexConfiguration.ts`
+- [x] `sandtableCodeMode.contribution.ts` -- context key, config watching, research defaults
+- [x] Contribution registered in `workbench.common.main.ts`
+- [x] `sandtable.codeModeEnabled` context key set from configuration
+- [x] `PaneCompositeBar.shouldBeHidden()` modified to check Code Mode for target containers
+- [x] Activity Bar containers hidden when Code Mode OFF: SCM, Debug, Testing, Extensions
+- [x] Bottom panels hidden when Code Mode OFF: Problems, Debug Console
+- [x] Run menu hidden when Code Mode OFF (entire top-level menu)
+- [x] Terminal > Tasks menu items hidden when Code Mode OFF
+- [x] Go > Symbol Navigation items hidden when Code Mode OFF (Definition, Declaration, Type, Implementations, References)
+- [x] Editor context menu: Go to Definition/Declaration/Type/Implementations/References hidden when Code Mode OFF
+- [x] Status bar: Language, Encoding, EOL, Indentation indicators hidden when Code Mode OFF
+- [x] Research-friendly defaults applied when Code Mode OFF (minimap off, word wrap on, breadcrumbs off)
+- [x] Research defaults removed when Code Mode toggled ON (restores VS Code defaults)
+- [x] "Code Mode" section added to Sandtable Settings page with toggle and feature list
+- [x] `npm run compile` passes with 0 errors
+
+#### Welcome Page Overhaul (Phase 1 -- Complete)
+- [x] "Get Started with Sandtable" walkthrough (Connect Cortex, Chat, Models, Agent, Theme, Code Mode)
+- [x] "Explore Sandtable" walkthrough (Shortcuts, Terminal, Command Palette, Search, Background)
+- [x] Start entries updated: "New Document...", "Open Workspace...", "Sandtable Settings"
+- [x] All Copilot walkthrough steps and related code removed
+- [x] SetupWeb and notebooks walkthroughs removed
+
+#### Terminology & Branding (Phase 1 -- Complete)
+- [x] Explorer renamed to "Workspace" in Activity Bar
+- [x] Help menu: removed VS Code links (Video Tutorials, Tips and Tricks, YouTube, Feature Requests)
+- [x] Help menu: added "Sandtable Settings" entry
+- [x] `product.json`: `defaultChatAgent` removed (null guards added to `DefaultAccountService`)
+- [x] `product.json`: `trustedExtensionAuthAccess` cleared
+
+#### UX Overhaul Phase 2 -- In Progress
+- [x] `DefaultAccountService` null guards for `defaultChatAgent` -- removed empty stubs from `product.json`, added safe fallback config
+- [x] Rename Symbol context menu gated behind Code Mode (`rename.ts`)
+- [x] Refactor / Source Action context menus gated behind Code Mode (`codeActionCommands.ts`)
+- [x] Go menu: Problem navigation (Next/Previous Problem) gated behind Code Mode (`gotoError.ts`)
+- [x] Go menu: Change navigation (Next/Previous Change) gated behind Code Mode (`quickDiffWidget.ts`)
+- [x] Code Mode quick-toggle: `Shift+Alt+M` keyboard shortcut via `sandtable.toggleCodeMode` command
+- [x] Code Mode status bar button: shows "Research Mode" / "Code Mode" with toggle on click
+- [x] Toggle command available in Command Palette as "Sandtable: Toggle Code Mode"
+- [x] Keybinding conflict resolved: changed from `Ctrl+Shift+M` (conflicts with Toggle Problems Panel) to `Shift+Alt+M`
+- [x] New File defaults to Markdown when Code Mode OFF (`fileCommands.ts`: both `newUntitledFile` and `newFile`)
+- [x] Window title template verified: `${appName}` already resolves to "Sandtable" from `product.json` `nameLong`
+- [x] Command Palette filtering: all 15 task commands gated behind Code Mode (`task.contribution.ts`)
+- [x] Terminal menu separators: investigated, VS Code auto-hides empty groups -- no code change needed
+- [x] `npm run compile` passes with 0 errors
+
+#### Chat Integration (VS Code Built-in Chat Panel) -- Complete
+- [x] Custom `sandtableChat` and `sandtableAgent` sidebar panels replaced with VS Code's built-in Chat panel
+- [x] `CortexLanguageModelProvider` -- registers Cortex as a language model vendor with `ILanguageModelsService`, exposing running models in VS Code's model picker
+- [x] `SandtableChatAgentImpl` -- default chat agent registered via `IChatAgentService`, handles conversations by routing to Cortex via the LM provider
+- [x] 6 workspace tools registered via `ILanguageModelToolsService`: read_file, edit_file, create_file, run_command, search_files, list_directory
+- [x] Chat setup flow naturally bypassed: no `defaultChatAgent` in `product.json` = Copilot setup flow inert
+- [x] `panelParticipantRegistered` context key set by agent registration = chat panel visible
+- [x] Old `sandtableChat` and `sandtableAgent` imports commented out in `workbench.common.main.ts`
+- [x] New files: `src/vs/workbench/contrib/sandtableLM/browser/` (contribution, agent, tools)
+- [x] `npm run compile` passes with 0 errors
+
+#### Provider/Model/Chat Streamlining -- Complete
+- [x] Removed redundant Connection settings page (absorbed by Providers)
+- [x] Redesigned Models page: curated model list with enable/disable, "+ Add Model" detection workflow, per-model parameter override editor (drop/rename/force/extra params)
+- [x] LM provider queries ProviderRegistryService for ALL models from ALL providers (not just Cortex)
+- [x] Chat agent accepts any provider model (removed `cortex:` prefix filter in resolveModelId)
+- [x] Model parameter overrides moved from Providers page to Models page (per-model, not per-provider)
+- [x] Added `sandtable.models.curated` setting for persistent model curation
+- [x] `npm run compile` passes with 0 errors
+
+#### Tool Calling Wired into Chat Agent -- Complete
+- [x] LM provider `sendChatRequest()` handles tool_calls: uses non-streaming for tool requests, emits `IChatResponseToolUsePart`
+- [x] Chat agent collects available tools from `ILanguageModelToolsService.getTools()` for each request
+- [x] Full tool-calling loop in agent: send tools to LLM -> detect tool_use -> invoke tools -> feed results back -> repeat (max 15 iterations)
+- [x] Agent respects `userSelectedTools` from request to filter tools
+- [x] Progress messages shown during tool execution ("Running tool: **name**...")
+- [x] Access to all VS Code built-in tools (edit file, terminal, tasks, fetch, tests) plus Sandtable tools (read_file, search_files, list_directory)
+- [x] `npm run compile` passes with 0 errors
+
+#### Settings Menu Reorganization -- Complete
+- [x] Sidebar reorganized into 5 categories: Workspace, AI & Models, Research, Exercises, System
+- [x] Category headers rendered as styled uppercase dividers in sidebar
+- [x] 6 future-phase placeholder sections added: Personas, Documents, Data Sources, Workflows, Sessions, Users & Roles
+- [x] Placeholder pages show "Coming Soon" badge with feature description
+- [x] About section created (version, platform, resources, mission statement)
+- [x] General section slimmed to dashboard: connection status, provider/model counts, quick action links
+- [x] `npm run compile` passes with 0 errors
+
+#### Next Steps (Phase 2 -- Remaining)
+- [ ] Custom walkthrough SVG media assets (art/design work)
+- [ ] Command Palette filtering: debug commands (8 without preconditions identified -- lower priority)
+- [ ] Runtime testing: verify tool calling works end-to-end in agent mode
+- [ ] run_command tool: implement via ITerminalService (currently placeholder)
+- [ ] Chat session persistence: evaluate VS Code's built-in session storage vs Cortex-side sessions

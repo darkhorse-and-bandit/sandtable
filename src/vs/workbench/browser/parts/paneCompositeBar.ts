@@ -31,6 +31,7 @@ import { GestureEvent } from '../../../base/browser/touch.js';
 import { IPaneCompositePart } from './paneCompositePart.js';
 import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
 import { IViewsService } from '../../services/views/common/viewsService.js';
+import { CodeModeConfigKeys } from '../../../platform/cortex/common/cortexConfiguration.js';
 
 interface IPlaceholderViewContainer {
 	readonly id: string;
@@ -108,6 +109,7 @@ export class PaneCompositeBar extends Disposable {
 		@IContextKeyService protected readonly contextKeyService: IContextKeyService,
 		@IWorkbenchEnvironmentService private readonly environmentService: IWorkbenchEnvironmentService,
 		@IWorkbenchLayoutService protected readonly layoutService: IWorkbenchLayoutService,
+		@IConfigurationService private readonly sandtableConfigService: IConfigurationService,
 	) {
 		super();
 
@@ -221,6 +223,13 @@ export class PaneCompositeBar extends Disposable {
 
 	private registerListeners(): void {
 
+		// Sandtable: Re-evaluate Code Mode container visibility when the setting changes
+		this._register(this.sandtableConfigService.onDidChangeConfiguration(e => {
+			if (e.affectsConfiguration(CodeModeConfigKeys.Enabled)) {
+				this.onDidCodeModeChange();
+			}
+		}));
+
 		// View Container Changes
 		this._register(this.viewDescriptorService.onDidChangeViewContainers(({ added, removed }) => this.onDidChangeViewContainers(added, removed)));
 		this._register(this.viewDescriptorService.onDidChangeContainerLocation(({ viewContainer, from, to }) => this.onDidChangeViewContainerLocation(viewContainer, from, to)));
@@ -241,6 +250,20 @@ export class PaneCompositeBar extends Disposable {
 			}));
 			this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, this.options.pinnedViewContainersKey, this._store)(() => this.updateCompositeBarItemsFromStorage(false)));
 		});
+	}
+
+	/**
+	 * Sandtable: When Code Mode is toggled, re-evaluate visibility for all
+	 * Code Mode containers in the current location (Sidebar or Panel).
+	 */
+	private onDidCodeModeChange(): void {
+		for (const containerId of PaneCompositeBar.SANDTABLE_CODE_MODE_CONTAINERS) {
+			const viewContainer = this.getViewContainer(containerId);
+			if (viewContainer) {
+				this.showOrHideViewContainer(viewContainer);
+			}
+		}
+		this.saveCachedViewContainers();
 	}
 
 	private onDidChangeViewContainers(added: readonly { container: ViewContainer; location: ViewContainerLocation }[], removed: readonly { container: ViewContainer; location: ViewContainerLocation }[]) {
@@ -431,9 +454,29 @@ export class PaneCompositeBar extends Disposable {
 		}
 	}
 
+	// ─── Sandtable Code Mode ──────────────────────────────────────────────────
+	// View containers that are only shown when Code Mode is enabled.
+	// When Code Mode is OFF, these containers are hidden from the Activity Bar and Panel.
+	private static readonly SANDTABLE_CODE_MODE_CONTAINERS = new Set([
+		'workbench.view.scm',            // Source Control
+		'workbench.view.debug',          // Run and Debug
+		'workbench.view.extension.test', // Testing
+		'workbench.view.extensions',     // Extensions
+		'workbench.panel.markers',       // Problems panel
+		'workbench.panel.repl',          // Debug Console panel
+	]);
+
 	private shouldBeHidden(viewContainerOrId: string | ViewContainer, cachedViewContainer?: ICachedViewContainer): boolean {
 		const viewContainer = isString(viewContainerOrId) ? this.getViewContainer(viewContainerOrId) : viewContainerOrId;
 		const viewContainerId = isString(viewContainerOrId) ? viewContainerOrId : viewContainerOrId.id;
+
+		// Sandtable: Hide Code Mode containers when Code Mode is disabled
+		if (PaneCompositeBar.SANDTABLE_CODE_MODE_CONTAINERS.has(viewContainerId)) {
+			const codeModeEnabled = this.sandtableConfigService.getValue<boolean>(CodeModeConfigKeys.Enabled);
+			if (!codeModeEnabled) {
+				return true;
+			}
+		}
 
 		if (viewContainer) {
 			if (viewContainer.hideIfEmpty) {

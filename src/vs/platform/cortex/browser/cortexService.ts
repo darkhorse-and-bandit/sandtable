@@ -33,21 +33,28 @@ import {
 	ICortexStreamResult,
 	ICortexSystemSummary,
 	ICortexThroughput,
+	CortexApiError,
 } from '../common/cortex.js';
 import {
 	CortexConfigKeys,
 	ChatConfigKeys,
 	CORTEX_DEFAULT_ENDPOINT,
-	CORTEX_DEFAULT_HEALTH_CHECK_INTERVAL_MS,
 } from '../common/cortexConfiguration.js';
+import { IProviderRegistryService } from '../common/providerRegistry.js';
+import { ILLMProvider } from '../common/llmProvider.js';
+import { IAggregateHealthResult, IProviderInfo, IUnifiedModel } from '../common/cortexProviderTypes.js';
+import { parseModelReference, extractModelName } from '../common/modelResolver.js';
 
 // Import configuration side-effects to ensure settings are registered
 import '../common/cortexConfiguration.js';
 
 /**
  * Browser-side implementation of ICortexService.
- * Manages the CortexClient, health check polling, connection status events,
- * and provides all service methods defined in the interface.
+ *
+ * Phase 4.5 evolution: This service now acts as a routing facade that delegates
+ * inference requests to the correct provider via IProviderRegistryService.
+ * Admin and monitoring methods are delegated to the Cortex provider specifically.
+ * A direct CortexClient is kept as a fallback for when the registry is not ready.
  */
 export class CortexService extends Disposable implements ICortexService {
 
@@ -55,9 +62,7 @@ export class CortexService extends Disposable implements ICortexService {
 
 	private readonly _client: CortexClient;
 	private _connectionStatus: CortexConnectionStatus = 'disconnected';
-	private _healthCheckTimer: ReturnType<typeof setInterval> | undefined;
 	private _modelCount: number = 0;
-	private _isDisposed: boolean = false;
 
 	// ─── Events ───────────────────────────────────────────────────────────
 
@@ -69,38 +74,41 @@ export class CortexService extends Disposable implements ICortexService {
 	constructor(
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@ILogService private readonly logService: ILogService,
+		@IProviderRegistryService private readonly _registry: IProviderRegistryService,
 	) {
 		super();
 
-		// Initialize client with current configuration
+		// Initialize direct client as fallback
 		const endpoint = this.configurationService.getValue<string>(CortexConfigKeys.Endpoint) || CORTEX_DEFAULT_ENDPOINT;
 		const apiKey = this.configurationService.getValue<string>(CortexConfigKeys.ApiKey) || '';
-
 		this._client = new CortexClient(endpoint, apiKey);
 
-		// Watch for configuration changes
+		// Watch for legacy configuration changes (still used for fallback client)
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(CortexConfigKeys.Endpoint)) {
 				const newEndpoint = this.configurationService.getValue<string>(CortexConfigKeys.Endpoint) || CORTEX_DEFAULT_ENDPOINT;
 				this._client.updateEndpoint(newEndpoint);
-				this.logService.info(`[CortexService] Endpoint updated to: ${newEndpoint}`);
-				// Re-check health immediately on endpoint change
-				this._performHealthCheck();
+				this.logService.info(`[CortexService] Fallback endpoint updated to: ${newEndpoint}`);
 			}
 			if (e.affectsConfiguration(CortexConfigKeys.ApiKey)) {
 				const newApiKey = this.configurationService.getValue<string>(CortexConfigKeys.ApiKey) || '';
 				this._client.updateApiKey(newApiKey);
-				this.logService.info('[CortexService] API key updated');
-			}
-			if (e.affectsConfiguration(CortexConfigKeys.HealthCheckIntervalMs)) {
-				this._restartHealthCheckPolling();
 			}
 		}));
 
-		// Start health check polling
-		this._startHealthCheckPolling();
+		// Subscribe to registry health events for connection status updates
+		this._register(this._registry.onProviderHealthChanged(() => {
+			this._updateConnectionStatusFromRegistry();
+		}));
 
-		this.logService.info(`[CortexService] Initialized with endpoint: ${endpoint}`);
+		this._register(this._registry.onModelsChanged(() => {
+			const health = this._registry.getAggregateHealth();
+			this._modelCount = health.totalModels;
+		}));
+
+		// Set initial status
+		this._updateConnectionStatus('connecting');
+		this.logService.info(`[CortexService] Initialized with provider registry`);
 	}
 
 	// ─── Connection Management ────────────────────────────────────────────
@@ -114,10 +122,325 @@ export class CortexService extends Disposable implements ICortexService {
 	}
 
 	async checkHealth(): Promise<CortexHealthResult> {
-		const result = await this._client.checkHealth();
-		this._modelCount = result.modelCount;
-		this._updateConnectionStatus(result.healthy ? 'connected' : 'disconnected');
-		return result;
+		const aggregate = this._registry.getAggregateHealth();
+		const healthy = aggregate.healthyProviders > 0;
+		this._modelCount = aggregate.totalModels;
+		this._updateConnectionStatus(healthy ? 'connected' : 'disconnected');
+		return {
+			healthy,
+			modelCount: aggregate.totalModels,
+			latencyMs: aggregate.providers.length > 0
+				? Math.round(aggregate.providers.reduce((sum, p) => sum + p.latencyMs, 0) / aggregate.providers.length)
+				: 0,
+		};
+	}
+
+	// ─── Multi-Provider (Phase 4.5) ───────────────────────────────────────
+
+	listProviders(): IProviderInfo[] {
+		const providers = this._registry.getProviders();
+		return providers.map(p => {
+			const health = this._registry.getProviderHealth(p.id);
+			return {
+				id: p.id,
+				displayName: p.displayName,
+				type: p.type,
+				healthy: health?.healthy ?? false,
+				modelCount: health?.modelCount ?? 0,
+			};
+		});
+	}
+
+	getAggregateHealth(): IAggregateHealthResult {
+		return this._registry.getAggregateHealth();
+	}
+
+	// ─── Inference (routed via provider registry) ─────────────────────────
+
+	async chatCompletion(request: ICortexChatRequest): Promise<ICortexChatResponse> {
+		const { provider, routedRequest } = this._routeRequest(request);
+		return provider.chatCompletion(routedRequest);
+	}
+
+	async chatCompletionStream(
+		request: ICortexChatRequest,
+		onToken: (chunk: ICortexStreamChunk) => void,
+		cancellation?: CancellationToken
+	): Promise<ICortexStreamResult> {
+		const { provider, routedRequest } = this._routeRequest(request);
+		return provider.chatCompletionStream(routedRequest, onToken, cancellation);
+	}
+
+	async textCompletion(request: ICortexCompletionRequest): Promise<ICortexCompletionResponse> {
+		const { provider, routedRequest } = this._routeTextRequest(request);
+		if (!provider.supportsTextCompletion || !provider.textCompletion) {
+			throw new CortexApiError(501, `Provider "${provider.displayName}" does not support text completions`);
+		}
+		return provider.textCompletion(routedRequest);
+	}
+
+	async textCompletionStream(
+		request: ICortexCompletionRequest,
+		onToken: (text: string) => void,
+		cancellation?: CancellationToken
+	): Promise<ICortexStreamResult> {
+		const { provider, routedRequest } = this._routeTextRequest(request);
+		if (!provider.supportsTextCompletion || !provider.textCompletionStream) {
+			throw new CortexApiError(501, `Provider "${provider.displayName}" does not support text completion streaming`);
+		}
+		return provider.textCompletionStream(routedRequest, onToken, cancellation);
+	}
+
+	async fimCompletion(request: ICortexFimRequest): Promise<ICortexCompletionResponse> {
+		const { provider, routedRequest } = this._routeFimRequest(request);
+		if (!provider.supportsFimCompletion || !provider.fimCompletion) {
+			throw new CortexApiError(501, `Provider "${provider.displayName}" does not support FIM completions`);
+		}
+		return provider.fimCompletion(routedRequest);
+	}
+
+	async fimCompletionStream(
+		request: ICortexFimRequest,
+		onToken: (text: string) => void,
+		cancellation?: CancellationToken
+	): Promise<ICortexStreamResult> {
+		const { provider, routedRequest } = this._routeFimRequest(request);
+		if (!provider.supportsFimCompletion || !provider.fimCompletionStream) {
+			throw new CortexApiError(501, `Provider "${provider.displayName}" does not support FIM completion streaming`);
+		}
+		return provider.fimCompletionStream(routedRequest, onToken, cancellation);
+	}
+
+	// ─── Model Discovery (aggregated from all providers) ──────────────────
+
+	async listRunningModels(): Promise<ICortexModel[]> {
+		try {
+			const unifiedModels = await this._registry.listAllModels();
+			return this._mapUnifiedToLegacy(unifiedModels);
+		} catch (err) {
+			this.logService.warn(`[CortexService] Failed to list models from registry, falling back to direct client: ${err}`);
+			return this._client.listRunningModels();
+		}
+	}
+
+	async getModelConstraints(modelName: string): Promise<ICortexModelConstraints> {
+		// Try to route to the correct provider
+		const provider = this._registry.getProviderForModel(modelName);
+		if (provider?.getModelConstraints) {
+			const bareModel = extractModelName(modelName);
+			return provider.getModelConstraints(bareModel);
+		}
+		// Fallback to direct client
+		return this._client.getModelConstraints(extractModelName(modelName));
+	}
+
+	// ─── IDE Status (Cortex-specific) ─────────────────────────────────────
+
+	async getIDEStatus(): Promise<ICortexIDEStatus> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.getIDEStatus();
+		}
+		return this._client.getIDEStatus();
+	}
+
+	// ─── Admin (delegated to Cortex provider) ─────────────────────────────
+
+	async listAllModels(): Promise<ICortexModelDetail[]> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.listAllModels();
+		}
+		await this._ensureAdminSession();
+		return this._client.listAllModels();
+	}
+
+	async startModel(modelId: number): Promise<void> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.startModel(modelId);
+		}
+		await this._ensureAdminSession();
+		return this._client.startModel(modelId);
+	}
+
+	async stopModel(modelId: number): Promise<void> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.stopModel(modelId);
+		}
+		await this._ensureAdminSession();
+		return this._client.stopModel(modelId);
+	}
+
+	async getModelLogs(modelId: number, diagnose?: boolean): Promise<string> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.getModelLogs(modelId, diagnose);
+		}
+		await this._ensureAdminSession();
+		return this._client.getModelLogs(modelId, diagnose);
+	}
+
+	async dryRunModel(modelId: number): Promise<ICortexDryRunResult> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.dryRunModel(modelId);
+		}
+		await this._ensureAdminSession();
+		return this._client.dryRunModel(modelId);
+	}
+
+	// ─── System Monitoring (Cortex-specific) ──────────────────────────────
+
+	async getSystemSummary(): Promise<ICortexSystemSummary> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.getSystemSummary();
+		}
+		await this._ensureAdminSession();
+		return this._client.getSystemSummary();
+	}
+
+	async getGPUMetrics(): Promise<ICortexGPUMetric[]> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.getGPUMetrics();
+		}
+		await this._ensureAdminSession();
+		return this._client.getGPUMetrics();
+	}
+
+	async getThroughputMetrics(): Promise<ICortexThroughput> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.getThroughputMetrics();
+		}
+		await this._ensureAdminSession();
+		return this._client.getThroughputMetrics();
+	}
+
+	// ─── Chat Sessions (Cortex-specific) ──────────────────────────────────
+
+	async listChatSessions(): Promise<ICortexChatSession[]> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.listChatSessions();
+		}
+		await this._ensureAdminSession();
+		return this._client.listChatSessions();
+	}
+
+	async getChatSession(sessionId: string): Promise<ICortexChatSessionDetail> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.getChatSession(sessionId);
+		}
+		await this._ensureAdminSession();
+		return this._client.getChatSession(sessionId);
+	}
+
+	async createChatSession(request: ICortexCreateSessionRequest): Promise<ICortexChatSession> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.createChatSession(request);
+		}
+		await this._ensureAdminSession();
+		return this._client.createChatSession(request);
+	}
+
+	async addMessageToSession(sessionId: string, message: ICortexSessionMessage): Promise<void> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.addMessageToSession(sessionId, message);
+		}
+		await this._ensureAdminSession();
+		return this._client.addMessageToSession(sessionId, message);
+	}
+
+	async deleteChatSession(sessionId: string): Promise<void> {
+		const cortex = this._registry.getCortexProvider();
+		if (cortex) {
+			return cortex.deleteChatSession(sessionId);
+		}
+		await this._ensureAdminSession();
+		return this._client.deleteChatSession(sessionId);
+	}
+
+	// ─── Routing Helpers ──────────────────────────────────────────────────
+
+	private _routeRequest(request: ICortexChatRequest): { provider: ILLMProvider; routedRequest: ICortexChatRequest } {
+		const provider = this._resolveProviderForModel(request.model);
+		const bareModel = extractModelName(request.model);
+		return {
+			provider,
+			routedRequest: { ...request, model: bareModel },
+		};
+	}
+
+	private _routeTextRequest(request: ICortexCompletionRequest): { provider: ILLMProvider; routedRequest: ICortexCompletionRequest } {
+		const provider = this._resolveProviderForModel(request.model);
+		const bareModel = extractModelName(request.model);
+		return {
+			provider,
+			routedRequest: { ...request, model: bareModel },
+		};
+	}
+
+	private _routeFimRequest(request: ICortexFimRequest): { provider: ILLMProvider; routedRequest: ICortexFimRequest } {
+		const provider = this._resolveProviderForModel(request.model);
+		const bareModel = extractModelName(request.model);
+		return {
+			provider,
+			routedRequest: { ...request, model: bareModel },
+		};
+	}
+
+	private _resolveProviderForModel(modelRef: string): ILLMProvider {
+		const provider = this._registry.getProviderForModel(modelRef);
+		if (provider) {
+			return provider;
+		}
+
+		// If model has a compound ref but provider not found, throw descriptive error
+		const parsed = parseModelReference(modelRef);
+		if (parsed) {
+			throw new CortexApiError(404, `Provider "${parsed.providerId}" not found for model "${parsed.modelName}"`);
+		}
+
+		// Bare model name, no active providers -- throw error
+		throw new CortexApiError(503, `No active providers available to serve model "${modelRef}"`);
+	}
+
+	/**
+	 * Maps IUnifiedModel[] to ICortexModel[] for backward compatibility.
+	 * Consumers that use listRunningModels() get compound names as served_model_name.
+	 */
+	private _mapUnifiedToLegacy(models: IUnifiedModel[]): ICortexModel[] {
+		return models
+			.filter(m => m.state === 'running' || m.state === 'available')
+			.map(m => ({
+				served_model_name: m.qualifiedName,
+				task: m.task || 'generate',
+				engine_type: (m.engineType === 'vllm' || m.engineType === 'llamacpp' || m.engineType === 'external')
+					? m.engineType as ICortexModel['engine_type']
+					: 'external' as const,
+				state: m.state === 'available' ? 'running' as const : m.state as ICortexModel['state'],
+			}));
+	}
+
+	// ─── Connection Status ────────────────────────────────────────────────
+
+	private _updateConnectionStatusFromRegistry(): void {
+		const aggregate = this._registry.getAggregateHealth();
+		this._modelCount = aggregate.totalModels;
+		if (aggregate.healthyProviders > 0) {
+			this._updateConnectionStatus('connected');
+		} else if (aggregate.totalProviders > 0) {
+			this._updateConnectionStatus('disconnected');
+		} else {
+			this._updateConnectionStatus('disconnected');
+		}
 	}
 
 	private _updateConnectionStatus(newStatus: CortexConnectionStatus): void {
@@ -129,213 +452,11 @@ export class CortexService extends Disposable implements ICortexService {
 		}
 	}
 
-	// ─── Health Check Polling ─────────────────────────────────────────────
-
-	private _startHealthCheckPolling(): void {
-		// Mark as connecting on startup
-		this._updateConnectionStatus('connecting');
-
-		// Perform initial health check immediately
-		this._performHealthCheck();
-
-		// Set up periodic polling
-		const interval = this.configurationService.getValue<number>(CortexConfigKeys.HealthCheckIntervalMs) || CORTEX_DEFAULT_HEALTH_CHECK_INTERVAL_MS;
-		this._healthCheckTimer = setInterval(() => this._performHealthCheck(), interval);
-	}
-
-	private _restartHealthCheckPolling(): void {
-		if (this._healthCheckTimer !== undefined) {
-			clearInterval(this._healthCheckTimer);
-			this._healthCheckTimer = undefined;
-		}
-		const interval = this.configurationService.getValue<number>(CortexConfigKeys.HealthCheckIntervalMs) || CORTEX_DEFAULT_HEALTH_CHECK_INTERVAL_MS;
-		this._healthCheckTimer = setInterval(() => this._performHealthCheck(), interval);
-		this.logService.info(`[CortexService] Health check interval updated to ${interval}ms`);
-	}
-
-	private async _performHealthCheck(): Promise<void> {
-		if (this._isDisposed) {
-			return;
-		}
-		try {
-			await this.checkHealth();
-		} catch (err) {
-			this.logService.warn(`[CortexService] Health check failed: ${err}`);
-			this._updateConnectionStatus('disconnected');
-		}
-	}
-
-	// ─── Inference ────────────────────────────────────────────────────────
-
-	async chatCompletion(request: ICortexChatRequest): Promise<ICortexChatResponse> {
-		return this._client.chatCompletion(request);
-	}
-
-	async chatCompletionStream(
-		request: ICortexChatRequest,
-		onToken: (chunk: ICortexStreamChunk) => void,
-		cancellation?: CancellationToken
-	): Promise<ICortexStreamResult> {
-		const abortController = new AbortController();
-
-		// Wire up cancellation token to abort controller
-		let disposable: { dispose(): void } | undefined;
-		if (cancellation) {
-			disposable = cancellation.onCancellationRequested(() => {
-				abortController.abort();
-			});
-		}
-
-		try {
-			return await this._client.streamChatCompletion(request, onToken, abortController.signal);
-		} finally {
-			disposable?.dispose();
-		}
-	}
-
-	async textCompletion(request: ICortexCompletionRequest): Promise<ICortexCompletionResponse> {
-		return this._client.textCompletion(request);
-	}
-
-	async textCompletionStream(
-		request: ICortexCompletionRequest,
-		onToken: (text: string) => void,
-		cancellation?: CancellationToken
-	): Promise<ICortexStreamResult> {
-		const abortController = new AbortController();
-
-		let disposable: { dispose(): void } | undefined;
-		if (cancellation) {
-			disposable = cancellation.onCancellationRequested(() => {
-				abortController.abort();
-			});
-		}
-
-		try {
-			return await this._client.streamTextCompletion(request, onToken, abortController.signal);
-		} finally {
-			disposable?.dispose();
-		}
-	}
-
-	async fimCompletion(request: ICortexFimRequest): Promise<ICortexCompletionResponse> {
-		return this._client.fimCompletion(request);
-	}
-
-	async fimCompletionStream(
-		request: ICortexFimRequest,
-		onToken: (text: string) => void,
-		cancellation?: CancellationToken
-	): Promise<ICortexStreamResult> {
-		const abortController = new AbortController();
-
-		let disposable: { dispose(): void } | undefined;
-		if (cancellation) {
-			disposable = cancellation.onCancellationRequested(() => {
-				abortController.abort();
-			});
-		}
-
-		try {
-			return await this._client.streamFimCompletion(request, onToken, abortController.signal);
-		} finally {
-			disposable?.dispose();
-		}
-	}
-
-	// ─── Model Discovery ──────────────────────────────────────────────────
-
-	async listRunningModels(): Promise<ICortexModel[]> {
-		return this._client.listRunningModels();
-	}
-
-	async getModelConstraints(modelName: string): Promise<ICortexModelConstraints> {
-		return this._client.getModelConstraints(modelName);
-	}
-
-	// ─── IDE Status ───────────────────────────────────────────────────────
-
-	async getIDEStatus(): Promise<ICortexIDEStatus> {
-		return this._client.getIDEStatus();
-	}
-
-	// ─── Admin (Model Management) ─────────────────────────────────────────
-
-	async listAllModels(): Promise<ICortexModelDetail[]> {
-		await this._ensureAdminSession();
-		return this._client.listAllModels();
-	}
-
-	async startModel(modelId: number): Promise<void> {
-		await this._ensureAdminSession();
-		return this._client.startModel(modelId);
-	}
-
-	async stopModel(modelId: number): Promise<void> {
-		await this._ensureAdminSession();
-		return this._client.stopModel(modelId);
-	}
-
-	async getModelLogs(modelId: number, diagnose?: boolean): Promise<string> {
-		await this._ensureAdminSession();
-		return this._client.getModelLogs(modelId, diagnose);
-	}
-
-	async dryRunModel(modelId: number): Promise<ICortexDryRunResult> {
-		await this._ensureAdminSession();
-		return this._client.dryRunModel(modelId);
-	}
-
-	// ─── System Monitoring ────────────────────────────────────────────────
-
-	async getSystemSummary(): Promise<ICortexSystemSummary> {
-		await this._ensureAdminSession();
-		return this._client.getSystemSummary();
-	}
-
-	async getGPUMetrics(): Promise<ICortexGPUMetric[]> {
-		await this._ensureAdminSession();
-		return this._client.getGPUMetrics();
-	}
-
-	async getThroughputMetrics(): Promise<ICortexThroughput> {
-		await this._ensureAdminSession();
-		return this._client.getThroughputMetrics();
-	}
-
-	// ─── Chat Sessions ────────────────────────────────────────────────────
-
-	async listChatSessions(): Promise<ICortexChatSession[]> {
-		await this._ensureAdminSession();
-		return this._client.listChatSessions();
-	}
-
-	async getChatSession(sessionId: string): Promise<ICortexChatSessionDetail> {
-		await this._ensureAdminSession();
-		return this._client.getChatSession(sessionId);
-	}
-
-	async createChatSession(request: ICortexCreateSessionRequest): Promise<ICortexChatSession> {
-		await this._ensureAdminSession();
-		return this._client.createChatSession(request);
-	}
-
-	async addMessageToSession(sessionId: string, message: ICortexSessionMessage): Promise<void> {
-		await this._ensureAdminSession();
-		return this._client.addMessageToSession(sessionId, message);
-	}
-
-	async deleteChatSession(sessionId: string): Promise<void> {
-		await this._ensureAdminSession();
-		return this._client.deleteChatSession(sessionId);
-	}
-
-	// ─── Admin Session Management ─────────────────────────────────────────
+	// ─── Fallback Admin Session (for direct client) ───────────────────────
 
 	private _adminSessionPromise: Promise<boolean> | undefined;
 
 	private async _ensureAdminSession(): Promise<void> {
-		// Avoid duplicate login attempts
 		if (this._adminSessionPromise) {
 			await this._adminSessionPromise;
 			return;
@@ -385,11 +506,6 @@ export class CortexService extends Disposable implements ICortexService {
 	// ─── Disposal ─────────────────────────────────────────────────────────
 
 	override dispose(): void {
-		this._isDisposed = true;
-		if (this._healthCheckTimer !== undefined) {
-			clearInterval(this._healthCheckTimer);
-			this._healthCheckTimer = undefined;
-		}
 		super.dispose();
 	}
 }

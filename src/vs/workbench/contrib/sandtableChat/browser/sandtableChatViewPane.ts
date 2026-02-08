@@ -230,17 +230,20 @@ export class SandtableChatViewPane extends ViewPane {
 
 		// Create session if not exists
 		if (!this._currentSessionId) {
+			const systemPrompt = this.configurationService.getValue<string>(ChatConfigKeys.SystemPrompt) || 'You are a helpful coding assistant.';
+
+			// Always add system prompt to conversation, even if session persistence fails
+			if (!this._conversationMessages.some(m => m.role === 'system')) {
+				this._conversationMessages.unshift({ role: 'system', content: systemPrompt });
+			}
+
 			try {
-				const systemPrompt = this.configurationService.getValue<string>(ChatConfigKeys.SystemPrompt) || 'You are a helpful coding assistant.';
 				const session = await this.cortexService.createChatSession({
 					title: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
 					model,
 					system_prompt: systemPrompt,
 				});
 				this._currentSessionId = session.id;
-
-				// Add system prompt to conversation
-				this._conversationMessages.unshift({ role: 'system', content: systemPrompt });
 
 				// Persist the user message to the session
 				await this.cortexService.addMessageToSession(session.id, {
@@ -249,6 +252,7 @@ export class SandtableChatViewPane extends ViewPane {
 				});
 			} catch {
 				// Session creation failed -- proceed without persistence
+				// Chat will still work via the provider registry
 			}
 		} else {
 			// Persist user message

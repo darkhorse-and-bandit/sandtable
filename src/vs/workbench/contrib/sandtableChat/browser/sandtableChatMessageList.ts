@@ -65,9 +65,11 @@ export class SandtableChatMessageList extends Disposable {
 		const messageEl = this._createMessageElement({ role: 'assistant', content: '' });
 		messageEl.classList.add('sandtable-chat-message-streaming');
 
-		// Add typing indicator
+		// Add typing indicator (using DOM APIs instead of innerHTML to comply with TrustedHTML CSP)
 		const typingIndicator = dom.append(messageEl.querySelector('.sandtable-chat-message-content')!, dom.$('.sandtable-chat-typing-indicator'));
-		typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+		dom.append(typingIndicator, dom.$('span'));
+		dom.append(typingIndicator, dom.$('span'));
+		dom.append(typingIndicator, dom.$('span'));
 
 		this._messageElements.set(index, messageEl);
 		this._container.appendChild(messageEl);

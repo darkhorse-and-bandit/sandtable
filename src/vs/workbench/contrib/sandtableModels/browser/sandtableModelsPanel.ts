@@ -15,7 +15,7 @@ import { IThemeService } from '../../../../platform/theme/common/themeService.js
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
-import { ICortexService, ICortexModelDetail, ICortexGPUMetric, ICortexSystemSummary, CortexConnectionStatus } from '../../../../platform/cortex/common/cortex.js';
+import { ICortexService, ICortexModelDetail, ICortexGPUMetric, ICortexSystemSummary, ICortexModel, CortexConnectionStatus } from '../../../../platform/cortex/common/cortex.js';
 import { ModelsConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
 import { SandtableSystemSummary } from './sandtableSystemSummary.js';
 import { SandtableGpuDashboard } from './sandtableGpuDashboard.js';
@@ -42,6 +42,7 @@ export class SandtableModelsPanel extends ViewPane {
 	private _gpuDashboard!: SandtableGpuDashboard;
 	private _modelsList!: SandtableModelsList;
 	private _modelLogs!: SandtableModelLogs;
+	private _externalModelsEl!: HTMLElement;
 
 	private _pollTimer: ReturnType<typeof setInterval> | undefined;
 	private _isConnected = false;
@@ -93,6 +94,9 @@ export class SandtableModelsPanel extends ViewPane {
 
 		// Model Logs
 		this._modelLogs = this._register(new SandtableModelLogs(this._contentEl, this.cortexService, this.logService));
+
+		// External Models (Read-Only)
+		this._externalModelsEl = dom.append(this._contentEl, dom.$('.sandtable-models-external-section'));
 
 		// ─── Event Wiring ────────────────────────────────────────────────
 
@@ -195,6 +199,9 @@ export class SandtableModelsPanel extends ViewPane {
 			// Fetch full model details (the IDE status only has running models)
 			await this._refreshModels();
 
+			// Fetch external models from other providers
+			await this._refreshExternalModels();
+
 		} catch {
 			// Combined endpoint not available, fall back to individual calls
 			this.logService.debug('[SandtableModelsPanel] IDE status endpoint unavailable, falling back to individual endpoints');
@@ -226,6 +233,9 @@ export class SandtableModelsPanel extends ViewPane {
 
 		// Fetch models
 		await this._refreshModels();
+
+		// Fetch external models from other providers
+		await this._refreshExternalModels();
 	}
 
 	/**
@@ -238,6 +248,56 @@ export class SandtableModelsPanel extends ViewPane {
 		} catch (err) {
 			this.logService.debug('[SandtableModelsPanel] Failed to fetch models:', err);
 			this._modelsList.showEmpty();
+		}
+	}
+
+	/**
+	 * Refresh the external (non-Cortex) models section.
+	 * External models are read-only -- no start/stop controls.
+	 */
+	private async _refreshExternalModels(): Promise<void> {
+		try {
+			const allModels: ICortexModel[] = await this.cortexService.listRunningModels();
+			const externalModels = allModels.filter(m => m.engine_type === 'external');
+
+			dom.clearNode(this._externalModelsEl);
+
+			if (externalModels.length === 0) {
+				return; // No external models -- hide the section entirely
+			}
+
+			const sectionTitle = dom.append(this._externalModelsEl, dom.$('.sandtable-models-section-title'));
+			sectionTitle.textContent = 'External Models (Read-Only)';
+
+			// Group by provider
+			const grouped = new Map<string, ICortexModel[]>();
+			for (const model of externalModels) {
+				const separatorIdx = model.served_model_name.indexOf('::');
+				const providerName = separatorIdx > 0 ? model.served_model_name.substring(0, separatorIdx) : 'External';
+				if (!grouped.has(providerName)) {
+					grouped.set(providerName, []);
+				}
+				grouped.get(providerName)!.push(model);
+			}
+
+			for (const [providerName, models] of grouped) {
+				const groupEl = dom.append(this._externalModelsEl, dom.$('.sandtable-models-external-group'));
+				const groupHeader = dom.append(groupEl, dom.$('.sandtable-models-external-group-header'));
+				groupHeader.textContent = providerName;
+
+				for (const model of models) {
+					const row = dom.append(groupEl, dom.$('.sandtable-models-external-row'));
+					const dot = dom.append(row, dom.$('.sandtable-models-external-dot'));
+					dot.textContent = '\u25CF'; // ●
+					const name = dom.append(row, dom.$('.sandtable-models-external-name'));
+					const displayName = model.served_model_name.includes('::')
+						? model.served_model_name.split('::')[1]
+						: model.served_model_name;
+					name.textContent = displayName;
+				}
+			}
+		} catch (err) {
+			this.logService.debug('[SandtableModelsPanel] Failed to fetch external models:', err);
 		}
 	}
 

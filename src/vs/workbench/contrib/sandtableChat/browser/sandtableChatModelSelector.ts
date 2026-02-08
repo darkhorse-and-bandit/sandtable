@@ -82,10 +82,33 @@ export class SandtableChatModelSelector extends Disposable {
 
 		this._selectElement.disabled = false;
 
+		// Group models by provider using the :: separator in served_model_name
+		const grouped = new Map<string, ICortexModel[]>();
 		for (const model of this._models) {
-			const option = dom.append(this._selectElement, dom.$('option')) as HTMLOptionElement;
-			option.value = model.served_model_name;
-			option.textContent = `${model.served_model_name} (${model.engine_type})`;
+			const separatorIdx = model.served_model_name.indexOf('::');
+			const providerName = separatorIdx > 0 ? model.served_model_name.substring(0, separatorIdx) : 'Default';
+			if (!grouped.has(providerName)) {
+				grouped.set(providerName, []);
+			}
+			grouped.get(providerName)!.push(model);
+		}
+
+		// Render optgroups per provider
+		for (const [providerName, models] of grouped) {
+			const optgroup = document.createElement('optgroup');
+			optgroup.label = providerName;
+			this._selectElement.appendChild(optgroup);
+
+			for (const model of models) {
+				const option = document.createElement('option');
+				option.value = model.served_model_name;
+				// Display the bare model name (strip provider prefix) with engine type
+				const displayName = model.served_model_name.includes('::')
+					? model.served_model_name.split('::')[1]
+					: model.served_model_name;
+				option.textContent = `${displayName} (${model.engine_type})`;
+				optgroup.appendChild(option);
+			}
 		}
 
 		// Select the first model if none selected or previous selection no longer available

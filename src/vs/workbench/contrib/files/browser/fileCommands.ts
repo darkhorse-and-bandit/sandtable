@@ -43,6 +43,7 @@ import { IAction, toAction } from '../../../../base/common/actions.js';
 import { EditorOpenSource, EditorResolution } from '../../../../platform/editor/common/editor.js';
 import { hash } from '../../../../base/common/hash.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { CodeModeConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
 import { IPaneCompositePartService } from '../../../services/panecomposite/browser/panecomposite.js';
 import { ViewContainerLocation } from '../../../common/views.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
@@ -689,13 +690,23 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 	handler: async (accessor, args?: { languageId?: string; viewType?: string }) => {
 		const editorService = accessor.get(IEditorService);
 
+		// Sandtable: Default to Markdown when Code Mode is OFF (research-first experience)
+		let languageId = args?.languageId;
+		if (!languageId) {
+			const configurationService = accessor.get(IConfigurationService);
+			const codeModeEnabled = configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled);
+			if (!codeModeEnabled) {
+				languageId = 'markdown';
+			}
+		}
+
 		await editorService.openEditor({
 			resource: undefined,
 			options: {
 				override: args?.viewType,
 				pinned: true
 			},
-			languageId: args?.languageId,
+			languageId,
 		});
 	}
 });
@@ -707,8 +718,18 @@ CommandsRegistry.registerCommand({
 		const dialogService = accessor.get(IFileDialogService);
 		const fileService = accessor.get(IFileService);
 
+		// Sandtable: Default to Markdown file when Code Mode is OFF (research-first experience)
+		let defaultFileName = args?.fileName ?? 'Untitled.txt';
+		if (!args?.fileName) {
+			const configurationService = accessor.get(IConfigurationService);
+			const codeModeEnabled = configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled);
+			if (!codeModeEnabled) {
+				defaultFileName = 'Untitled.md';
+			}
+		}
+
 		const createFileLocalized = nls.localize('newFileCommand.saveLabel', "Create File");
-		const defaultFileUri = joinPath(await dialogService.defaultFilePath(), args?.fileName ?? 'Untitled.txt');
+		const defaultFileUri = joinPath(await dialogService.defaultFilePath(), defaultFileName);
 
 		const saveUri = await dialogService.showSaveDialog({ saveLabel: createFileLocalized, title: createFileLocalized, defaultUri: defaultFileUri });
 
