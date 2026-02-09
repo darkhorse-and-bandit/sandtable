@@ -26,6 +26,11 @@ import { ChatAgentLocation } from '../../chat/common/constants.js';
 import { ICortexService, ICortexStreamChunk, ICortexMessage } from '../../../../platform/cortex/common/cortex.js';
 import { IProviderRegistryService } from '../../../../platform/cortex/common/providerRegistry.js';
 import { IUnifiedModel } from '../../../../platform/cortex/common/cortexProviderTypes.js';
+import { lookupKnownModelSpec } from '../../../../platform/cortex/common/knownModelContextWindows.js';
+import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
+import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { URI } from '../../../../base/common/uri.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -149,6 +154,13 @@ class SandtableLanguageModelProvider extends Disposable implements ILanguageMode
 				this._onDidChange.fire();
 			}
 		}));
+
+		// Force initial model resolution. The LanguageModelsService only auto-resolves
+		// on registration when stored model picker preferences exist for this vendor.
+		// On a fresh install (no stored preferences), models are never resolved into
+		// the cache and the picker stays empty. This deferred fire guarantees the
+		// service queries our models at least once after registration completes.
+		queueMicrotask(() => this._onDidChange.fire());
 	}
 
 	async provideLanguageModelChatInfo(
@@ -186,7 +198,13 @@ class SandtableLanguageModelProvider extends Disposable implements ILanguageMode
 			const availableModels = allModels.filter(m => m.state === 'running' || m.state === 'available');
 
 			// Apply curated model filter (if configured)
-			const curatedList = this.configurationService.getValue<Array<{ qualifiedName: string; enabled: boolean }>>('sandtable.models.curated');
+			const curatedList = this.configurationService.getValue<Array<{
+				qualifiedName: string;
+				enabled: boolean;
+				displayName?: string;
+				contextWindowTokens?: number;
+				maxOutputTokens?: number;
+			}>>('sandtable.models.curated');
 			let modelsToExpose: IUnifiedModel[];
 
 			if (curatedList && curatedList.length > 0) {
@@ -207,22 +225,50 @@ class SandtableLanguageModelProvider extends Disposable implements ILanguageMode
 			for (const model of modelsToExpose) {
 				const modelId = model.qualifiedName; // e.g., "openai::gpt-4o" or "cortex::deepseek-v3"
 
+				// Resolve context window size, capabilities, and display name for this model.
+				// Priority: curated config > known models table > registry defaults
+				const curatedEntry = curatedList?.find(c => c.qualifiedName === model.qualifiedName);
+				const knownSpec = lookupKnownModelSpec(model.modelName);
+
+				let maxInput = 128_000;
+				let maxOutput = 4_096;
+
+				if (curatedEntry?.contextWindowTokens) {
+					maxInput = curatedEntry.contextWindowTokens;
+				} else if (knownSpec) {
+					maxInput = knownSpec.contextWindowTokens;
+				}
+
+				if (curatedEntry?.maxOutputTokens) {
+					maxOutput = curatedEntry.maxOutputTokens;
+				} else if (knownSpec) {
+					maxOutput = knownSpec.maxOutputTokens;
+				}
+
+				// Enrich capabilities from the known model table. The provider registry
+				// defaults toolCalling to false for OpenAI-compatible providers, but many
+				// models (GPT-5, Claude, etc.) do support it. The known table has accurate
+				// toolCalling data for well-known model families.
+				const hasToolCalling = model.capabilities?.toolCalling || knownSpec?.toolCalling || false;
+
+				const displayName = curatedEntry?.displayName || model.modelName;
+
 				const metadata: ILanguageModelChatMetadata = {
 					extension: SANDTABLE_EXTENSION_ID,
-					name: model.modelName,
+					name: displayName,
 					id: modelId,
 					vendor: SANDTABLE_VENDOR,
 					version: '1.0.0',
 					family: model.engineType || model.providerType,
-					maxInputTokens: 128000, // Default; could be refined with constraints query
-					maxOutputTokens: 4096,
+					maxInputTokens: maxInput,
+					maxOutputTokens: maxOutput,
 					isDefaultForLocation: isFirst ? { [ChatAgentLocation.Chat]: true } : {},
 					isUserSelectable: true,
 					tooltip: `${model.providerName} — ${model.modelName}`,
 					modelPickerCategory: { label: model.providerName, order: model.providerType === 'cortex' ? 0 : 1 },
 					capabilities: {
-						toolCalling: model.capabilities?.toolCalling ?? false,
-						agentMode: model.capabilities?.toolCalling ?? false,
+						toolCalling: hasToolCalling,
+						agentMode: hasToolCalling,
 					},
 				};
 
@@ -301,7 +347,11 @@ class SandtableLanguageModelProvider extends Disposable implements ILanguageMode
 					}
 
 					source.resolve();
-					return { totalTokens: response.usage?.completion_tokens ?? 0 };
+					return {
+						totalTokens: response.usage?.completion_tokens ?? 0,
+						promptTokens: response.usage?.prompt_tokens,
+						completionTokens: response.usage?.completion_tokens,
+					};
 				} else {
 					// Streaming path: text-only responses stream token by token
 					const result = await this.cortexService.chatCompletionStream(
@@ -317,7 +367,11 @@ class SandtableLanguageModelProvider extends Disposable implements ILanguageMode
 						token
 					);
 					source.resolve();
-					return result;
+					return {
+						totalTokens: result.usage?.completion_tokens ?? result.totalTokens,
+						promptTokens: result.usage?.prompt_tokens,
+						completionTokens: result.usage?.completion_tokens,
+					};
 				}
 			} catch (e) {
 				if (!token.isCancellationRequested) {
@@ -384,6 +438,16 @@ class SandtableLMContribution extends Disposable implements IWorkbenchContributi
 			this.logService,
 		));
 		this._register(this.languageModelsService.registerLanguageModelProvider(SANDTABLE_VENDOR, provider));
+
+		// Intercept the "Add Language Models" command (Copilot-specific) to open
+		// Sandtable Settings where users can configure providers and curate models.
+		this._register(CommandsRegistry.registerCommand(
+			'workbench.action.chat.triggerSetup',
+			(accessor: ServicesAccessor) => {
+				const editorService = accessor.get(IEditorService);
+				editorService.openEditor({ resource: URI.parse('sandtable://settings') });
+			}
+		));
 
 		this.logService.info('[Sandtable LM] Language model provider registered (queries all providers)');
 	}

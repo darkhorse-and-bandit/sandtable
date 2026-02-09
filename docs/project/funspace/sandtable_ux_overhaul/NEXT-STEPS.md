@@ -47,9 +47,9 @@ This document tracks remaining work, enhancements, and follow-up tasks for the S
 - No empty separator lines are rendered
 - [ ] Consider adding Sandtable-specific Terminal menu items (e.g., "Connect to Cortex" terminal command) -- future enhancement
 
-### Selection Menu Review
+### ~~Selection Menu Review~~ (Reviewed -- Kept Visible)
 - The Selection menu was kept always visible (useful for text editing in general)
-- [ ] Review if any Selection menu items are code-specific and should be gated behind Code Mode
+- [x] Reviewed: Basic selection (Select All, Expand/Shrink, Copy Line) and multicursor features are useful for text editing in both modes. No changes needed.
 
 ### ~~Go Menu Partial Items~~ (DONE)
 - Only `4_symbol_nav` group items (Go to Definition, etc.) were gated behind Code Mode
@@ -67,23 +67,26 @@ This document tracks remaining work, enhancements, and follow-up tasks for the S
 
 ## Priority 3: Deeper Identity Changes
 
-### Command Palette Filtering (Partially Done)
-- When Code Mode is OFF, many Command Palette entries are irrelevant (e.g., "Debug: Start Debugging", "Tasks: Run Build Task")
+### ~~Command Palette / Command Center Filtering~~ (DONE)
 - [x] **Task commands (15 items):** All task Command Palette entries gated behind `sandtableTaskPaletteWhen` (combines `TaskExecutionSupportedContext` + `sandtable.codeModeEnabled`). File: `task.contribution.ts`
 - [x] **Audit completed:** Most debug commands already have `CONTEXT_DEBUGGERS_AVAILABLE` preconditions that naturally filter them
-- [ ] **Debug commands (8 without preconditions):** `debug.addConfiguration`, `clearReplAction`, `toggleDisassemblyViewSourceCode`, `addFunctionBreakpointAction`, `addDataBreakpointOnAddress`, `toggleBreakpointsActivatedAction`, `removeAllBreakpoints`, `toggleBreakpointsPresentation` -- these appear unconditionally but are lower priority since they're niche commands
+- [x] **Command Center dropdown:** "Start Debugging", "Run Task", "Go to Symbol" entries hidden when Code Mode is OFF
+- [x] **Command Center labels:** Renamed to "Open Document", "Search in Documents", "Ask AI" in Research Mode
+- [x] **Research entries added:** "Browse Personas" and "Open Sandtable Settings" appear in Research Mode
+- [x] **Placeholder text:** Simplified to "Search files by name" (removed code-centric suffixes)
+- **Files:** `anythingQuickAccess.ts`
 - SCM commands: No SCM commands have `f1: true` -- they are context-menu/view-specific only
-- Testing commands: `testing.toggleTestingPeekHistory` and `testing.configureProfile` lack adequate filtering but are very niche
+- [ ] **Debug commands (8 without preconditions):** Niche commands like `debug.addConfiguration` still appear -- very low priority
 
 ### Keyboard Shortcut Relevance
 - F5 (Start Debugging), Ctrl+Shift+B (Run Build Task), etc. are meaningless without Code Mode
 - [ ] These keybindings are still registered but their commands won't do anything useful -- consider unbinding or re-assigning when Code Mode is OFF
 - [ ] Low priority since the commands simply fail silently
 
-### File Explorer Context Menu
-- Right-clicking a file in the Workspace sidebar shows coding-specific entries
-- [ ] Review and gate code-specific file context menu items (e.g., "Open With...", language-specific items)
-- [ ] Keep general items: Open, Copy Path, Rename, Delete, etc.
+### ~~File Explorer Context Menu~~ (DONE)
+- [x] "Open in Integrated Terminal" and "Open in External Terminal" gated behind Code Mode
+- [x] General items preserved: Open, Copy Path, Rename, Delete, etc.
+- **File:** `externalTerminal.contribution.ts`
 
 ### ~~Rename Symbol / Refactor / Source Action~~ (DONE)
 - [x] Rename Symbol context menu gated behind Code Mode (`rename.ts`)
@@ -141,11 +144,43 @@ This document tracks remaining work, enhancements, and follow-up tasks for the S
 - [x] 6 future-phase placeholders: Personas, Documents, Data Sources, Workflows, Sessions, Users & Roles
 - [x] About section, slimmed General dashboard
 
+### ~~Chat Panel Text Cleanup~~ (DONE)
+- [x] Welcome titles adapted for Research Mode: "Ask a question" / "Edit content" / "Research with Agent"
+- [x] Chat mode placeholders: "Ask a question or explore a topic" / "Edit or revise selected content" / "Describe what to research or explore next"
+- [x] Suggested prompts: "Explore Documents" / "Start Research" in Research Mode
+- [x] "Generate Agent Instructions" rephrased for workspace context (not "onboard AI onto your codebase")
+- [x] Agent title bar hover: "describe what to research next"
+- **Files:** `chatWidget.ts`, `chatInputEditorContrib.ts`, `agentTitleBarStatusWidget.ts`
+
+### ~~Copilot / Microsoft Branding Cleanup~~ (DONE)
+- [x] Copilot status bar icon hidden when Code Mode is OFF (Sandtable has Cortex status indicator)
+- **File:** `chatStatusEntry.ts`
+
+### ~~Inline Chat / Editor Hints~~ (DONE)
+- [x] Empty editor hint: "Ask a question, or start writing" in Research Mode
+- [x] Inline chat placeholders: "Generate content" / "Modify selected text" in Research Mode
+- [x] Editor watermark: "Start Debugging" and "Toggle Terminal" hidden in Research Mode
+- **Files:** `emptyTextEditorHint.ts`, `inlineChatOverlayWidget.ts`, `inlineChatController.ts`, `editorGroupWatermark.ts`
+
+### ~~Explorer Panels~~ (DONE)
+- [x] Outline panel hidden in Research Mode (code symbols irrelevant)
+- [x] Timeline panel hidden in Research Mode
+- **Files:** `outline.contribution.ts`, `timeline.contribution.ts`
+
+### ~~Status Bar Cleanup~~ (DONE)
+- [x] OVR (overtype mode) indicator hidden in Research Mode
+- [x] Remote Window indicator hidden when Code Mode OFF and not connected to remote
+- **Files:** `editorStatus.ts`, `remoteIndicator.ts`
+
+### ~~Menu Bar Gating~~ (DONE)
+- [x] Go menu hidden at top level when Code Mode is OFF
+- [x] Terminal menu hidden at top level when Code Mode is OFF
+- [x] Go to Symbol in Editor, Go to Symbol in Workspace, Go to Bracket gated behind Code Mode
+- **Files:** `menubarControl.ts`, `gotoSymbolQuickAccess.ts`, `searchActionsSymbol.ts`, `bracketMatching.ts`
+
 ### Remaining Work
-- [ ] `run_command` tool: implement via `ITerminalService` (currently returns placeholder)
 - [ ] Runtime testing: verify tool calling end-to-end in agent mode
 - [ ] Evaluate VS Code's built-in session persistence vs Cortex-side session storage
-- [ ] Customize chat panel welcome view with Sandtable branding
 
 ### Mode-Specific Activity Bar Ordering
 - With chat now in the Auxiliary Bar (right side), the Activity Bar is less crowded

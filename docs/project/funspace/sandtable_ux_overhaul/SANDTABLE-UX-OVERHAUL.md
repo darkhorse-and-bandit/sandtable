@@ -1,6 +1,6 @@
 # Funspace: Sandtable UX Overhaul & Code Mode
 
-**Status:** Phase 2 In Progress
+**Status:** Phase 2 Complete
 **Date:** 2026-02-08
 **Category:** Identity & UX Transformation
 
@@ -73,8 +73,9 @@ sandtable.codeMode.enabled (boolean setting, default: false)
 
 **Menu Bar:**
 - Entire "Run" menu (hidden at top level)
-- Terminal > Tasks group (Run Task, Build Task, Configure Tasks, etc.)
-- Go > Symbol Navigation group (Go to Definition, Declaration, Type Definition, Implementations, References)
+- Entire "Go" menu (hidden at top level -- most items code-centric)
+- Entire "Terminal" menu (hidden at top level -- developer tool)
+- Go > Symbol Navigation group (Go to Definition, Declaration, Type Definition, Implementations, References, Go to Symbol, Go to Bracket)
 - Go > Problem Navigation group (Next/Previous Problem)
 - Go > Change Navigation group (Next/Previous Change)
 
@@ -90,9 +91,41 @@ sandtable.codeMode.enabled (boolean setting, default: false)
 - Encoding indicator (e.g., "UTF-8")
 - End of Line indicator (e.g., "LF")
 - Indentation indicator (e.g., "Spaces: 4")
+- OVR (overtype mode) indicator
+- Copilot status bar icon (hidden; Sandtable uses Cortex status indicator)
+- Remote Window indicator (hidden when not connected to a remote)
+
+**Explorer Sidebar Panels:**
+- Outline panel (shows code symbols -- irrelevant for research)
+- Timeline panel (shows git history)
+
+**File Explorer Context Menu:**
+- "Open in Integrated Terminal"
+- "Open in External Terminal"
 
 **Command Palette:**
 - All 15 task commands (Run Task, Build Task, Test Task, Configure Tasks, etc.)
+
+**Command Center Dropdown (Ctrl+P):**
+- "Start Debugging" and "Run Task" help entries hidden
+- "Go to Symbol in Editor" and "Go to Symbol in Workspace" help entries hidden
+- Placeholder simplified to "Search files by name" (removed code-centric suffixes)
+- Entries renamed: "Open Document", "Search in Documents", "Ask AI"
+- Research-specific entries added: "Browse Personas", "Open Sandtable Settings"
+
+**Chat Panel Text:**
+- Welcome titles: "Ask a question" / "Edit content" / "Research with Agent"
+- Input placeholders: research-friendly descriptions instead of code-centric ones
+- Suggested prompts: "Explore Documents" / "Start Research"
+- "Generate Agent Instructions" rephrased for workspace context
+- Agent hover label: "describe what to research next"
+
+**Inline Chat Placeholders:**
+- "Generate content" / "Modify selected text" (replacing code-centric terminology)
+
+**Editor Empty State:**
+- Hint text: "Ask a question, or start writing" (replacing "Generate code / select a language")
+- Watermark shortcuts: "Start Debugging" and "Toggle Terminal" hidden
 
 **New File Behavior:**
 - `Ctrl+N` (New Untitled File) defaults to Markdown language mode
@@ -109,11 +142,13 @@ sandtable.codeMode.enabled (boolean setting, default: false)
 - Search in Activity Bar
 - Chat panel in Auxiliary Bar (right side) -- VS Code's built-in chat, powered by Cortex models
 - Sandtable Models in Activity Bar
+- Agent Portfolio in Activity Bar
 - Terminal panel
 - Output panel
-- File, Edit, Selection, View, Terminal (basic), Help menus
-- Cursor position in Status Bar
+- File, Edit, Selection, View, Help menus
+- Cursor position (Ln/Col) in Status Bar
 - Cortex connection status in Status Bar
+- Active Persona indicator in Status Bar
 - Code Mode toggle button in Status Bar (shows "Research Mode" / "Code Mode", click to switch)
 
 ## Global Identity Changes (Always Active)

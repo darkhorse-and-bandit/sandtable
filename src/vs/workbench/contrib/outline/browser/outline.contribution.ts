@@ -12,6 +12,7 @@ import { VIEW_CONTAINER } from '../../files/browser/explorerViewlet.js';
 import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
 import { Codicon } from '../../../../base/common/codicons.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
+import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { OutlineConfigKeys } from '../../../services/outline/browser/outline.js';
 import { IOutlinePane } from './outline.js';
 
@@ -23,6 +24,7 @@ import './outlineActions.js';
 
 const outlineViewIcon = registerIcon('outline-view-icon', Codicon.symbolClass, localize('outlineViewIcon', 'View icon of the outline view.'));
 
+// Sandtable: Only show Outline panel when Code Mode is enabled (code symbols are not relevant for research users)
 Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry).registerViews([{
 	id: IOutlinePane.Id,
 	name: localize2('name', "Outline"),
@@ -34,6 +36,7 @@ Registry.as<IViewsRegistry>(ViewExtensions.ViewsRegistry).registerViews([{
 	collapsed: true,
 	order: 2,
 	weight: 30,
+	when: ContextKeyExpr.has('sandtable.codeModeEnabled'),
 	focusCommand: { id: 'outline.focus' }
 }], VIEW_CONTAINER);
 

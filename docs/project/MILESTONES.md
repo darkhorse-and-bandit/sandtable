@@ -160,6 +160,9 @@ Note: Phases 2, 3, and 4 all depend on Phase 1 (the platform service layer) but 
 | Legacy settings migration works | `sandtable.cortex.*` settings auto-create default Cortex provider |
 | Parameter compatibility system | Automatic reasoning model detection + per-model admin overrides for drop/rename/force/inject params |
 | CSP and auth fixes verified | `http://` allowed in connect-src, Cortex session auth works for all endpoints |
+| Test Model button working | Admin can test a curated model with one click; shows response or detailed API error inline |
+| Curated model overrides applied | Parameter overrides from `sandtable.models.curated` are plumbed through to `normalizeChatBody()` during inference |
+| Provider connectivity timing fixed | Providers optimistically included in model queries before first health check completes |
 | `npm run compile` passes | Zero TypeScript compilation errors |
 
 **Risk assessment:** LOW -- The facade pattern ensures all existing consumers work unchanged. The OpenAI chat completions API is a well-established standard, and most target servers (Ollama, vLLM, LM Studio) implement it reliably. No Cortex-side changes are required.
@@ -182,14 +185,72 @@ Phases 5+ extend Sandtable from a developer tool into a full research and scenar
 
 ### Phase 6: Agent Personas and Roleplay System
 
-| Milestone | Description |
-|-----------|-------------|
-| Persona configuration schema | Define agent personas with name, role, system prompt, knowledge sources, and behavioral parameters |
-| Persona manager panel | Create, edit, save, and organize agent persona configurations |
-| Persona-bound chat sessions | Start chat sessions with a specific persona active (system prompt, temperature, model selection) |
-| Persona templates | Pre-built templates for common roles: researcher, analyst, red team, blue team, facilitator, subject matter expert |
-| Multi-agent conversations | Multiple personas interacting in a single session -- useful for wargaming exercises and structured debates |
-| Persona sharing | Export/import persona configurations as JSON files for team collaboration |
+**Status:** Complete (IDE-side implementation)
+**Completed:** 2026-02-08
+**Docs:** [PHASE-6-PERSONAS.md](phases/PHASE-6-PERSONAS.md)
+
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| Persona configuration schema | Done | `ICuratedPersona` interface with name, role, system prompt, model, temperature, topP, maxTokens, guidelines, icon |
+| Persona settings | Done | `sandtable.personas` array + `sandtable.activePersona` string settings registered |
+| Persona manager UI | Done | Full CRUD in Settings page: card list, create/edit form, duplicate, delete, import/export JSON |
+| Persona templates | Done | 5 built-in personas: Research Analyst, Red Team Commander, Blue Team Defender, Exercise Facilitator, Subject Matter Expert |
+| Persona status bar | Done | Status bar indicator showing active persona, click opens quick-pick selector |
+| Persona-bound chat | Done | Agent uses persona's system prompt, model preference, and temperature/topP/maxTokens overrides |
+| Persona sharing | Done | Export all personas to JSON, import from JSON file |
+| Multi-agent conversations | Future | Multiple personas interacting in a single session (Phase 6+) |
+
+### UX Cleanup: Code Mode Comprehensive Audit
+
+**Status:** Complete
+**Completed:** 2026-02-08
+**Docs:** [SANDTABLE-UX-OVERHAUL.md](funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md)
+
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| Chat panel text cleanup | Done | Welcome titles, placeholders, suggested prompts, and hover labels adapted for Research Mode |
+| Copilot branding removal | Done | Copilot status bar icon hidden when Code Mode is OFF |
+| Editor empty state / hints | Done | Empty editor hint, inline chat placeholders, and watermark shortcuts adapted for Research Mode |
+| Explorer panels gating | Done | Outline and Timeline panels hidden when Code Mode is OFF |
+| Status bar cleanup | Done | OVR indicator, Remote Window button hidden when Code Mode is OFF |
+| File explorer context menu | Done | "Open in Terminal" entries gated behind Code Mode |
+| Command center overhaul | Done | Code-centric entries filtered, labels renamed, research entries added (Browse Personas, Open Settings) |
+| Menu bar gating | Done | Go and Terminal menus hidden at top level when Code Mode is OFF |
+| Go menu item gating | Done | Go to Symbol, Go to Bracket gated behind Code Mode |
+
+### Phase 6.1: Full Persona CRUD Tools
+
+**Status:** Complete
+**Completed:** 2026-02-09
+**Docs:** [PHASE-6.1-PERSONA-TOOLS.md](phases/PHASE-6.1-PERSONA-TOOLS.md)
+
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| List personas tool | Done | `sandtable_list_personas` -- enumerate all personas with active indicator |
+| Get persona tool | Done | `sandtable_get_persona` -- full details by ID or fuzzy name match |
+| Edit persona tool | Done | `sandtable_edit_persona` -- partial update with validation and change summary |
+| Delete persona tool | Done | `sandtable_delete_persona` -- remove custom personas, guard built-ins |
+| Activate persona tool | Done | `sandtable_activate_persona` -- switch or deactivate by ID/name |
+| Duplicate persona tool | Done | `sandtable_duplicate_persona` -- clone-and-modify in a single tool call |
+| Export persona tool | Done | `sandtable_export_persona` -- serialize to JSON for sharing |
+| Import persona tool | Done | `sandtable_import_persona` -- import from JSON with validation |
+| Tools settings page | Done | New "Tools" menu item in Sandtable Settings with auto-discovery, categorized cards, expandable details |
+| Tool metadata tags | Done | Added `tags` to all 15 tool definitions for categorization |
+
+### Chat Model Picker & Token Usage Tracking
+
+**Status:** Complete
+**Completed:** 2026-02-09
+**Docs:** [funspace/chat_token_tracking/DESIGN.md](funspace/chat_token_tracking/DESIGN.md)
+
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| Model picker populated | Done | Chat panel dropdown shows all registered models grouped by provider, with "Auto" default and "Add Language Models" opening Settings |
+| Agent mode filter fixed | Done | Model capabilities enriched from known model table so tool-calling models appear in Agent mode |
+| Known model context windows | Done | 60+ model family entries with accurate context window sizes, max output tokens, and tool-calling flags |
+| Streaming usage capture | Done | `stream_options: { include_usage: true }` sent with streaming requests; real token counts captured from final SSE chunk |
+| Token usage pie chart | Done | VS Code's built-in `ChatContextUsageWidget` fed real data -- circular pie chart with color-coded warnings at 75% and 90% |
+| Settings token budget UI | Done | Context window and max output token fields added to curated model edit panel |
 
 ### Phase 7: MCP Integration and External Data
 

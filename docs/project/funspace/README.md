@@ -14,7 +14,10 @@ Funspace features are:
 | Feature | Directory | Status | Description |
 |---------|-----------|--------|-------------|
 | Editor Background Image | [custom_editor_background/](custom_editor_background/) | Complete | Custom background images behind code with opacity, blur, and overlay controls |
-| Sandtable UX Overhaul | [sandtable_ux_overhaul/](sandtable_ux_overhaul/) | Phase 2 In Progress | Code Mode toggle, research-first identity, VS Code Chat integration, settings reorganization, tool calling, multi-provider model picker |
+| Sandtable UX Overhaul | [sandtable_ux_overhaul/](sandtable_ux_overhaul/) | Phase 2 Complete | Code Mode toggle, research-first identity, comprehensive UI text/label cleanup, command center overhaul, menu/panel gating, VS Code Chat integration, settings reorganization |
+| Integrated Map & COP | [integrated_map_cop/](integrated_map_cop/) | Vision & Research | Interactive Common Operating Picture with military symbology, ORBAT management, AI-aware spatial tools, scenario timeline, and offline map tiles for wargaming and research |
+| Chat Model Picker & Token Tracking | [chat_token_tracking/](chat_token_tracking/) | Complete | Model picker populated with registered models in all chat modes, token usage pie chart fed with real API data, 60+ model context window reference table, streaming usage capture, Settings UI for token budgets |
+| Tool Call Display Overhaul | [tool_call_display/](tool_call_display/) | Complete | Persistent, collapsible tool call rendering with human-friendly aliases, transparency into tool inputs/outputs, native VS Code tool invocation pipeline integration |
 
 ## Contributing a Funspace Feature
 

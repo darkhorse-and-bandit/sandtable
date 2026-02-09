@@ -18,12 +18,13 @@ import {
 	IChatAgentResult,
 	IChatAgentHistoryEntry,
 } from '../../chat/common/participants/chatAgents.js';
-import { IChatProgress, IChatMarkdownContent, IChatProgressMessage } from '../../chat/common/chatService/chatService.js';
+import { IChatProgress, IChatMarkdownContent } from '../../chat/common/chatService/chatService.js';
 import { ChatAgentLocation, ChatModeKind } from '../../chat/common/constants.js';
 import { ILanguageModelsService, IChatMessage, ChatMessageRole, IChatResponsePart } from '../../chat/common/languageModels.js';
 import { ILanguageModelToolsService, IToolData, CountTokensCallback } from '../../chat/common/tools/languageModelToolsService.js';
 import { ICortexService } from '../../../../platform/cortex/common/cortex.js';
-import { ChatConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
+import { ChatConfigKeys, PersonaConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
+import { ICuratedPersona, BUILTIN_PERSONAS } from '../../../../platform/cortex/common/personaTypes.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,12 @@ const MAX_TOOL_ITERATIONS = 15;
 /**
  * Sandtable chat agent implementation with full tool-calling support.
  *
- * This agent:
+ * This agent supports three modes:
+ * - **Ask** -- Simple text chat, no tools
+ * - **Edit** -- Edit/refactor code with tools and mode instructions
+ * - **Agent** -- Full autonomous tool-calling loop
+ *
+ * Flow:
  * 1. Collects available tools from ILanguageModelToolsService
  * 2. Passes tool definitions to the LLM alongside user messages
  * 3. Detects tool_use responses from the LLM
@@ -128,16 +134,25 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 		token: CancellationToken
 	): Promise<IChatAgentResult> {
 		let totalTokens = 0;
+		let lastPromptTokens = 0;
+		let totalCompletionTokens = 0;
 		let iteration = 0;
 
 		while (iteration < MAX_TOOL_ITERATIONS && !token.isCancellationRequested) {
 			iteration++;
 
 			// Send request to LLM with tools
+			// Persona overrides take priority over default configuration
+			const persona = this.resolveActivePersona();
 			const options: Record<string, unknown> = {
-				temperature: this.configurationService.getValue<number>(ChatConfigKeys.Temperature) ?? 0.7,
-				max_tokens: this.configurationService.getValue<number>(ChatConfigKeys.MaxTokens) ?? 4096,
+				temperature: persona?.temperature ?? this.configurationService.getValue<number>(ChatConfigKeys.Temperature) ?? 0.7,
+				max_tokens: persona?.maxTokens ?? this.configurationService.getValue<number>(ChatConfigKeys.MaxTokens) ?? 4096,
 			};
+
+			// Apply top_p if the persona specifies it
+			if (persona?.topP !== undefined) {
+				options['top_p'] = persona.topP;
+			}
 
 			// Only pass tools in Agent mode
 			if (tools.length > 0) {
@@ -162,7 +177,14 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 				responseParts.push(...partsArray);
 			}
 
-			await response.result;
+			// Capture real token usage from the provider result (if available)
+			const resultData = await response.result;
+			if (resultData?.promptTokens !== undefined) {
+				lastPromptTokens = resultData.promptTokens;
+			}
+			if (resultData?.completionTokens !== undefined) {
+				totalCompletionTokens += resultData.completionTokens;
+			}
 
 			// Separate text parts and tool_use parts
 			const textParts = responseParts.filter(p => p.type === 'text');
@@ -182,10 +204,16 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 
 			// If no tool calls, we're done
 			if (toolUseParts.length === 0) {
-				this.logService.debug(`[Sandtable Agent] Completed after ${iteration} iteration(s), ~${totalTokens} text chunks`);
+				// Use real token usage from the API if available, otherwise fall back to heuristic estimation
+				const estimatedPromptTokens = Math.ceil(messages.reduce((sum, m) =>
+					sum + m.content.reduce((s, p) => s + (p.type === 'text' ? p.value.length : 0), 0), 0) / 4);
+				this.logService.debug(`[Sandtable Agent] Completed after ${iteration} iteration(s), prompt: ${lastPromptTokens || estimatedPromptTokens} tokens (${lastPromptTokens ? 'real' : 'estimated'}), completion: ${totalCompletionTokens || totalTokens} tokens`);
 				return {
 					metadata: { modelId, iterations: iteration },
-					usage: { completionTokens: totalTokens, promptTokens: 0 },
+					usage: {
+						promptTokens: lastPromptTokens || estimatedPromptTokens,
+						completionTokens: totalCompletionTokens || totalTokens,
+					},
 				};
 			}
 
@@ -226,11 +254,16 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 				const toolCallId = toolPart.toolCallId;
 				const toolParams = toolPart.parameters;
 
-				// Report tool invocation progress to the UI
-				progress([{
-					kind: 'progressMessage',
-					content: new MarkdownString(`Running tool: **${toolName}**...`),
-				} satisfies IChatProgressMessage]);
+				// Begin a native tool invocation via the tools service.
+				// This creates a persistent ChatToolInvocation that appears in the
+				// chat panel with proper icons, state transitions, and collapsible
+				// input/output display -- replacing the old transient progressMessage.
+				this.toolsService.beginToolCall({
+					toolCallId,
+					toolId: toolName,
+					chatRequestId: request.requestId,
+					sessionResource: request.sessionResource,
+				});
 
 				this.logService.debug(`[Sandtable Agent] Invoking tool: ${toolName}(${JSON.stringify(toolParams).substring(0, 200)})`);
 
@@ -238,14 +271,20 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 					// Create a simple token counter
 					const countTokens: CountTokensCallback = async (input: string) => Math.ceil(input.length / 4);
 
-					// Invoke the tool via the tools service
+					// Invoke the tool via the tools service.
+					// This internally calls prepareToolInvocation() on the tool to get
+					// invocationMessage/pastTenseMessage, transitions through Executing ->
+					// Completed states, and captures the result for collapsible display.
 					const toolResult = await this.toolsService.invokeTool(
 						{
 							callId: toolCallId,
 							toolId: toolName,
 							parameters: toolParams as Record<string, unknown>,
 							tokenBudget: 4096,
-							context: undefined,
+							context: {
+								sessionId: request.sessionResource.toString(),
+								sessionResource: request.sessionResource,
+							},
 							chatRequestId: request.requestId,
 						},
 						countTokens,
@@ -299,9 +338,14 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 			} satisfies IChatMarkdownContent]);
 		}
 
+		const estimatedPromptTokens = Math.ceil(messages.reduce((sum, m) =>
+			sum + m.content.reduce((s, p) => s + (p.type === 'text' ? p.value.length : 0), 0), 0) / 4);
 		return {
 			metadata: { modelId, iterations: iteration },
-			usage: { completionTokens: totalTokens, promptTokens: 0 },
+			usage: {
+				promptTokens: lastPromptTokens || estimatedPromptTokens,
+				completionTokens: totalCompletionTokens || totalTokens,
+			},
 		};
 	}
 
@@ -343,7 +387,7 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 
 	/**
 	 * Resolve the model ID to use for this request.
-	 * Priority: user-selected model > configured default > first available model from any provider
+	 * Priority: user-selected model > persona model > configured default > first available model
 	 */
 	private async resolveModelId(userSelectedModelId?: string): Promise<string | undefined> {
 		// If user explicitly selected a model in the chat panel picker, use it
@@ -352,6 +396,20 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 		}
 
 		const allModelIds = this.languageModelsService.getLanguageModelIds();
+
+		// Check active persona's preferred model
+		const persona = this.resolveActivePersona();
+		if (persona?.model) {
+			const match = allModelIds.find(id =>
+				id === persona.model ||
+				id === `cortex::${persona.model}` ||
+				id.endsWith(`::${persona.model}`)
+			);
+			if (match) {
+				this.logService.debug(`[Sandtable Agent] Using persona "${persona.name}" preferred model: ${match}`);
+				return match;
+			}
+		}
 
 		// Check configured default model
 		const configuredModel = this.configurationService.getValue<string>(ChatConfigKeys.DefaultModel);
@@ -376,14 +434,63 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
 
 	// ─── Message Building ──────────────────────────────────────────────────
 
+	// ─── Persona Resolution ───────────────────────────────────────────────
+
+	/**
+	 * Resolve the currently active persona from configuration.
+	 * Returns undefined if no persona is active.
+	 */
+	private resolveActivePersona(): ICuratedPersona | undefined {
+		const activeId = this.configurationService.getValue<string>(PersonaConfigKeys.ActivePersona) || '';
+		if (!activeId) {
+			return undefined;
+		}
+
+		const stored = this.configurationService.getValue<ICuratedPersona[]>(PersonaConfigKeys.Personas) ?? [];
+		const personas = stored.length > 0 ? stored : [...BUILTIN_PERSONAS];
+		return personas.find(p => p.id === activeId);
+	}
+
+	// ─── Message Building ──────────────────────────────────────────────────
+
 	/**
 	 * Build the message list for the LLM from chat history and the current request.
+	 *
+	 * The system prompt is determined by:
+	 * 1. Active persona's system prompt (if a persona is active)
+	 * 2. Default system prompt from chat settings
+	 *
+	 * In Edit mode, mode instructions (describing selected files and intent) are
+	 * appended to the system prompt so the LLM has full context.
+	 *
+	 * If the persona has behavioral guidelines, they are also appended.
 	 */
 	private buildMessages(request: IChatAgentRequest, history: IChatAgentHistoryEntry[]): IChatMessage[] {
 		const messages: IChatMessage[] = [];
 
-		// System prompt
-		const systemPrompt = this.configurationService.getValue<string>(ChatConfigKeys.SystemPrompt) || 'You are a helpful AI research assistant with access to workspace tools. Use tools when needed to read files, edit code, run commands, and search the workspace.';
+		// Resolve active persona
+		const persona = this.resolveActivePersona();
+
+		// System prompt: persona overrides default
+		let systemPrompt: string;
+		if (persona) {
+			systemPrompt = persona.systemPrompt;
+			this.logService.debug(`[Sandtable Agent] Using persona system prompt: "${persona.name}"`);
+
+			// Append behavioral guidelines if present
+			if (persona.guidelines) {
+				systemPrompt += '\n\nBehavioral guidelines: ' + persona.guidelines;
+			}
+		} else {
+			systemPrompt = this.configurationService.getValue<string>(ChatConfigKeys.SystemPrompt) || 'You are a helpful AI research assistant with access to workspace tools. Use tools when needed to read files, edit code, run commands, and search the workspace.';
+		}
+
+		// In Edit mode, append mode instructions (VS Code provides instructions
+		// about the files that are selected and the editing context)
+		if (request.modeInstructions?.content) {
+			systemPrompt += '\n\n' + request.modeInstructions.content;
+		}
+
 		messages.push({
 			role: ChatMessageRole.System,
 			content: [{ type: 'text', value: systemPrompt }],
@@ -429,7 +536,8 @@ class SandtableChatAgentImpl extends Disposable implements IChatAgentImplementat
  * Registers the Sandtable chat agent with VS Code's IChatAgentService.
  *
  * This makes "Sandtable" the default chat participant in the built-in Chat panel.
- * The agent supports both Ask mode (simple text) and Agent mode (tool calling).
+ * The agent supports Ask mode (simple text), Edit mode (inline code changes),
+ * and Agent mode (full tool-calling loop).
  */
 class SandtableChatAgentContribution extends Disposable implements IWorkbenchContribution {
 
@@ -460,11 +568,11 @@ class SandtableChatAgentContribution extends Disposable implements IWorkbenchCon
 			extensionPublisherId: 'sandtable',
 			extensionDisplayName: 'Sandtable',
 			metadata: {
-				helpTextPrefix: 'Ask Sandtable anything. In Agent mode, tools are available for reading files, editing code, running commands, and searching the workspace.',
+				helpTextPrefix: 'Ask Sandtable anything. In Edit mode, ask for code changes to open files. In Agent mode, tools are available for reading files, editing code, running commands, and searching the workspace.',
 			},
 			slashCommands: [],
 			locations: [ChatAgentLocation.Chat, ChatAgentLocation.Terminal, ChatAgentLocation.EditorInline],
-			modes: [ChatModeKind.Ask, ChatModeKind.Agent],
+			modes: [ChatModeKind.Ask, ChatModeKind.Edit, ChatModeKind.Agent],
 			disambiguation: [],
 		}));
 

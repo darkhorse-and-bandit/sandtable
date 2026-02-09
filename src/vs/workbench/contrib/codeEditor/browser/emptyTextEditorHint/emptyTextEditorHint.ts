@@ -31,6 +31,7 @@ import { AccessibilityVerbositySettingId } from '../../../accessibility/browser/
 import { IChatAgentService } from '../../../chat/common/participants/chatAgents.js';
 import { ChatAgentLocation } from '../../../chat/common/constants.js';
 import { IInlineChatSessionService } from '../../../inlineChat/browser/inlineChatSessionService.js';
+import { CodeModeConfigKeys } from '../../../../../platform/cortex/common/cortexConfiguration.js';
 import './emptyTextEditorHint.css';
 
 export const emptyTextEditorHintSetting = 'workbench.editor.empty.hint';
@@ -242,28 +243,49 @@ class EmptyTextEditorHintContentWidget extends Disposable implements IContentWid
 		const keybindingsLookup = [askSomethingCommandId, ChangeLanguageAction.ID];
 		const keybindingLabels = keybindingsLookup.map(id => this.keybindingService.lookupKeybinding(id)?.getLabel());
 
-		const hintMsg = (hasInlineChatProvider ? localize({
-			key: 'emptyTextEditorHintWithInlineChat',
-			comment: [
-				'Preserve double-square brackets and their order',
-				'language refers to a programming language'
-			]
-		}, '[[Generate code]] ({0}), or [[select a language]] ({1}). Start typing to dismiss or [[don\'t show]] this again.', keybindingLabels.at(0) ?? '', keybindingLabels.at(1) ?? '') : localize({
-			key: 'emptyTextEditorHintWithoutInlineChat',
-			comment: [
-				'Preserve double-square brackets and their order',
-				'language refers to a programming language'
-			]
-		}, '[[Select a language]] ({0}) to get started. Start typing to dismiss or [[don\'t show]] this again.', keybindingLabels.at(1) ?? '')).replaceAll(' ()', '');
+		// Sandtable: Use research-friendly hint text when Code Mode is OFF
+		const isCodeModeEnabled = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+
+		let hintMsg: string;
+		let ariaLabel: string;
+
+		if (!isCodeModeEnabled) {
+			// Research Mode: simplified hint without code-centric terminology
+			hintMsg = hasInlineChatProvider ? localize({
+				key: 'emptyTextEditorHintResearchWithChat',
+				comment: ['Preserve double-square brackets and their order']
+			}, '[[Ask a question]] ({0}), or start writing. [[Don\'t show]] this again.', keybindingLabels.at(0) ?? '') : localize({
+				key: 'emptyTextEditorHintResearch',
+				comment: ['Preserve double-square brackets and their order']
+			}, 'Start writing or open a document from the workspace. [[Don\'t show]] this again.');
+			ariaLabel = hasInlineChatProvider
+				? localize('researchHintAriaLabelWithChat', 'Execute {0} to ask a question, or start writing. Start typing to dismiss.', keybindingLabels.at(0) ?? '')
+				: localize('researchHintAriaLabel', 'Start writing or open a document. Start typing to dismiss.');
+		} else {
+			hintMsg = (hasInlineChatProvider ? localize({
+				key: 'emptyTextEditorHintWithInlineChat',
+				comment: [
+					'Preserve double-square brackets and their order',
+					'language refers to a programming language'
+				]
+			}, '[[Generate code]] ({0}), or [[select a language]] ({1}). Start typing to dismiss or [[don\'t show]] this again.', keybindingLabels.at(0) ?? '', keybindingLabels.at(1) ?? '') : localize({
+				key: 'emptyTextEditorHintWithoutInlineChat',
+				comment: [
+					'Preserve double-square brackets and their order',
+					'language refers to a programming language'
+				]
+			}, '[[Select a language]] ({0}) to get started. Start typing to dismiss or [[don\'t show]] this again.', keybindingLabels.at(1) ?? ''));
+			ariaLabel = hasInlineChatProvider ?
+				localize('defaultHintAriaLabelWithInlineChat', 'Execute {0} to ask a question, execute {1} to select a language and get started. Start typing to dismiss.', ...keybindingLabels) :
+				localize('defaultHintAriaLabelWithoutInlineChat', 'Execute {0} to select a language and get started. Start typing to dismiss.', ...keybindingLabels);
+		}
+
+		hintMsg = hintMsg.replaceAll(' ()', '');
 		const hintElement = renderFormattedText(hintMsg, {
 			actionHandler: hintHandler,
 			renderCodeSegments: false,
 		});
 		hintElement.style.fontStyle = 'italic';
-
-		const ariaLabel = hasInlineChatProvider ?
-			localize('defaultHintAriaLabelWithInlineChat', 'Execute {0} to ask a question, execute {1} to select a language and get started. Start typing to dismiss.', ...keybindingLabels) :
-			localize('defaultHintAriaLabelWithoutInlineChat', 'Execute {0} to select a language and get started. Start typing to dismiss.', ...keybindingLabels);
 		// eslint-disable-next-line no-restricted-syntax
 		for (const anchor of hintElement.querySelectorAll('a')) {
 			anchor.style.cursor = 'pointer';

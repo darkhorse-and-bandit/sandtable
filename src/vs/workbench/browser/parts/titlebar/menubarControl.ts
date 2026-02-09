@@ -7,7 +7,7 @@ import './media/menubarControl.css';
 import { localize, localize2 } from '../../../../nls.js';
 import { IMenuService, MenuId, IMenu, SubmenuItemAction, registerAction2, Action2, MenuItemAction, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { MenuBarVisibility, IWindowOpenable, getMenuBarVisibility, MenuSettings, hasNativeMenu } from '../../../../platform/window/common/window.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IAction, Action, SubmenuAction, Separator, IActionRunner, ActionRunner, WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification, toAction } from '../../../../base/common/actions.js';
 import { addDisposableListener, Dimension, EventType } from '../../../../base/browser/dom.js';
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
@@ -85,6 +85,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	order: 4
 });
 
+// Sandtable: Hide Go menu when Code Mode is OFF (most items are code-centric)
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarGoMenu,
 	title: {
@@ -92,9 +93,11 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		original: 'Go',
 		mnemonicTitle: localize({ key: 'mGoto', comment: ['&& denotes a mnemonic'] }, "&&Go")
 	},
+	when: ContextKeyExpr.has('sandtable.codeModeEnabled'),
 	order: 5
 });
 
+// Sandtable: Hide Terminal menu when Code Mode is OFF (developer tool)
 MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 	submenu: MenuId.MenubarTerminalMenu,
 	title: {
@@ -102,6 +105,7 @@ MenuRegistry.appendMenuItem(MenuId.MenubarMainMenu, {
 		original: 'Terminal',
 		mnemonicTitle: localize({ key: 'mTerminal', comment: ['&& denotes a mnemonic'] }, "&&Terminal")
 	},
+	when: ContextKeyExpr.has('sandtable.codeModeEnabled'),
 	order: 7
 });
 

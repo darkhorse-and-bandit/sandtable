@@ -30,6 +30,7 @@ import { EditSuggestionId } from '../../../../editor/common/textModelEditSource.
 import { localize } from '../../../../nls.js';
 import { MenuId } from '../../../../platform/actions/common/actions.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { CodeModeConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
@@ -284,10 +285,18 @@ export class InlineChatController implements IEditorContribution {
 			}
 		}));
 
+		// Sandtable: Use research-friendly placeholder when Code Mode is OFF
 		const defaultPlaceholderObs = visibleSessionObs.map((session, r) => {
-			return session?.initialSelection.isEmpty()
-				? localize('placeholder', "Generate code")
-				: localize('placeholderWithSelection', "Modify selected code");
+			const isCodeModeEnabled = this._configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+			if (isCodeModeEnabled) {
+				return session?.initialSelection.isEmpty()
+					? localize('placeholder', "Generate code")
+					: localize('placeholderWithSelection', "Modify selected code");
+			} else {
+				return session?.initialSelection.isEmpty()
+					? localize('placeholderResearch', "Generate content")
+					: localize('placeholderWithSelectionResearch', "Modify selected text");
+			}
 		});
 
 

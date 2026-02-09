@@ -39,6 +39,7 @@ export class ProviderRegistryService extends Disposable implements IProviderRegi
 	private readonly _providers = new Map<string, ILLMProvider>();
 	private readonly _providerHealth = new Map<string, IProviderHealthResult>();
 	private readonly _providerConfigs = new Map<string, IProviderConfig>();
+	private readonly _checkedProviders = new Set<string>();
 	private _healthTimer: ReturnType<typeof setInterval> | undefined;
 	private _isDisposed = false;
 
@@ -75,7 +76,13 @@ export class ProviderRegistryService extends Disposable implements IProviderRegi
 	getActiveProviders(): ILLMProvider[] {
 		return Array.from(this._providers.values()).filter(p => {
 			const config = this._providerConfigs.get(p.id);
-			return config?.enabled !== false && p.isConnected;
+			if (config?.enabled === false) {
+				return false;
+			}
+			// Include providers that are connected OR haven't completed their
+			// first health check yet (optimistic inclusion to avoid timing gaps
+			// where models are discoverable but the chat panel says "no models").
+			return p.isConnected || !this._checkedProviders.has(p.id);
 		});
 	}
 
@@ -116,6 +123,7 @@ export class ProviderRegistryService extends Disposable implements IProviderRegi
 			this._providers.delete(providerId);
 			this._providerConfigs.delete(providerId);
 			this._providerHealth.delete(providerId);
+			this._checkedProviders.delete(providerId);
 			this._persistProviderConfigs();
 			this._onProvidersChanged.fire();
 			this._onModelsChanged.fire();
@@ -374,6 +382,7 @@ export class ProviderRegistryService extends Disposable implements IProviderRegi
 				const health = await provider.checkHealth();
 				const previous = this._providerHealth.get(provider.id);
 				this._providerHealth.set(provider.id, health);
+				this._checkedProviders.add(provider.id);
 
 				// Fire event if health changed
 				if (!previous || previous.healthy !== health.healthy || previous.modelCount !== health.modelCount) {
@@ -381,6 +390,7 @@ export class ProviderRegistryService extends Disposable implements IProviderRegi
 					this._onModelsChanged.fire();
 				}
 			} catch (err) {
+				this._checkedProviders.add(provider.id);
 				this.logService.warn(`[ProviderRegistryService] Health check failed for "${provider.displayName}": ${err}`);
 			}
 		});

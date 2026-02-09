@@ -1,0 +1,289 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Sandtable Contributors. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* ─── Agent Portfolio Panel Root ───────────────────────────────────────────── */
+
+.sandtable-personas-root {
+	padding: 12px 14px;
+	overflow-y: auto;
+	height: 100%;
+	box-sizing: border-box;
+}
+
+.sandtable-personas-root h2 {
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--vscode-foreground, #cccccc);
+	margin: 0 0 4px 0;
+}
+
+.sandtable-personas-root p.sandtable-personas-desc {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground, #9d9d9d);
+	margin: 0 0 12px 0;
+	line-height: 1.5;
+}
+
+/* ─── Active Persona Banner ────────────────────────────────────────────────── */
+
+.sandtable-persona-active-card {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	background: var(--vscode-editorWidget-background, #252526);
+	border: 1px solid var(--vscode-editorWidget-border, #454545);
+	border-radius: 6px;
+	padding: 10px 14px;
+	margin-bottom: 12px;
+}
+
+.sandtable-persona-active-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.sandtable-persona-active-label {
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--vscode-foreground, #cccccc);
+}
+
+.sandtable-persona-active-value {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground, #9d9d9d);
+}
+
+/* ─── Action Buttons ───────────────────────────────────────────────────────── */
+
+.sandtable-persona-actions {
+	display: flex;
+	gap: 6px;
+	margin: 0 0 12px 0;
+	flex-wrap: wrap;
+}
+
+.sandtable-personas-btn {
+	font-size: 11px;
+	padding: 4px 10px;
+	border-radius: 4px;
+	border: 1px solid var(--vscode-widget-border, #303030);
+	background: transparent;
+	color: var(--vscode-foreground, #cccccc);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.sandtable-personas-btn:hover {
+	background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.04));
+}
+
+.sandtable-personas-btn-primary {
+	background: var(--vscode-button-background, #0e639c);
+	color: var(--vscode-button-foreground, #ffffff);
+	border-color: var(--vscode-button-background, #0e639c);
+}
+
+.sandtable-personas-btn-primary:hover {
+	background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+.sandtable-personas-btn-danger {
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+	border-color: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.sandtable-personas-btn-danger:hover {
+	background: rgba(241, 76, 76, 0.12);
+}
+
+.sandtable-persona-clear-btn {
+	font-size: 11px;
+	padding: 2px 8px;
+}
+
+/* ─── Persona Card List ────────────────────────────────────────────────────── */
+
+.sandtable-persona-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.sandtable-persona-card {
+	background: var(--vscode-editorWidget-background, #252526);
+	border: 1px solid var(--vscode-editorWidget-border, #454545);
+	border-radius: 6px;
+	padding: 10px 14px;
+	margin-bottom: 8px;
+	position: relative;
+	transition: border-color 0.15s ease;
+}
+
+.sandtable-persona-card-active {
+	border-color: var(--vscode-textLink-foreground, #3794ff);
+}
+
+.sandtable-persona-card-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-bottom: 4px;
+}
+
+.sandtable-persona-icon {
+	font-size: 14px;
+	color: var(--vscode-textLink-foreground, #3794ff);
+	flex-shrink: 0;
+}
+
+.sandtable-persona-name {
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--vscode-foreground, #cccccc);
+}
+
+.sandtable-persona-role {
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground, #9d9d9d);
+}
+
+.sandtable-persona-badge {
+	font-size: 9px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	padding: 1px 5px;
+	border-radius: 3px;
+}
+
+.sandtable-persona-badge-builtin {
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--vscode-descriptionForeground, #9d9d9d);
+	border: 1px solid var(--vscode-widget-border, #303030);
+}
+
+.sandtable-persona-badge-active {
+	background: rgba(55, 148, 255, 0.15);
+	color: var(--vscode-textLink-foreground, #3794ff);
+	border: 1px solid var(--vscode-textLink-foreground, #3794ff);
+}
+
+.sandtable-persona-details {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+	margin-bottom: 6px;
+}
+
+.sandtable-persona-tag {
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 3px;
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--vscode-descriptionForeground, #9d9d9d);
+	border: 1px solid var(--vscode-widget-border, #303030);
+}
+
+.sandtable-persona-prompt-preview {
+	font-size: 11px;
+	line-height: 1.4;
+	color: var(--vscode-descriptionForeground, #9d9d9d);
+	margin: 2px 0 6px 0;
+	font-style: italic;
+	opacity: 0.8;
+}
+
+.sandtable-persona-card-actions {
+	display: flex;
+	gap: 4px;
+	flex-wrap: wrap;
+	margin-top: 2px;
+}
+
+/* ─── Persona Form ─────────────────────────────────────────────────────────── */
+
+.sandtable-persona-form {
+	background: var(--vscode-editorWidget-background, #252526);
+	border: 1px solid var(--vscode-editorWidget-border, #454545);
+	border-radius: 6px;
+	padding: 14px;
+	margin-top: 8px;
+}
+
+.sandtable-persona-form h3 {
+	font-size: 13px;
+	font-weight: 600;
+	margin: 0 0 12px 0;
+	color: var(--vscode-foreground, #cccccc);
+}
+
+.sandtable-persona-form-group {
+	margin-bottom: 12px;
+}
+
+.sandtable-persona-form-group label {
+	display: block;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--vscode-foreground, #cccccc);
+	margin-bottom: 4px;
+}
+
+.sandtable-persona-form-group .sandtable-persona-form-desc {
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground, #9d9d9d);
+	margin: 0 0 4px 0;
+}
+
+.sandtable-persona-form-group input,
+.sandtable-persona-form-group textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 4px 8px;
+	font-size: 12px;
+	border: 1px solid var(--vscode-input-border, #3c3c3c);
+	background: var(--vscode-input-background, #3c3c3c);
+	color: var(--vscode-input-foreground, #cccccc);
+	border-radius: 3px;
+	outline: none;
+}
+
+.sandtable-persona-form-group input:focus,
+.sandtable-persona-form-group textarea:focus {
+	border-color: var(--vscode-focusBorder, #007fd4);
+}
+
+.sandtable-persona-prompt-textarea {
+	min-height: 160px;
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 11px;
+	line-height: 1.5;
+	resize: vertical;
+}
+
+.sandtable-persona-params-row {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-bottom: 12px;
+}
+
+.sandtable-persona-param-group {
+	flex: 1;
+	min-width: 100px;
+}
+
+.sandtable-persona-form-actions {
+	display: flex;
+	gap: 6px;
+	margin-top: 14px;
+	padding-top: 10px;
+	border-top: 1px solid var(--vscode-widget-border, #303030);
+}

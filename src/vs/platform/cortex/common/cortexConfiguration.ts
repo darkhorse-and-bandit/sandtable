@@ -57,6 +57,11 @@ export const enum ProviderConfigKeys {
 	DefaultProvider = 'sandtable.defaultProvider',
 }
 
+export const enum PersonaConfigKeys {
+	Personas = 'sandtable.personas',
+	ActivePersona = 'sandtable.activePersona',
+}
+
 export const enum AppearanceConfigKeys {
 	BackgroundImage = 'sandtable.appearance.backgroundImage',
 	BackgroundOpacity = 'sandtable.appearance.backgroundOpacity',
@@ -231,6 +236,22 @@ configurationRegistry.registerConfiguration({
 						type: 'boolean',
 						default: true,
 						description: nls.localize('sandtable.models.curated.enabled', "Whether this model is available for selection in the chat panel."),
+					},
+					contextWindowTokens: {
+						type: 'number',
+						minimum: 1,
+						description: nls.localize(
+							'sandtable.models.curated.contextWindowTokens',
+							"Actual context window size in tokens as configured on the serving backend. For local models (vLLM, llama.cpp, Ollama), this should reflect the server's configured limit, NOT the model's theoretical maximum. For cloud APIs, leave empty to use the known models table. Powers the context usage indicator in the chat panel."
+						),
+					},
+					maxOutputTokens: {
+						type: 'number',
+						minimum: 1,
+						description: nls.localize(
+							'sandtable.models.curated.maxOutputTokens',
+							"Maximum output tokens for this model. Leave empty to use the known models table default."
+						),
 					},
 					overrides: {
 						type: 'object',
@@ -437,6 +458,82 @@ configurationRegistry.registerConfiguration({
 				nls.localize('sandtable.appearance.backgroundCoverage.full', "Image extends behind code, line numbers, and minimap."),
 			],
 			description: nls.localize('sandtable.appearance.backgroundCoverage', "How much of the editor area the background image covers."),
+		},
+
+		// ─── Persona Settings (Phase 6) ─────────────────────────────────
+		[PersonaConfigKeys.Personas]: {
+			type: 'array',
+			default: [],
+			description: nls.localize('sandtable.personas', "Agent personas — named configurations that customize the chat agent's behavior with tailored system prompts, model preferences, and inference parameters. When empty, built-in template personas are loaded automatically."),
+			items: {
+				type: 'object',
+				required: ['id', 'name', 'role', 'systemPrompt'],
+				properties: {
+					id: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.id', "Unique identifier (UUID) for this persona."),
+					},
+					name: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.name', "Display name (e.g., 'Red Team Commander')."),
+					},
+					role: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.role', "Short role/title description (e.g., 'Adversarial Analyst')."),
+					},
+					systemPrompt: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.systemPrompt', "Full system prompt text injected before conversations."),
+					},
+					model: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.model', "Preferred model (compound ID like 'cortex::deepseek-v3'). Empty = use default."),
+					},
+					temperature: {
+						type: 'number',
+						minimum: 0.0,
+						maximum: 2.0,
+						description: nls.localize('sandtable.personas.temperature', "Temperature override for inference (0.0-2.0)."),
+					},
+					topP: {
+						type: 'number',
+						minimum: 0.0,
+						maximum: 1.0,
+						description: nls.localize('sandtable.personas.topP', "Top-p / nucleus sampling override (0.0-1.0)."),
+					},
+					maxTokens: {
+						type: 'number',
+						minimum: 1,
+						maximum: 32768,
+						description: nls.localize('sandtable.personas.maxTokens', "Maximum tokens per response."),
+					},
+					guidelines: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.guidelines', "Behavioral guidelines appended to the system prompt."),
+					},
+					icon: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.icon', "Codicon icon name (e.g., 'shield', 'telescope', 'beaker')."),
+					},
+					isBuiltIn: {
+						type: 'boolean',
+						description: nls.localize('sandtable.personas.isBuiltIn', "Whether this is a built-in template persona (cannot be deleted)."),
+					},
+					createdAt: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.createdAt', "ISO 8601 creation timestamp."),
+					},
+					updatedAt: {
+						type: 'string',
+						description: nls.localize('sandtable.personas.updatedAt', "ISO 8601 last-modification timestamp."),
+					},
+				},
+			},
+		},
+		[PersonaConfigKeys.ActivePersona]: {
+			type: 'string',
+			default: '',
+			description: nls.localize('sandtable.activePersona', "ID of the currently active persona. When set, the persona's system prompt, model, and parameters override the defaults. Empty = no persona active."),
 		},
 	}
 });

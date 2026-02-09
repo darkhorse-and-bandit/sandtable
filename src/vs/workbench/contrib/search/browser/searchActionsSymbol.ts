@@ -7,6 +7,7 @@ import * as nls from '../../../../nls.js';
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import * as Constants from '../common/constants.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
 import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
@@ -34,7 +35,8 @@ registerAction2(class ShowAllSymbolsAction extends Action2 {
 			menu: {
 				id: MenuId.MenubarGoMenu,
 				group: '3_global_nav',
-				order: 2
+				order: 2,
+				when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Hide in Research Mode
 			}
 		});
 	}

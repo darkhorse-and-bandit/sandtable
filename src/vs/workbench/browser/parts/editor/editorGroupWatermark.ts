@@ -37,8 +37,10 @@ const openFileOrFolder: WatermarkEntry = { text: localize('watermark.openFileFol
 const openRecent: WatermarkEntry = { text: localize('watermark.openRecent', "Open Recent"), id: 'workbench.action.openRecent' };
 const newUntitledFile: WatermarkEntry = { text: localize('watermark.newUntitledFile', "New Untitled Text File"), id: 'workbench.action.files.newUntitledFile' };
 const findInFiles: WatermarkEntry = { text: localize('watermark.findInFiles', "Find in Files"), id: 'workbench.action.findInFiles' };
-const toggleTerminal: WatermarkEntry = { text: localize({ key: 'watermark.toggleTerminal', comment: ['toggle is a verb here'] }, "Toggle Terminal"), id: 'workbench.action.terminal.toggleTerminal', when: { web: ContextKeyExpr.equals('terminalProcessSupported', true) } };
-const startDebugging: WatermarkEntry = { text: localize('watermark.startDebugging', "Start Debugging"), id: 'workbench.action.debug.start', when: { web: ContextKeyExpr.equals('terminalProcessSupported', true) } };
+// Sandtable: Gate Terminal and Debugging watermark entries behind Code Mode
+const codeModeEnabledKey = ContextKeyExpr.has('sandtable.codeModeEnabled');
+const toggleTerminal: WatermarkEntry = { text: localize({ key: 'watermark.toggleTerminal', comment: ['toggle is a verb here'] }, "Toggle Terminal"), id: 'workbench.action.terminal.toggleTerminal', when: { native: codeModeEnabledKey, web: ContextKeyExpr.and(ContextKeyExpr.equals('terminalProcessSupported', true), codeModeEnabledKey) } };
+const startDebugging: WatermarkEntry = { text: localize('watermark.startDebugging', "Start Debugging"), id: 'workbench.action.debug.start', when: { native: codeModeEnabledKey, web: ContextKeyExpr.and(ContextKeyExpr.equals('terminalProcessSupported', true), codeModeEnabledKey) } };
 const openSettings: WatermarkEntry = { text: localize('watermark.openSettings', "Open Settings"), id: 'workbench.action.openSettings' };
 
 const baseEntries: WatermarkEntry[] = [

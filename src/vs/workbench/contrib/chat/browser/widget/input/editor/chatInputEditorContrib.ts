@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { MarkdownString } from '../../../../../../../base/common/htmlContent.js';
+import { localize } from '../../../../../../../nls.js';
 import { Disposable, MutableDisposable } from '../../../../../../../base/common/lifecycle.js';
 import { autorun } from '../../../../../../../base/common/observable.js';
 import { themeColorFromId } from '../../../../../../../base/common/themables.js';
@@ -12,8 +13,10 @@ import { ICodeEditorService } from '../../../../../../../editor/browser/services
 import { Range } from '../../../../../../../editor/common/core/range.js';
 import { IDecorationOptions } from '../../../../../../../editor/common/editorCommon.js';
 import { TrackedRangeStickiness } from '../../../../../../../editor/common/model.js';
+import { IConfigurationService } from '../../../../../../../platform/configuration/common/configuration.js';
 import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
 import { ILabelService } from '../../../../../../../platform/label/common/label.js';
+import { CodeModeConfigKeys } from '../../../../../../../platform/cortex/common/cortexConfiguration.js';
 import { inputPlaceholderForeground } from '../../../../../../../platform/theme/common/colorRegistry.js';
 import { IThemeService } from '../../../../../../../platform/theme/common/themeService.js';
 import { IChatAgentCommand, IChatAgentData, IChatAgentService } from '../../../../common/participants/chatAgents.js';
@@ -21,6 +24,7 @@ import { chatSlashCommandBackground, chatSlashCommandForeground } from '../../..
 import { ChatRequestAgentPart, ChatRequestAgentSubcommandPart, ChatRequestDynamicVariablePart, ChatRequestSlashCommandPart, ChatRequestSlashPromptPart, ChatRequestTextPart, ChatRequestToolPart, ChatRequestToolSetPart, IParsedChatRequestPart, chatAgentLeader, chatSubcommandLeader } from '../../../../common/requestParser/chatParserTypes.js';
 import { ChatRequestParser } from '../../../../common/requestParser/chatRequestParser.js';
 import { IPromptsService } from '../../../../common/promptSyntax/service/promptsService.js';
+import { ChatModeKind } from '../../../../common/constants.js';
 import { IChatWidget } from '../../../chat.js';
 import { ChatWidget } from '../../chatWidget.js';
 import { dynamicVariableDecorationType } from '../../../attachments/chatDynamicVariables.js';
@@ -81,6 +85,7 @@ class InputEditorDecorations extends Disposable {
 		@IChatAgentService private readonly chatAgentService: IChatAgentService,
 		@ILabelService private readonly labelService: ILabelService,
 		@IPromptsService private readonly promptsService: IPromptsService,
+		@IConfigurationService private readonly configurationService: IConfigurationService,
 	) {
 		super();
 
@@ -98,6 +103,11 @@ class InputEditorDecorations extends Disposable {
 		}));
 		this._register(this.chatAgentService.onDidChangeAgents(() => this.triggerInputEditorDecorationsUpdate()));
 		this._register(this.promptsService.onDidChangeSlashCommands(() => this.triggerInputEditorDecorationsUpdate()));
+		this._register(this.configurationService.onDidChangeConfiguration(e => {
+			if (e.affectsConfiguration(CodeModeConfigKeys.Enabled)) {
+				this.triggerInputEditorDecorationsUpdate();
+			}
+		}));
 		this._register(autorun(reader => {
 			// Watch for changes to the current mode and its properties
 			const currentMode = this.widget.input.currentModeObs.read(reader);
@@ -165,7 +175,24 @@ class InputEditorDecorations extends Disposable {
 
 		if (!inputValue) {
 			const mode = this.widget.input.currentModeObs.get();
-			const placeholder = mode.argumentHint?.get() ?? mode.description.get() ?? '';
+			let placeholder = mode.argumentHint?.get() ?? mode.description.get() ?? '';
+
+			// Sandtable: Override code-centric placeholders with research-friendly text when Code Mode is OFF
+			const isCodeModeEnabled = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+			if (!isCodeModeEnabled && mode.isBuiltin) {
+				switch (mode.kind) {
+					case ChatModeKind.Ask:
+						placeholder = localize('chatPlaceholder.askResearch', "Ask a question or explore a topic");
+						break;
+					case ChatModeKind.Edit:
+						placeholder = localize('chatPlaceholder.editResearch', "Edit or revise selected content");
+						break;
+					case ChatModeKind.Agent:
+						placeholder = localize('chatPlaceholder.agentResearch', "Describe what to research or explore next");
+						break;
+				}
+			}
+
 			const displayPlaceholder = viewModel.inputPlaceholder || placeholder;
 
 			const decoration: IDecorationOptions[] = [

@@ -19,6 +19,7 @@ import { IModelDeltaDecoration, OverviewRulerLane, TrackedRangeStickiness } from
 import { ModelDecorationOptions } from '../../../common/model/textModel.js';
 import * as nls from '../../../../nls.js';
 import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
+import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
 import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
 import { registerColor } from '../../../../platform/theme/common/colorRegistry.js';
 import { registerThemingParticipant, themeColorFromId } from '../../../../platform/theme/common/themeService.js';
@@ -408,13 +409,14 @@ registerEditorAction(SelectToBracketAction);
 registerEditorAction(JumpToBracketAction);
 registerEditorAction(RemoveBracketsAction);
 
-// Go to menu
+// Sandtable: Gate Go to Bracket behind Code Mode (code-centric feature)
 MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
 	group: '5_infile_nav',
 	command: {
 		id: 'editor.action.jumpToBracket',
 		title: nls.localize({ key: 'miGoToBracket', comment: ['&& denotes a mnemonic'] }, "Go to &&Bracket")
 	},
+	when: ContextKeyExpr.has('sandtable.codeModeEnabled'),
 	order: 2
 });
 

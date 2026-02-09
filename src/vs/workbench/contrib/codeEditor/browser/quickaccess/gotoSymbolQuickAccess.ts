@@ -267,7 +267,8 @@ class GotoSymbolAction extends Action2 {
 			menu: [{
 				id: MenuId.MenubarGoMenu,
 				group: '4_symbol_nav',
-				order: 1
+				order: 1,
+				when: ContextKeyExpr.has('sandtable.codeModeEnabled'), // Sandtable: Hide in Research Mode
 			}]
 		});
 	}

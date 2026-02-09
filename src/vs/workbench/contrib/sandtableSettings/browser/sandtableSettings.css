@@ -1008,3 +1008,287 @@
 	border-color: var(--vscode-textLink-foreground, #3794ff);
 	background: rgba(55, 148, 255, 0.06);
 }
+
+/* ─── Model Test Result ────────────────────────────────────────────────────── */
+
+.sandtable-model-test-result {
+	margin-top: 10px;
+	border-radius: 6px;
+	font-size: 13px;
+	min-height: 0;
+}
+
+.sandtable-model-test-result:empty {
+	display: none;
+}
+
+.sandtable-model-test-success {
+	padding: 10px 12px;
+	background: rgba(115, 201, 145, 0.1);
+	border: 1px solid rgba(115, 201, 145, 0.3);
+	color: var(--vscode-testing-iconPassed, #73c991);
+}
+
+.sandtable-model-test-failure {
+	padding: 10px 12px;
+	background: rgba(241, 76, 76, 0.1);
+	border: 1px solid rgba(241, 76, 76, 0.3);
+	color: var(--vscode-testing-iconFailed, #f14c4c);
+}
+
+.sandtable-model-test-header {
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.sandtable-model-test-reply {
+	font-style: italic;
+	opacity: 0.9;
+	margin-bottom: 4px;
+	line-height: 1.4;
+}
+
+.sandtable-model-test-usage {
+	font-size: 11px;
+	opacity: 0.7;
+	margin-top: 4px;
+}
+
+.sandtable-model-test-error {
+	font-size: 12px;
+	margin-top: 4px;
+	word-break: break-word;
+	line-height: 1.4;
+	font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.sandtable-model-test-tip {
+	font-size: 11px;
+	margin-top: 8px;
+	opacity: 0.7;
+	font-style: italic;
+}
+
+/* ─── Tools Section ────────────────────────────────────────────────────────── */
+
+.sandtable-tool-count {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--vscode-descriptionForeground, #999);
+	margin-bottom: 16px;
+	padding: 6px 0;
+	border-bottom: 1px solid var(--vscode-panel-border, #333);
+}
+
+.sandtable-tool-category {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 20px 0 10px 0;
+}
+
+.sandtable-tool-category:first-of-type {
+	margin-top: 8px;
+}
+
+.sandtable-tool-category-label {
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--vscode-foreground, #cccccc);
+}
+
+.sandtable-tool-category-count {
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground, #999);
+	padding: 1px 8px;
+	border-radius: 10px;
+	background: var(--vscode-badge-background, rgba(255, 255, 255, 0.05));
+}
+
+/* ─── Tool Card ────────────────────────────────────────────────────────────── */
+
+.sandtable-tool-card {
+	background: var(--vscode-editorWidget-background, #252526);
+	border: 1px solid var(--vscode-editorWidget-border, #454545);
+	border-radius: 6px;
+	padding: 12px 16px;
+	margin-bottom: 8px;
+}
+
+.sandtable-tool-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 4px;
+}
+
+.sandtable-tool-name {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--vscode-foreground, #cccccc);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sandtable-tool-badges {
+	display: flex;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.sandtable-tool-badge {
+	display: inline-block;
+	font-size: 10px;
+	font-weight: 500;
+	letter-spacing: 0.03em;
+	padding: 1px 7px;
+	border-radius: 10px;
+	white-space: nowrap;
+}
+
+.sandtable-tool-badge-source {
+	color: var(--vscode-textLink-foreground, #3794ff);
+	background: rgba(55, 148, 255, 0.1);
+	border: 1px solid rgba(55, 148, 255, 0.2);
+}
+
+.sandtable-tool-badge-workspace {
+	color: var(--vscode-testing-iconPassed, #73c991);
+	background: rgba(115, 201, 145, 0.1);
+	border: 1px solid rgba(115, 201, 145, 0.2);
+}
+
+.sandtable-tool-user-desc {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground, #999);
+	margin-bottom: 2px;
+	line-height: 1.4;
+}
+
+.sandtable-tool-id {
+	font-size: 11px;
+	font-family: var(--vscode-editor-font-family, monospace);
+	color: var(--vscode-descriptionForeground, #999);
+	opacity: 0.7;
+	margin-bottom: 6px;
+}
+
+/* ─── Tool Details Toggle ──────────────────────────────────────────────────── */
+
+.sandtable-tool-details-toggle {
+	display: inline-block;
+	font-size: 11px;
+	color: var(--vscode-textLink-foreground, #3794ff);
+	background: transparent;
+	border: none;
+	padding: 2px 0;
+	cursor: pointer;
+	font-family: var(--vscode-font-family);
+}
+
+.sandtable-tool-details-toggle:hover {
+	text-decoration: underline;
+}
+
+.sandtable-tool-details-toggle.expanded {
+	color: var(--vscode-textLink-activeForeground, #3794ff);
+}
+
+/* ─── Tool Details Panel ───────────────────────────────────────────────────── */
+
+.sandtable-tool-details {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid var(--vscode-panel-border, #333);
+}
+
+.sandtable-tool-details-label {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--vscode-descriptionForeground, #999);
+	margin: 10px 0 4px 0;
+}
+
+.sandtable-tool-details-label:first-child {
+	margin-top: 0;
+}
+
+.sandtable-tool-model-desc {
+	font-size: 12px;
+	color: var(--vscode-foreground, #cccccc);
+	line-height: 1.5;
+	opacity: 0.85;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.sandtable-tool-no-params {
+	font-size: 12px;
+	color: var(--vscode-descriptionForeground, #999);
+	font-style: italic;
+	margin-top: 4px;
+}
+
+/* ─── Tool Parameter Table ─────────────────────────────────────────────────── */
+
+.sandtable-tool-params-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12px;
+	margin-top: 4px;
+}
+
+.sandtable-tool-params-table th {
+	text-align: left;
+	font-weight: 600;
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground, #999);
+	padding: 4px 8px 4px 0;
+	border-bottom: 1px solid var(--vscode-panel-border, #333);
+}
+
+.sandtable-tool-params-table td {
+	padding: 4px 8px 4px 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+	vertical-align: top;
+	color: var(--vscode-foreground, #cccccc);
+}
+
+.sandtable-tool-params-table tr:last-child td {
+	border-bottom: none;
+}
+
+.sandtable-tool-param-name {
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.sandtable-tool-param-type {
+	font-family: var(--vscode-editor-font-family, monospace);
+	opacity: 0.7;
+	white-space: nowrap;
+}
+
+.sandtable-tool-param-desc {
+	line-height: 1.4;
+	opacity: 0.85;
+}
+
+.sandtable-tool-badge-required {
+	display: inline-block;
+	font-size: 10px;
+	padding: 0px 5px;
+	border-radius: 3px;
+	color: var(--vscode-charts-orange, #d18616);
+	background: rgba(209, 134, 22, 0.1);
+	border: 1px solid rgba(209, 134, 22, 0.2);
+}
+
+/* Persona styles have moved to sandtablePersonas.css in the Agent Portfolio panel */

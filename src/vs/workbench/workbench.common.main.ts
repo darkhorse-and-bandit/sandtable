@@ -434,7 +434,7 @@ import './contrib/editTelemetry/browser/editTelemetry.contribution.js';
 // Opener
 import './contrib/opener/browser/opener.contribution.js';
 
-// Sandtable -- Cortex platform service + provider registry + LM provider + chat agent + tools + status + settings + completion + models + appearance + code mode
+// Sandtable -- Cortex platform service + provider registry + LM provider + chat agent + tools + status + settings + completion + models + appearance + code mode + personas
 import '../platform/cortex/browser/cortexService.js';
 import '../platform/cortex/browser/providerRegistryService.js';
 import './contrib/sandtableCodeMode/browser/sandtableCodeMode.contribution.js';
@@ -446,6 +446,7 @@ import './contrib/sandtableSettings/browser/sandtableSettings.contribution.js';
 import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.js';
 import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
 import './contrib/sandtableAppearance/browser/sandtableAppearance.contribution.js';
+import './contrib/sandtablePersonas/browser/sandtablePersonas.contribution.js';     // Phase 6: Persona status bar + quick-pick
 // NOTE: sandtableChat and sandtableAgent are DEPRECATED -- replaced by sandtableLM integration with VS Code's built-in chat panel
 // import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
 // import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';

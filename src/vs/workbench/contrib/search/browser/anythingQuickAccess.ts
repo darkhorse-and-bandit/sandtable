@@ -27,6 +27,7 @@ import { ILanguageService } from '../../../../editor/common/languages/language.j
 import { localize } from '../../../../nls.js';
 import { IWorkingCopyService } from '../../../services/workingCopy/common/workingCopyService.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { CodeModeConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
 import { IWorkbenchEditorConfiguration, EditorResourceAccessor, isEditorInput } from '../../../common/editor.js';
 import { EditorInput } from '../../../common/editor/editorInput.js';
 import { IEditorService, SIDE_GROUP, ACTIVE_GROUP } from '../../../services/editor/common/editorService.js';
@@ -57,6 +58,7 @@ import { Registry } from '../../../../platform/registry/common/platform.js';
 import { ASK_QUICK_QUESTION_ACTION_ID } from '../../chat/browser/actions/chatQuickInputActions.js';
 import { IQuickChatService } from '../../chat/browser/chat.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { ICustomEditorLabelService } from '../../../services/editor/common/customEditorLabelService.js';
 
 interface IAnythingQuickPickItem extends IPickerQuickAccessItem, IQuickPickItemWithResource { }
@@ -140,6 +142,7 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 		@IQuickChatService private readonly quickChatService: IQuickChatService,
 		@ILogService private readonly logService: ILogService,
+		@ICommandService private readonly commandService: ICommandService,
 		@ICustomEditorLabelService private readonly customEditorLabelService: ICustomEditorLabelService
 	) {
 		super(AnythingQuickAccessProvider.PREFIX, {
@@ -221,6 +224,12 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 
 	override provide(picker: IQuickPick<IAnythingQuickPickItem, { useSeparators: true }>, token: CancellationToken, runOptions?: AnythingQuickAccessProviderRunOptions): IDisposable {
 		const disposables = new DisposableStore();
+
+		// Sandtable: Simplify Quick Open placeholder when Code Mode is OFF
+		const isCodeModeOn = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+		if (!isCodeModeOn) {
+			picker.placeholder = localize('anythingQuickAccessPlaceholderResearch', "Search files by name");
+		}
 
 		// Update the pick state for this run
 		this.pickState.set(picker);
@@ -828,11 +837,41 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 			return []; // If there's a filter, we don't show the help
 		}
 
-		type IHelpAnythingQuickPickItem = IAnythingQuickPickItem & { commandCenterOrder: number };
+		type IHelpAnythingQuickPickItem = IAnythingQuickPickItem & { commandCenterOrder: number; commandId?: string };
+
+		// Sandtable: Identify code-centric entries to hide from the command center when Code Mode is OFF.
+		// Filter by commandId where available, and by commandCenterOrder as a fallback for entries
+		// that lack a commandId (e.g. the Tasks quick access provider).
+		const isCodeModeEnabled = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+		const codeModeOnlyCommandIds = new Set([
+			'workbench.action.gotoSymbol',              // Go to Symbol in Editor
+			'workbench.action.showAllSymbols',          // Go to Symbol in Workspace
+			'workbench.action.debug.selectandstart',    // Start Debugging
+		]);
+		const codeModeOnlyOrders = new Set([
+			50, // Start Debugging (commandCenterOrder)
+			60, // Run Task (commandCenterOrder, has no commandId)
+		]);
+
 		const providers: IHelpAnythingQuickPickItem[] = this.lazyRegistry.value.getQuickAccessProviders(this.contextKeyService)
 			.filter(p => p.helpEntries.some(h => h.commandCenterOrder !== undefined))
 			.flatMap(provider => provider.helpEntries
 				.filter(h => h.commandCenterOrder !== undefined)
+				// Sandtable: Filter out code-mode-only help entries when Code Mode is OFF
+				.filter(h => {
+					if (isCodeModeEnabled) {
+						return true;
+					}
+					// Block by commandId if it matches the blocklist
+					if (h.commandId && codeModeOnlyCommandIds.has(h.commandId)) {
+						return false;
+					}
+					// Block by commandCenterOrder as a fallback for entries without commandId
+					if (!h.commandId && codeModeOnlyOrders.has(h.commandCenterOrder!)) {
+						return false;
+					}
+					return true;
+				})
 				.map(helpEntry => {
 					const providerSpecificOptions: AnythingQuickAccessProviderRunOptions | undefined = {
 						...runOptions,
@@ -844,6 +883,7 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 						label,
 						description: helpEntry.prefix ?? provider.prefix,
 						commandCenterOrder: helpEntry.commandCenterOrder!,
+						commandId: helpEntry.commandId,
 						keybinding: helpEntry.commandId ? this.keybindingService.lookupKeybinding(helpEntry.commandId) : undefined,
 						ariaLabel: localize('helpPickAriaLabel', "{0}, {1}", label, helpEntry.description),
 						accept: () => {
@@ -859,11 +899,43 @@ export class AnythingQuickAccessProvider extends PickerQuickAccessProvider<IAnyt
 		// to the command center, so for now, let's do this.
 		if (this.quickChatService.enabled) {
 			providers.push({
-				label: localize('chat', "Open Quick Chat"),
+				label: isCodeModeEnabled
+					? localize('chat', "Open Quick Chat")
+					: localize('chatResearch', "Ask AI"),
 				commandCenterOrder: 30,
 				keybinding: this.keybindingService.lookupKeybinding(ASK_QUICK_QUESTION_ACTION_ID),
 				accept: () => this.quickChatService.toggle()
 			});
+		}
+
+		// Sandtable: Add Research Mode-specific entries when Code Mode is OFF
+		if (!isCodeModeEnabled) {
+			providers.push({
+				label: localize('browsePersonas', "Browse Personas"),
+				commandCenterOrder: 35,
+				keybinding: this.keybindingService.lookupKeybinding('sandtable.selectPersona'),
+				accept: () => { this.commandService.executeCommand('sandtable.selectPersona'); }
+			});
+			providers.push({
+				label: localize('openSandtableSettings', "Open Sandtable Settings"),
+				commandCenterOrder: 45,
+				keybinding: this.keybindingService.lookupKeybinding('sandtable.openSettings'),
+				accept: () => { this.commandService.executeCommand('sandtable.openSettings'); }
+			});
+		}
+
+		// Sandtable: Rename entries for Research Mode when Code Mode is OFF
+		if (!isCodeModeEnabled) {
+			const researchLabels: Record<number, string> = {
+				10: localize('openDocument', "Open Document"),           // "Go to File"
+				25: localize('searchInDocuments', "Search in Documents"), // "Search for Text"
+			};
+			for (const provider of providers) {
+				const newLabel = researchLabels[provider.commandCenterOrder];
+				if (newLabel) {
+					provider.label = newLabel;
+				}
+			}
 		}
 
 		return providers.sort((a, b) => a.commandCenterOrder - b.commandCenterOrder);

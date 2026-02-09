@@ -50,6 +50,7 @@ import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { workbenchConfigurationNodeBase } from '../../../common/configuration.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { CodeModeConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import Severity from '../../../../base/common/severity.js';
 import { isCancellationError } from '../../../../base/common/errors.js';
@@ -261,6 +262,13 @@ export class RemoteStatusIndicator extends Disposable implements IWorkbenchContr
 
 		// Update indicator when formatter changes as it may have an impact on the remote label
 		this._register(this.labelService.onDidChangeFormatters(() => this.updateRemoteStatusIndicator()));
+
+		// Sandtable: Update indicator when Code Mode is toggled (hide when OFF and not connected)
+		this._register(this.configurationService.onDidChangeConfiguration(e => {
+			if (e.affectsConfiguration(CodeModeConfigKeys.Enabled)) {
+				this.updateRemoteStatusIndicator();
+			}
+		}));
 
 		// Update based on remote indicator changes if any
 		const remoteIndicator = this.environmentService.options?.windowIndicator;
@@ -553,6 +561,18 @@ export class RemoteStatusIndicator extends Disposable implements IWorkbenchContr
 				this.renderRemoteStatusIndicator(`$(remote) ${truncate(workspaceLabel, RemoteStatusIndicator.REMOTE_STATUS_LABEL_MAX_LENGTH)}`, tooltip);
 				return;
 			}
+		}
+
+		// Sandtable: Hide the "Open Remote Window" button when Code Mode is OFF and not connected
+		// to a remote. This button is a developer-oriented feature that is not useful for research users.
+		const isCodeModeEnabled = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+		if (!isCodeModeEnabled) {
+			// Not connected to a remote and Code Mode is OFF -- hide the indicator entirely
+			if (this.remoteStatusEntry) {
+				this.remoteStatusEntry.dispose();
+				this.remoteStatusEntry = undefined;
+			}
+			return;
 		}
 
 		this.renderRemoteStatusIndicator(RemoteStatusIndicator.DEFAULT_REMOTE_STATUS_LABEL, nls.localize('noHost.tooltip', "Open a Remote Window"));

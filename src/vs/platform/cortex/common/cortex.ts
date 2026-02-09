@@ -173,6 +173,8 @@ export interface ICortexStreamChunk {
 
 export interface ICortexStreamResult {
 	totalTokens: number;
+	/** Real token usage from the API (when stream_options.include_usage was honored) */
+	usage?: ICortexUsage;
 }
 
 // ─── Model Types ──────────────────────────────────────────────────────────────

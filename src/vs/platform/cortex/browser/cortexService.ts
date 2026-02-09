@@ -38,6 +38,7 @@ import {
 import {
 	CortexConfigKeys,
 	ChatConfigKeys,
+	ModelsConfigKeys,
 	CORTEX_DEFAULT_ENDPOINT,
 } from '../common/cortexConfiguration.js';
 import { IProviderRegistryService } from '../common/providerRegistry.js';
@@ -372,10 +373,14 @@ export class CortexService extends Disposable implements ICortexService {
 	private _routeRequest(request: ICortexChatRequest): { provider: ILLMProvider; routedRequest: ICortexChatRequest } {
 		const provider = this._resolveProviderForModel(request.model);
 		const bareModel = extractModelName(request.model);
-		return {
-			provider,
-			routedRequest: { ...request, model: bareModel },
-		};
+
+		// Apply curated model overrides (from sandtable.models.curated) to the request.
+		// These override the consumer's default parameters before the provider applies
+		// its own provider-level and auto-detection overrides on top.
+		let routedRequest: ICortexChatRequest = { ...request, model: bareModel };
+		routedRequest = this._applyCuratedOverrides(request.model, routedRequest);
+
+		return { provider, routedRequest };
 	}
 
 	private _routeTextRequest(request: ICortexCompletionRequest): { provider: ILLMProvider; routedRequest: ICortexCompletionRequest } {
@@ -394,6 +399,81 @@ export class CortexService extends Disposable implements ICortexService {
 			provider,
 			routedRequest: { ...request, model: bareModel },
 		};
+	}
+
+	/**
+	 * Applies curated model overrides from sandtable.models.curated to a chat request.
+	 * Curated overrides use field names: dropParameters, renameParameters, forceParameters, extraParameters.
+	 * These are applied directly to the request before the provider's own overrides run.
+	 */
+	private _applyCuratedOverrides(qualifiedName: string, request: ICortexChatRequest): ICortexChatRequest {
+		interface ICuratedModel {
+			qualifiedName: string;
+			enabled: boolean;
+			overrides?: {
+				dropParameters?: string[];
+				renameParameters?: Record<string, string>;
+				forceParameters?: Record<string, string>;
+				extraParameters?: Record<string, string>;
+			};
+		}
+
+		const curated = this.configurationService.getValue<ICuratedModel[]>(ModelsConfigKeys.CuratedModels);
+		if (!curated || curated.length === 0) {
+			return request;
+		}
+
+		const entry = curated.find(m => m.qualifiedName === qualifiedName);
+		if (!entry?.overrides) {
+			return request;
+		}
+
+		const overrides = entry.overrides;
+		const body: Record<string, unknown> = { ...request };
+
+		// Drop parameters
+		if (overrides.dropParameters) {
+			for (const param of overrides.dropParameters) {
+				delete body[param];
+			}
+		}
+
+		// Rename parameters
+		if (overrides.renameParameters) {
+			for (const [oldName, newName] of Object.entries(overrides.renameParameters)) {
+				if (body[oldName] !== undefined) {
+					body[newName] = body[oldName];
+					delete body[oldName];
+				}
+			}
+		}
+
+		// Force parameters
+		if (overrides.forceParameters) {
+			for (const [param, value] of Object.entries(overrides.forceParameters)) {
+				// Try to parse as JSON for typed values (numbers, booleans)
+				try {
+					body[param] = JSON.parse(value);
+				} catch {
+					body[param] = value;
+				}
+			}
+		}
+
+		// Extra parameters (only inject if not already present)
+		if (overrides.extraParameters) {
+			for (const [param, value] of Object.entries(overrides.extraParameters)) {
+				if (body[param] === undefined) {
+					try {
+						body[param] = JSON.parse(value);
+					} catch {
+						body[param] = value;
+					}
+				}
+			}
+		}
+
+		return body as unknown as ICortexChatRequest;
 	}
 
 	private _resolveProviderForModel(modelRef: string): ILLMProvider {

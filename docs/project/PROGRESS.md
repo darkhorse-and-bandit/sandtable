@@ -2,8 +2,8 @@
 
 This is the living checklist for the Sandtable project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
 
-**Last updated:** 2026-02-08
-**Current phase:** Phase 4 IDE Side Complete -- Awaiting Cortex Tool Calling Metadata
+**Last updated:** 2026-02-09
+**Current phase:** Chat Model Picker & Token Usage Tracking Complete
 
 ---
 
@@ -420,6 +420,42 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [x] Register imports in `workbench.common.main.ts`
 - [x] Final `npm run compile` with 0 errors
 
+### Post-Implementation Bug Fixes (Phase 4.5)
+
+Issues discovered during live testing with OpenAI and Cortex providers:
+
+- [x] **TrustedHTML CSP fix** -- Replaced `innerHTML` in `sandtableChatMessageList.ts` typing indicator with `dom.append()` calls to comply with Electron's TrustedHTML CSP
+- [x] **System prompt on session failure** -- Moved system prompt insertion in `sandtableChatViewPane.ts` outside the session creation `try/catch` so chat works when Cortex is unreachable
+- [x] **CSP `http://` allowance** -- Added `http:` to `connect-src` directive in `workbench.html` and `workbench-dev.html` to allow connections to local network HTTP servers
+- [x] **False-positive health check** -- Rewrote `OpenAICompatibleClient.checkHealth()` to call `request()` directly instead of `listModels()` which swallowed errors
+- [x] **Endpoint URL normalization** -- Added `_normalizeEndpoint()` to `CortexClient` and `OpenAICompatibleClient` to strip trailing `/v1` preventing URL duplication
+- [x] **Cortex session auth priority** -- Changed `CortexClient` auth to prefer session cookie over Bearer token for all requests. Added `_setAuthHeaders()` helper
+- [x] **CortexLLMProvider session login** -- Added `_ensureAdminSession()` before `checkHealth()`, `listModels()`, `getModelCapabilities()`, `getModelConstraints()`, and `getIDEStatus()` in the Cortex provider
+
+### Sub-Phase 4.5.7: Model Parameter Overrides
+
+Addresses API parameter incompatibilities across different LLM providers/models (e.g., GPT-5 rejects `temperature` and `max_tokens`):
+
+- [x] **Layer 1: Auto-detection** -- `OpenAICompatibleClient.normalizeChatBody()` detects GPT-5/o1/o3 reasoning models and strips unsupported params (`temperature`, `top_p`, `frequency_penalty`, `presence_penalty`). Renames `max_tokens` to `max_completion_tokens` for all external providers
+- [x] **Layer 2: `IModelParameterOverrides` type** -- New interface with `dropParams`, `renameParams`, `forceParams`, `extraParams` in `cortexProviderTypes.ts`
+- [x] **Layer 2: `modelOverrides` on `IProviderConfig`** -- Per-model overrides keyed by model name or glob pattern (e.g., `gpt-5*`)
+- [x] **Layer 2: Override resolution** -- `OpenAICompatibleProvider._resolveModelOverrides()` matches model names with exact match then trailing `*` wildcard
+- [x] **Layer 2: Override application** -- `normalizeChatBody()` applies admin overrides after auto-detection (admin wins)
+- [x] **Layer 2: Settings schema** -- Updated `sandtable.providers` item schema with `modelOverrides` property
+- [x] **Layer 2: Provider editor UI** -- "Model Parameter Overrides" section in `sandtableProviderEditor.ts` with add/edit/remove per model pattern
+- [x] **Layer 2: Provider card badges** -- Override count shown on provider cards in settings page
+- [x] `npm run compile` passes with 0 errors
+
+### Sub-Phase 4.5.8: Model Test Button and Reliability Fixes
+
+Adds a "Test Model" button for verifying models work before using them in chat, plus fixes for curated model overrides and provider connectivity timing:
+
+- [x] **Test Model button** -- Added to curated model config panel in `sandtableSettingsPage.ts`. Sends a minimal `chatCompletion()` request ("Say hello in one sentence") through the full routing + normalization pipeline. Shows model reply (green) or API error details (red) inline
+- [x] **Test result CSS** -- Green success box, red failure box, reply text, usage stats, and error tip styles in `sandtableSettings.css`
+- [x] **Curated model overrides plumbing** -- `CortexService._routeRequest()` now reads `sandtable.models.curated` and applies curated model overrides (`dropParameters`, `renameParameters`, `forceParameters`, `extraParameters`) to the request before the provider's own overrides run
+- [x] **Provider connectivity timing fix** -- `ProviderRegistryService.getActiveProviders()` now includes providers that haven't completed their first health check yet (optimistic inclusion). Prevents "No models available" when health polls haven't finished at startup. Providers are excluded only after a failed health check
+- [x] `npm run compile` passes with 0 errors
+
 ---
 
 ## Cortex Enhancements
@@ -454,6 +490,7 @@ This is the living checklist for the Sandtable project. Update checkboxes as tas
 - [x] `docs/project/funspace/custom_editor_background/EDITOR-BACKGROUND-IMAGE.md` -- Editor background image feature
 - [x] `docs/project/funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md` -- UX overhaul & Code Mode documentation
 - [x] `docs/project/funspace/sandtable_ux_overhaul/NEXT-STEPS.md` -- Remaining work and follow-up tasks
+- [x] `docs/project/funspace/chat_token_tracking/DESIGN.md` -- Chat model picker fix & token usage tracking design
 
 ---
 
@@ -563,9 +600,287 @@ Optional, self-contained features built by the dev team for fun. These don't blo
 - [x] General section slimmed to dashboard: connection status, provider/model counts, quick action links
 - [x] `npm run compile` passes with 0 errors
 
+#### Stabilization and Hardening -- Complete
+- [x] `run_command` tool: implemented via `ITerminalService` with shell integration output capture and basic fallback
+- [x] Edit mode (`ChatModeKind.Edit`): added to agent's supported modes, mode instructions appended to system prompt
+- [x] `npm run compile` passes with 0 errors
+
+#### Code Mode UX Cleanup -- Complete
+Comprehensive audit and cleanup of all coding-centric UI elements that remain visible when Code Mode is OFF. Every change dynamically responds to the code mode toggle (no restart required).
+
+**Chat Panel Text and Suggested Actions:**
+- [x] Welcome titles: "Ask a question" / "Edit content" / "Research with Agent" (replacing code-centric titles)
+- [x] Chat input placeholders: "Ask a question or explore a topic" / "Edit or revise selected content" / "Describe what to research or explore next"
+- [x] Suggested prompts: "Explore Documents" / "Start Research" (replacing "Build Workspace" / "Show Config")
+- [x] "Generate Agent Instructions" message rephrased to "configure AI for your workspace"
+- [x] Agent title bar hover: "describe what to research next" (replacing "describe what to build next")
+
+**Copilot Status Bar:**
+- [x] Copilot status bar icon hidden when Code Mode is OFF (Sandtable has its own Cortex status indicator)
+
+**Editor Empty State / Watermark:**
+- [x] Empty editor hint: "Ask a question, or start writing" (replacing "Generate code / select a language")
+- [x] Inline chat placeholders: "Generate content" / "Modify selected text" (replacing "Generate code" / "Modify selected code")
+- [x] Editor watermark: "Start Debugging" and "Toggle Terminal" shortcuts hidden behind code mode
+
+**Panels:**
+- [x] Outline panel hidden when Code Mode is OFF (code symbols irrelevant for research)
+- [x] Timeline panel hidden when Code Mode is OFF
+
+**Status Bar:**
+- [x] OVR (overtype mode) indicator hidden when Code Mode is OFF
+- [x] Remote Window indicator hidden when Code Mode is OFF and not connected to remote
+
+**File Explorer:**
+- [x] "Open in Integrated Terminal" / "Open in External Terminal" context menu items gated behind code mode
+
+**Files modified:** `chatWidget.ts`, `chatInputEditorContrib.ts`, `agentTitleBarStatusWidget.ts`, `chatStatusEntry.ts`, `emptyTextEditorHint.ts`, `inlineChatOverlayWidget.ts`, `inlineChatController.ts`, `editorGroupWatermark.ts`, `outline.contribution.ts`, `timeline.contribution.ts`, `editorStatus.ts`, `externalTerminal.contribution.ts`, `remoteIndicator.ts`
+
+#### Command Center Overhaul -- Complete
+Full overhaul of the Quick Open command center dropdown and menu bar for Research Mode.
+
+**Command Center Dropdown (Ctrl+P):**
+- [x] Fixed filter bugs: "Start Debugging" and "Run Task" now properly hidden (wrong commandId fixed, order-based fallback added)
+- [x] Placeholder simplified to "Search files by name" (removed "go to line/symbol" suffixes)
+- [x] Entries renamed: "Open Document" / "Search in Documents" / "Ask AI" (replacing code-centric labels)
+- [x] Research-mode entries added: "Browse Personas" and "Open Sandtable Settings"
+- [x] Code-centric entries filtered: Go to Symbol, Start Debugging, Run Task hidden
+
+**Menu Bar:**
+- [x] Go menu hidden when Code Mode is OFF (most items are code-centric)
+- [x] Terminal menu hidden when Code Mode is OFF (developer tool)
+- [x] Go to Symbol in Editor menu item gated behind code mode
+- [x] Go to Symbol in Workspace menu item gated behind code mode
+- [x] Go to Bracket menu item gated behind code mode
+
+**Files modified:** `anythingQuickAccess.ts`, `menubarControl.ts`, `gotoSymbolQuickAccess.ts`, `searchActionsSymbol.ts`, `bracketMatching.ts`
+
+- [x] `npm run compile` passes with 0 errors
+
 #### Next Steps (Phase 2 -- Remaining)
 - [ ] Custom walkthrough SVG media assets (art/design work)
-- [ ] Command Palette filtering: debug commands (8 without preconditions identified -- lower priority)
 - [ ] Runtime testing: verify tool calling works end-to-end in agent mode
-- [ ] run_command tool: implement via ITerminalService (currently placeholder)
 - [ ] Chat session persistence: evaluate VS Code's built-in session storage vs Cortex-side sessions
+
+---
+
+## Phase 6: Agent Personas
+
+**Status:** Complete (IDE-side implementation)
+**Completed:** 2026-02-08
+**Docs:** [PHASE-6-PERSONAS.md](phases/PHASE-6-PERSONAS.md)
+
+### Persona Schema and Settings
+- [x] Create `src/vs/platform/cortex/common/personaTypes.ts` -- `ICuratedPersona` interface
+- [x] Define `BUILTIN_PERSONAS` array with 5 default personas
+- [x] Define `generatePersonaId()` UUID generator
+- [x] Add `PersonaConfigKeys` enum to `cortexConfiguration.ts`
+- [x] Register `sandtable.personas` array setting with full JSON schema
+- [x] Register `sandtable.activePersona` string setting
+- [x] `npm run compile` passes with 0 errors
+
+### Built-in Persona Templates
+- [x] Research Analyst (structured analysis, citations, temp: 0.5)
+- [x] Red Team Commander (adversarial thinking, doctrine-aware, temp: 0.8)
+- [x] Blue Team Defender (defensive posture, risk mitigation, temp: 0.6)
+- [x] Exercise Facilitator (neutral, tracks objectives, temp: 0.4)
+- [x] Subject Matter Expert (deep expertise, source references, temp: 0.7)
+
+### Agent Portfolio Panel (Activity Bar)
+- [x] `SandtablePersonasPanel` ViewPane with full CRUD in Activity Bar sidebar
+- [x] ViewContainer registered with `Codicon.organization` icon
+- [x] Active persona banner, card list, create/edit form, import/export
+- [x] `sandtable.openAgentPortfolio` command in Command Palette
+- [x] Dedicated `sandtablePersonas.css` styles
+- [x] Persona CRUD removed from Settings page (replaced with redirect placeholder)
+- [x] `npm run compile` passes with 0 errors
+
+### Persona Selection (Multiple Access Points)
+- [x] Status bar item shows active persona name (click opens quick-pick)
+- [x] Chat input persona picker button (person icon via `MenuId.ChatInputSide`)
+- [x] `sandtable.selectPersona` command in Command Palette
+- [x] Quick-pick shows icon, name, role, system prompt preview
+- [x] Registered in `workbench.common.main.ts`
+- [x] `npm run compile` passes with 0 errors
+
+### Chat Agent Integration
+- [x] `resolveActivePersona()` reads active persona from configuration
+- [x] `buildMessages()` uses persona system prompt + guidelines
+- [x] `resolveModelId()` considers persona's preferred model
+- [x] `runToolLoop()` applies persona temperature, top_p, max_tokens overrides
+- [x] `npm run compile` passes with 0 errors
+
+### AI-Assisted Persona Creation Tool
+- [x] `sandtable_create_persona` tool registered with `ILanguageModelToolsService`
+- [x] Tool accepts name, role, systemPrompt, guidelines, temperature, topP, maxTokens, icon
+- [x] Saves persona to configuration, returns formatted markdown summary
+- [x] Users can ask AI "create a persona" and the LLM drafts all fields
+- [x] `npm run compile` passes with 0 errors
+
+### Testing
+- [ ] Agent Portfolio panel opens from Activity Bar
+- [ ] Built-in personas load automatically
+- [ ] Create, edit, duplicate, delete custom personas in Agent Portfolio
+- [ ] Person icon in chat input opens quick-pick
+- [ ] Status bar persona indicator and quick-pick work
+- [ ] Chat agent uses persona overrides
+- [ ] Import/export personas as JSON
+- [ ] Ask AI "Create a cybersecurity red team persona" -- tool creates persona
+- [ ] Settings page Personas shows redirect to Agent Portfolio
+- [ ] run_command tool executes commands
+- [ ] Edit mode appears and applies mode instructions
+
+### Documentation
+- [x] `docs/project/phases/PHASE-6-PERSONAS.md` -- Phase plan and task breakdown
+- [x] Updated `PROGRESS.md` with Phase 6 checklist
+- [x] Updated `MILESTONES.md` with Phase 6 milestones
+- [x] Updated `ARCHITECTURE.md` with persona file structure and types
+
+---
+
+## Funspace: Tool Call Display Overhaul
+
+**Status:** Complete
+**Completed:** 2026-02-08
+**Docs:** [funspace/tool_call_display/DESIGN.md](funspace/tool_call_display/DESIGN.md)
+
+Overhauled tool call display in the chat pane to provide persistent, collapsible, human-friendly tool invocation rendering using VS Code's native tool invocation pipeline.
+
+### Tool Metadata Enhancements
+- [x] Added `userDescription` to all 15 tool `IToolData` definitions (workspace + persona tools)
+- [x] Added `alwaysDisplayInputOutput: true` to 6 workspace tools (read_file, edit_file, create_file, run_command, search_files, list_directory)
+- [x] Added `prepareToolInvocation()` to all 15 tool classes with context-specific `invocationMessage` and `pastTenseMessage`
+- [x] Workspace tools set `toolSpecificData` with `kind: 'input'` for native collapsible input/output display
+
+### Agent Native Pipeline Integration
+- [x] Refactored `SandtableChatAgentImpl.runToolLoop()` to use `toolsService.beginToolCall()` instead of transient `IChatProgressMessage`
+- [x] `beginToolCall()` creates persistent `ChatToolInvocation` in Streaming state, appended to chat response model
+- [x] `invokeTool()` handles `prepareToolInvocation()`, state transitions (Executing -> Completed), and result capture
+- [x] Removed manual `progress([{ kind: 'progressMessage' }])` calls for tool execution
+- [x] Tool invocations pass `sessionResource` and `chatRequestId` for proper chat model integration
+
+### User-Facing Improvements
+- [x] Tool calls show human-friendly aliases: "Reading `src/utils.ts`" instead of "Running tool: **sandtable_read_file**..."
+- [x] After completion, tools show past-tense summary: "Read `src/utils.ts`"
+- [x] Tool icon changes from spinner to checkmark on completion
+- [x] Tool calls persist in chat conversation after completion (no longer vanish)
+- [x] Completed tool calls collapse to a single line with expandable input/output details
+- [x] Expanded tool results use scrollable containers with max-height constraints
+
+### Build
+- [x] `npm run compile` passes with 0 errors
+
+---
+
+## Phase 6.1: Full Persona CRUD Tools
+
+**Status:** Complete
+**Completed:** 2026-02-09
+**Docs:** [PHASE-6.1-PERSONA-TOOLS.md](phases/PHASE-6.1-PERSONA-TOOLS.md)
+
+Extended the Sandtable chat agent's tool-calling capabilities from 7 tools to 15 tools, giving the agent full conversational CRUD over the persona system plus import/export and duplication features.
+
+### Required Persona Tools (5 new)
+- [x] `sandtable_list_personas` -- List all personas with active indicator, role, temperature, built-in flag
+- [x] `sandtable_get_persona` -- Get full details by ID or fuzzy name match (case-insensitive partial)
+- [x] `sandtable_edit_persona` -- Partial update of any mutable field with validation and change summary
+- [x] `sandtable_delete_persona` -- Delete custom personas (built-in guard), auto-clear active if deleted
+- [x] `sandtable_activate_persona` -- Activate by ID/name or deactivate (empty params)
+
+### Stretch Goal Tools (3 new)
+- [x] `sandtable_duplicate_persona` -- Clone-and-modify in a single tool call with optional overrides
+- [x] `sandtable_export_persona` -- Export one or all personas as pretty-printed JSON for sharing
+- [x] `sandtable_import_persona` -- Import from JSON string (single object or array) with validation
+
+### Shared Helpers
+- [x] `getPersonas()` -- Module-level helper for loading personas with built-in fallback
+- [x] `findPersona()` -- Lookup by exact ID with fuzzy name fallback
+
+### Registration and Integration
+- [x] All 8 new tools registered in `SandtableToolsContribution` constructor
+- [x] Log message updated from "7 workspace tools registered" to "15 workspace tools registered"
+- [x] All tools follow existing pattern: `IToolData` + `IToolImpl` class + `this._register()`
+- [x] All persona tools use `runsInWorkspace: false` (operate on settings, not workspace files)
+
+### Build
+- [x] `gulp compile-client` passes with 0 errors
+
+---
+
+## Tools Settings Page
+
+**Status:** Complete
+**Completed:** 2026-02-09
+
+Added a "Tools" menu item to the Sandtable Settings page under the "AI & Models" category that dynamically discovers and displays all registered LLM tools at runtime.
+
+### Settings Page Integration
+- [x] Added `'tools'` to `SectionId` type union
+- [x] Added Tools entry to `SECTIONS` array (under AI & Models, after Agent, before Code Completion)
+- [x] Injected `ILanguageModelToolsService` into `SandtableSettingsPage` constructor
+- [x] Added `case 'tools'` to `_renderSection()` switch
+
+### Tools Section Rendering
+- [x] `_renderToolsSection()` -- Auto-discovers tools via `toolsService.getTools(undefined)`, groups by category, subscribes to `onDidChangeTools` for live updates
+- [x] `_categorizeTool()` -- Categorizes tools by source type (MCP, extension, user) and ID pattern (workspace vs persona)
+- [x] `_renderToolCard()` -- Renders card with display name, `userDescription`, tool ID, source/workspace badges, and expandable details
+- [x] `_renderParameterTable()` -- Renders `inputSchema` properties as a table with parameter name, type, required badge, and description
+- [x] `DisposableStore` for tools section listeners, cleared on section switch
+
+### Tool Metadata Tags
+- [x] Added `tags` to all 15 Sandtable tool `IToolData` definitions for richer categorization
+- [x] Workspace tools tagged: `['workspace', 'file']`, `['workspace', 'search']`, `['workspace', 'terminal']`, `['workspace', 'filesystem']`
+- [x] Persona tools tagged: `['persona']`
+
+### CSS
+- [x] Tool card styling (`.sandtable-tool-card`, header, badges, ID, user description)
+- [x] Category headers (`.sandtable-tool-category`, label, count)
+- [x] Expandable details panel (`.sandtable-tool-details`, toggle, model description)
+- [x] Parameter table (`.sandtable-tool-params-table`, name/type/required/desc cells)
+- [x] Badge variants: source (blue), workspace (green), required (orange)
+
+### Build
+- [x] `gulp compile-client` passes with 0 errors
+
+---
+
+## Chat Model Picker Fix & Token Usage Tracking
+
+**Status:** Complete
+**Completed:** 2026-02-09
+**Docs:** [funspace/chat_token_tracking/DESIGN.md](funspace/chat_token_tracking/DESIGN.md)
+
+Two connected fixes that complete the chat panel's model selection and context awareness UX. The model picker dropdown now shows all registered models, and the existing VS Code `ChatContextUsageWidget` (circular pie chart) is fed real token usage data from API responses.
+
+### Problem 1: Model Picker Empty -- Fixed
+- [x] **Root cause identified:** VS Code's `LanguageModelsService` skips initial model resolution when no stored picker preferences exist (`_hasStoredModelForVendor()` returns false on fresh install)
+- [x] **`queueMicrotask` initial fire** -- Added `queueMicrotask(() => this._onDidChange.fire())` at the end of `SandtableLanguageModelProvider` constructor to force `_resolveAllLanguageModels()` after registration completes
+- [x] **"Add Language Models" command handler** -- Registered `workbench.action.chat.triggerSetup` to open `sandtable://settings` instead of no-op Copilot setup
+- [x] **Agent mode filter bug fixed** -- Enriched model capabilities (`toolCalling`, `agentMode`) from the known model context window table. Previously, OpenAI-compatible providers defaulted `toolCalling: false`, causing `suitableForAgentMode()` to filter out ALL models in Agent mode. Now uses known table data (GPT-5, Claude, etc. correctly report `toolCalling: true`)
+- [x] `npm run compile` passes with 0 errors
+
+### Problem 2: Token Usage Indicator Hidden -- Fixed
+- [x] **Known model context window table** -- Created `src/vs/platform/cortex/common/knownModelContextWindows.ts` with 60+ entries covering OpenAI, Anthropic, DeepSeek, Qwen, Meta, Mistral, Google, Microsoft, Cohere model families
+- [x] **Curated model schema extended** -- Added `contextWindowTokens` and `maxOutputTokens` fields to `sandtable.models.curated` items schema
+- [x] **Enriched model metadata** -- `provideLanguageModelChatInfo()` resolves `maxInputTokens`/`maxOutputTokens` with layered lookup: curated config > known models table > default (128K). Uses curated `displayName` if available
+- [x] **Streaming usage capture** -- Extended `ICortexStreamResult` with optional `usage?: ICortexUsage`. Added `stream_options: { include_usage: true }` to streaming requests. Final SSE chunk usage data captured when provider supports it
+- [x] **Real usage in LM provider** -- `sendChatRequest()` propagates real `promptTokens` and `completionTokens` from both streaming and non-streaming API responses
+- [x] **Real usage in agent result** -- `SandtableChatAgentImpl.runToolLoop()` captures real token counts across iterations and reports in `IChatAgentResult.usage`. Falls back to ~4 chars/token heuristic when API doesn't return usage
+- [x] **VS Code's ChatContextUsageWidget automatically appears** -- Pie chart reads `response.result?.usage.promptTokens` and `maxInputTokens` from model metadata. Both values now populated
+- [x] `npm run compile` passes with 0 errors
+
+### Settings Page Enhancements
+- [x] **Token budget fields in model edit panel** -- "Context Window (tokens)" and "Max Output Tokens" number inputs added to curated model edit panel
+- [x] **Token info display on model cards** -- Cards show context window and max output info (e.g., "Context: 400K · Max output: 128K") when configured
+- [x] **Save handler updated** -- `contextWindowTokens` and `maxOutputTokens` persisted alongside display name and overrides
+
+### New File
+- [x] `src/vs/platform/cortex/common/knownModelContextWindows.ts` -- `IKnownModelSpec` interface, `KNOWN_MODEL_CONTEXT_WINDOWS` array (60+ entries), `lookupKnownModelSpec()`, `matchesGlobPattern()`
+
+### Modified Files
+- [x] `src/vs/workbench/contrib/sandtableLM/browser/sandtableLM.contribution.ts` -- queueMicrotask, enriched metadata, command handler, streaming usage, capabilities enrichment
+- [x] `src/vs/workbench/contrib/sandtableLM/browser/sandtableChatAgent.ts` -- Real token usage tracking and heuristic fallback in `IChatAgentResult.usage`
+- [x] `src/vs/platform/cortex/common/cortex.ts` -- `ICortexStreamResult.usage?: ICortexUsage`
+- [x] `src/vs/platform/cortex/common/openAICompatibleClient.ts` -- `stream_options`, SSE usage capture
+- [x] `src/vs/platform/cortex/common/cortexConfiguration.ts` -- `contextWindowTokens` and `maxOutputTokens` in curated schema
+- [x] `src/vs/workbench/contrib/sandtableSettings/browser/sandtableSettingsPage.ts` -- Token budget inputs and display in model edit panel

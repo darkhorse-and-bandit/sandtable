@@ -102,12 +102,16 @@ export class ExternalTerminalContribution extends Disposable implements IWorkben
 	) {
 		super();
 
+		// Sandtable: Gate terminal context menu items behind Code Mode
+		const codeModeEnabled = ContextKeyExpr.has('sandtable.codeModeEnabled');
 		const shouldShowIntegratedOnLocal = ContextKeyExpr.and(
+			codeModeEnabled,
 			ResourceContextKey.Scheme.isEqualTo(Schemas.file),
 			ContextKeyExpr.or(ContextKeyExpr.equals('config.terminal.explorerKind', 'integrated'), ContextKeyExpr.equals('config.terminal.explorerKind', 'both')));
 
 
 		const shouldShowExternalKindOnLocal = ContextKeyExpr.and(
+			codeModeEnabled,
 			ResourceContextKey.Scheme.isEqualTo(Schemas.file),
 			ContextKeyExpr.or(ContextKeyExpr.equals('config.terminal.explorerKind', 'external'), ContextKeyExpr.equals('config.terminal.explorerKind', 'both')));
 
@@ -118,7 +122,7 @@ export class ExternalTerminalContribution extends Disposable implements IWorkben
 				id: OPEN_IN_INTEGRATED_TERMINAL_COMMAND_ID,
 				title: nls.localize('scopedConsoleAction.Integrated', "Open in Integrated Terminal")
 			},
-			when: ContextKeyExpr.or(shouldShowIntegratedOnLocal, ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote))
+			when: ContextKeyExpr.and(codeModeEnabled, ContextKeyExpr.or(shouldShowIntegratedOnLocal, ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote)))
 		};
 
 

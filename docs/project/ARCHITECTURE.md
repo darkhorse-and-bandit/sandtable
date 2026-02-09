@@ -85,6 +85,7 @@ src/vs/
       sandtableSettings/   ** NEW: Custom settings page **
       sandtableStatus/     ** NEW: Status bar indicator **
       sandtableAppearance/ ** NEW: Editor background images **
+      sandtablePersonas/   ** NEW: Agent Portfolio panel + persona picker + AI creation tool (Phase 6) **
       sandtableChat/       ** DEPRECATED: Custom chat panel (replaced by sandtableLM) **
       sandtableAgent/      ** DEPRECATED: Custom agent panel (replaced by sandtableLM) **
   code/          Electron desktop app entry point
@@ -343,6 +344,32 @@ Models are identified by compound names: `"providerId::modelName"`. The `::` sep
 
 Admin and monitoring methods are always delegated to the Cortex provider specifically.
 
+### Parameter Compatibility
+
+Different LLM models reject parameters that others require (e.g., GPT-5 rejects `temperature` and `max_tokens`, requiring `max_completion_tokens` instead). Sandtable handles this with a two-layer system:
+
+**Layer 1 -- Automatic Detection:** `OpenAICompatibleClient.normalizeChatBody()` auto-detects known reasoning model patterns (`gpt-5*`, `o1*`, `o3*`) and strips unsupported sampling parameters. `max_tokens` is renamed to `max_completion_tokens` for all external providers. No configuration needed.
+
+**Layer 2 -- Admin Overrides:** Each provider can have a `modelOverrides` map in its config, keyed by model name or glob pattern. Each curated model can also have its own overrides (`dropParameters`, `renameParameters`, `forceParameters`, `extraParameters`). Both levels support:
+- `dropParams` / `dropParameters` -- parameters to remove from the request
+- `renameParams` / `renameParameters` -- parameters to rename
+- `forceParams` / `forceParameters` -- parameters to force to specific values
+- `extraParams` / `extraParameters` -- additional parameters to inject if not already present
+
+Override chain: consumer defaults -> curated model overrides -> provider auto-detection -> provider-level admin overrides (admin always wins).
+
+### Model Testing
+
+The Models settings section includes a "Test Model" button on each curated model's configuration panel. When clicked, it sends a minimal `chatCompletion()` request ("Say hello in one sentence") through the full routing and normalization pipeline. The result is displayed inline:
+- **Success:** Shows the model's response text, token usage stats (green box)
+- **Failure:** Shows the exact API error message, including parameter incompatibility details (red box)
+
+This creates a fast configure-test-fix loop: the admin can see which parameter is rejected, adjust overrides, save, and re-test without leaving the settings page.
+
+### Provider Connectivity
+
+Providers are included in model queries optimistically: enabled providers that haven't completed their first health check are included alongside connected providers. This prevents a timing gap at startup where the chat panel shows "No models available" while health polls are still in flight. After the first health check completes, only connected providers are included.
+
 ## CortexClient Implementation
 
 The HTTP client that talks to Cortex's gateway. Uses the standard `fetch` API with `ReadableStream` for SSE parsing -- no external dependencies.
@@ -558,18 +585,17 @@ Every endpoint the IDE calls, organized by feature.
 
 ## Authentication Model
 
-The IDE uses two authentication mechanisms to match Cortex's existing auth model:
+### Cortex Provider
 
-1. **API Key** -- For inference endpoints (`/v1/*`). Stored in VS Code settings (`sandtable.cortex.apiKey`). Sent as `Authorization: Bearer <key>` header.
+Cortex uses **session cookie authentication** for all endpoints (model discovery, inference, admin, system monitoring). The `CortexLLMProvider` calls `CortexClient.login(username, password)` to obtain a `cortex_session` cookie before making any API requests. The session cookie takes priority over the API key Bearer token when both are available. Auth priority in `CortexClient._setAuthHeaders()`: session cookie > Bearer API key > none.
 
-2. **Session Cookie** -- For admin endpoints (`/admin/*`) and chat session endpoints. The IDE performs a login request to get a `cortex_session` cookie, then includes it in subsequent admin requests.
+### External Providers (OpenAI-Compatible)
 
-The `ConnectionManager` handles:
-- Storing credentials (API key in settings, session cookie in memory)
-- Automatic session refresh when cookie expires
-- Health check polling (every 15 seconds)
-- Connection state management (`connected` / `disconnected` / `connecting`)
-- Event emission when connection status changes
+External OpenAI-compatible providers use standard **Bearer token authentication** via the `Authorization: Bearer <key>` header. The API key is configured per-provider in the `sandtable.providers` settings array.
+
+### Content Security Policy
+
+The Electron workbench HTML (`workbench.html`, `workbench-dev.html`) includes a CSP `connect-src` directive that allows `'self'`, `https:`, `http:`, and `ws:` protocols. The `http:` allowance is required for connecting to local network servers (Cortex, Ollama, etc.) that don't use HTTPS.
 
 ## Settings Schema
 
@@ -610,6 +636,7 @@ All new settings registered under the `sandtable` namespace:
 // Model Manager
 'sandtable.models.showInActivityBar'      // type: boolean, default: true
 'sandtable.models.gpuPollIntervalMs'      // type: number,  default: 5000
+'sandtable.models.curated'               // type: array,   default: [] (curated model list with per-model overrides)
 
 // Appearance
 'sandtable.appearance.backgroundImage'    // type: string,  default: '' (bundled: or file path)
@@ -622,6 +649,18 @@ All new settings registered under the `sandtable` namespace:
 // Providers (Phase 4.5)
 'sandtable.providers'                    // type: array,   default: [] (auto-created from legacy settings)
 'sandtable.defaultProvider'              // type: string,  default: '' (first enabled provider)
+// Each provider entry: { id, displayName, type, endpoint, apiKey, enabled, priority,
+//   username?, password?, modelOverrides?: { "pattern*": { dropParams, renameParams, forceParams, extraParams } } }
+// Each curated model entry: { qualifiedName, displayName?, enabled, overrides?:
+//   { dropParameters?, renameParameters?, forceParameters?, extraParameters? } }
+
+// Personas (Phase 6)
+'sandtable.personas'                     // type: array,   default: [] (built-in templates loaded when empty)
+'sandtable.activePersona'                // type: string,  default: '' (no persona active)
+
+// Each curated model entry also supports (added for token tracking):
+//   contextWindowTokens?: number  -- actual serving context window in tokens
+//   maxOutputTokens?: number      -- max output tokens for this model
 ```
 
 ## New File Structure Map
@@ -722,8 +761,9 @@ src/vs/platform/cortex/
     llmProvider.ts                     # ILLMProvider base interface
     cortexLLMProvider.ts               # ICortexLLMProvider extended interface (Cortex-specific)
     providerRegistry.ts                # IProviderRegistryService interface + DI decorator
-    openAICompatibleClient.ts          # HTTP client for OpenAI-compatible endpoints
+    openAICompatibleClient.ts          # HTTP client for OpenAI-compatible endpoints (+ stream_options usage capture)
     modelResolver.ts                   # Compound model ID parsing and resolution
+    knownModelContextWindows.ts        # Known model context window reference table (60+ model families)
 
   browser/
     providerRegistryService.ts         # ProviderRegistryService implementation
@@ -734,6 +774,61 @@ src/vs/workbench/contrib/sandtableSettings/
   browser/
     sandtableProviderEditor.ts         # Provider add/edit dialog
 ```
+
+### Phase 6 Files
+
+```
+src/vs/platform/cortex/
+  common/
+    personaTypes.ts                    # ICuratedPersona interface, BUILTIN_PERSONAS, generatePersonaId()
+    cortexConfiguration.ts             # + PersonaConfigKeys enum, sandtable.personas + sandtable.activePersona settings
+
+src/vs/workbench/contrib/sandtablePersonas/
+  browser/
+    sandtablePersonas.contribution.ts  # ViewContainer (Activity Bar), status bar, quick-pick, chat input picker
+    sandtablePersonasPanel.ts          # Agent Portfolio panel (ViewPane with full CRUD)
+    sandtablePersonas.css              # Panel styles
+
+src/vs/workbench/contrib/sandtableSettings/
+  browser/
+    sandtableSettingsPage.ts           # + _renderToolsSection() (auto-discovery, categorized tool cards)
+    sandtableSettings.css              # + Tool card, badge, parameter table, and category styles
+
+src/vs/workbench/contrib/sandtableLM/
+  browser/
+    sandtableChatAgent.ts              # + resolveActivePersona(), persona system prompt/model/params integration
+    sandtableTools.ts                  # 15 tools: 6 workspace + 9 persona CRUD/import/export/duplicate
+```
+
+### Code Mode Architecture
+
+The Code Mode toggle (`sandtable.codeMode.enabled`, default: `false`) controls the visibility of all coding-centric UI elements. The implementation uses two complementary patterns:
+
+**Declarative gating** via the `sandtable.codeModeEnabled` context key in `when` clauses:
+- Menu bar items (Go, Terminal menus)
+- Menu items (Go to Symbol, Go to Bracket, Open in Terminal)
+- View registrations (Outline panel, Timeline panel)
+- Editor watermark entries (Start Debugging, Toggle Terminal)
+
+**Imperative gating** via `configurationService.getValue(CodeModeConfigKeys.Enabled)`:
+- Status bar items (Copilot, OVR, Remote Window indicator)
+- Chat panel text (welcome titles, placeholders, suggested prompts)
+- Editor hints (empty editor, inline chat placeholders)
+- Command center (help entry filtering, label overrides, research-specific entries)
+
+**Files involved in Code Mode gating (beyond the core `sandtableCodeMode.contribution.ts`):**
+
+| Area | Files |
+|------|-------|
+| Chat panel text | `chatWidget.ts`, `chatInputEditorContrib.ts`, `agentTitleBarStatusWidget.ts` |
+| Status bar | `chatStatusEntry.ts`, `editorStatus.ts`, `remoteIndicator.ts` |
+| Editor hints | `emptyTextEditorHint.ts`, `inlineChatOverlayWidget.ts`, `inlineChatController.ts` |
+| Panels/views | `outline.contribution.ts`, `timeline.contribution.ts`, `paneCompositeBar.ts` |
+| Menus | `menubarControl.ts`, `gotoSymbolQuickAccess.ts`, `searchActionsSymbol.ts`, `bracketMatching.ts` |
+| Command center | `anythingQuickAccess.ts` |
+| Context menus | `externalTerminal.contribution.ts` |
+| Editor watermark | `editorGroupWatermark.ts` |
+| File defaults | `fileCommands.ts` |
 
 ### Registration Entry Points
 
@@ -752,6 +847,7 @@ import './contrib/sandtableSettings/browser/sandtableSettings.contribution.js';
 import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.js';
 import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
 import './contrib/sandtableAppearance/browser/sandtableAppearance.contribution.js';
+import './contrib/sandtablePersonas/browser/sandtablePersonas.contribution.js';   // Phase 6: Agent Portfolio + persona picker + AI creation tool
 // DEPRECATED (replaced by sandtableLM integration with VS Code's built-in chat panel):
 // import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
 // import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';

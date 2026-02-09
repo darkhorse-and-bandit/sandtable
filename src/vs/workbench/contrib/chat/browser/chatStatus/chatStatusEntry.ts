@@ -22,6 +22,7 @@ import { disposableWindowInterval } from '../../../../../base/browser/dom.js';
 import { isNewUser } from './chatStatus.js';
 import product from '../../../../../platform/product/common/product.js';
 import { isCompletionsEnabled } from '../../../../../editor/common/services/completionsEnablement.js';
+import { CodeModeConfigKeys } from '../../../../../platform/cortex/common/cortexConfiguration.js';
 
 export class ChatStatusBarEntry extends Disposable implements IWorkbenchContribution {
 
@@ -53,7 +54,9 @@ export class ChatStatusBarEntry extends Disposable implements IWorkbenchContribu
 
 	private update(): void {
 		const sentiment = this.chatEntitlementService.sentiment;
-		if (!sentiment.hidden) {
+		// Sandtable: Hide Copilot status bar entry when Code Mode is OFF
+		const isCodeModeEnabled = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+		if (!sentiment.hidden && isCodeModeEnabled) {
 			const props = this.getEntryProps();
 			if (this.entry) {
 				this.entry.update(props);
@@ -84,7 +87,7 @@ export class ChatStatusBarEntry extends Disposable implements IWorkbenchContribu
 		this._register(this.editorService.onDidActiveEditorChange(() => this.onDidActiveEditorChange()));
 
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(product.defaultChatAgent?.completionsEnablementSetting)) {
+			if (e.affectsConfiguration(product.defaultChatAgent?.completionsEnablementSetting) || e.affectsConfiguration(CodeModeConfigKeys.Enabled)) {
 				this.update();
 			}
 		}));

@@ -466,6 +466,11 @@ class EditorStatus extends Disposable {
 	}
 
 	private updateInputModeElement(inputMode: 'overtype' | 'insert' | undefined): void {
+		// Sandtable: Hide OVR indicator when Code Mode is OFF
+		if (!this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled)) {
+			this.inputModeElement.clear();
+			return;
+		}
 		if (inputMode === 'overtype') {
 			if (!this.inputModeElement.value) {
 				const text = localize('inputModeOvertype', 'OVR');

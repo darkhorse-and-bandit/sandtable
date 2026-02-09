@@ -37,7 +37,8 @@ export class TimelinePaneDescriptor implements IViewDescriptor {
 	readonly canToggleVisibility = true;
 	readonly hideByDefault = false;
 	readonly canMoveView = true;
-	readonly when = TimelineHasProviderContext;
+	// Sandtable: Only show Timeline panel when Code Mode is enabled
+	readonly when = ContextKeyExpr.and(TimelineHasProviderContext, ContextKeyExpr.has('sandtable.codeModeEnabled'));
 
 	focusCommand = { id: 'timeline.focus' };
 }

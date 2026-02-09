@@ -36,6 +36,7 @@ import { ITextResourceEditorInput } from '../../../../../platform/editor/common/
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
 import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
 import { ILogService } from '../../../../../platform/log/common/log.js';
+import { CodeModeConfigKeys } from '../../../../../platform/cortex/common/cortexConfiguration.js';
 import { bindContextKey } from '../../../../../platform/observable/common/platformObservableUtils.js';
 import product from '../../../../../platform/product/common/product.js';
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
@@ -868,11 +869,11 @@ export class ChatWidget extends Disposable implements IChatWidget {
 		} else if (this._instructionFilesExist === false) {
 			// Show generate instructions message if no files exist
 			const generateInstructionsCommand = 'workbench.action.chat.generateInstructions';
-			return new MarkdownString(localize(
-				'chatWidget.instructions',
-				"[Generate Agent Instructions]({0}) to onboard AI onto your codebase.",
-				`command:${generateInstructionsCommand}`
-			), { isTrusted: { enabledCommands: [generateInstructionsCommand] } });
+			const isCodeModeEnabled = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+			const instructionsText = isCodeModeEnabled
+				? localize('chatWidget.instructions', "[Generate Agent Instructions]({0}) to onboard AI onto your codebase.", `command:${generateInstructionsCommand}`)
+				: localize('chatWidget.instructionsResearch', "[Generate Agent Instructions]({0}) to configure AI for your workspace.", `command:${generateInstructionsCommand}`);
+			return new MarkdownString(instructionsText, { isTrusted: { enabledCommands: [generateInstructionsCommand] } });
 		}
 
 		// While checking, don't show the generate instructions message
@@ -929,12 +930,19 @@ export class ChatWidget extends Disposable implements IChatWidget {
 		}
 
 		let title: string;
+		const isCodeMode = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
 		if (this.input.currentModeKind === ChatModeKind.Ask) {
-			title = localize('chatDescription', "Ask about your code");
+			title = isCodeMode
+				? localize('chatDescription', "Ask about your code")
+				: localize('chatDescriptionResearch', "Ask a question");
 		} else if (this.input.currentModeKind === ChatModeKind.Edit) {
-			title = localize('editsTitle', "Edit in context");
+			title = isCodeMode
+				? localize('editsTitle', "Edit in context")
+				: localize('editsTitleResearch', "Edit content");
 		} else {
-			title = localize('agentTitle', "Build with Agent");
+			title = isCodeMode
+				? localize('agentTitle', "Build with Agent")
+				: localize('agentTitleResearch', "Research with Agent");
 		}
 
 		return {
@@ -950,33 +958,64 @@ export class ChatWidget extends Disposable implements IChatWidget {
 
 		// Use predefined suggestions for new users
 		if (!this.chatEntitlementService.sentiment.installed) {
+			const isCodeModeOn = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
 			const isEmpty = this.contextService.getWorkbenchState() === WorkbenchState.EMPTY;
 			if (isEmpty) {
-				return [
-					{
-						icon: Codicon.vscode,
-						label: localize('chatWidget.suggestedPrompts.gettingStarted', "Ask @vscode"),
-						prompt: localize('chatWidget.suggestedPrompts.gettingStartedPrompt', "@vscode How do I change the theme to light mode?"),
-					},
-					{
-						icon: Codicon.newFolder,
-						label: localize('chatWidget.suggestedPrompts.newProject', "Create Project"),
-						prompt: localize('chatWidget.suggestedPrompts.newProjectPrompt', "Create a #new Hello World project in TypeScript"),
-					}
-				];
+				if (isCodeModeOn) {
+					return [
+						{
+							icon: Codicon.vscode,
+							label: localize('chatWidget.suggestedPrompts.gettingStarted', "Ask @vscode"),
+							prompt: localize('chatWidget.suggestedPrompts.gettingStartedPrompt', "@vscode How do I change the theme to light mode?"),
+						},
+						{
+							icon: Codicon.newFolder,
+							label: localize('chatWidget.suggestedPrompts.newProject', "Create Project"),
+							prompt: localize('chatWidget.suggestedPrompts.newProjectPrompt', "Create a #new Hello World project in TypeScript"),
+						}
+					];
+				} else {
+					return [
+						{
+							icon: Codicon.question,
+							label: localize('chatWidget.suggestedPrompts.gettingStartedResearch', "Ask a Question"),
+							prompt: localize('chatWidget.suggestedPrompts.gettingStartedResearchPrompt', "How do I get started with Sandtable?"),
+						},
+						{
+							icon: Codicon.newFolder,
+							label: localize('chatWidget.suggestedPrompts.openWorkspace', "Open Workspace"),
+							prompt: localize('chatWidget.suggestedPrompts.openWorkspacePrompt', "Help me set up a new research workspace"),
+						}
+					];
+				}
 			} else {
-				return [
-					{
-						icon: Codicon.debugAlt,
-						label: localize('chatWidget.suggestedPrompts.buildWorkspace', "Build Workspace"),
-						prompt: localize('chatWidget.suggestedPrompts.buildWorkspacePrompt', "How do I build this workspace?"),
-					},
-					{
-						icon: Codicon.gear,
-						label: localize('chatWidget.suggestedPrompts.findConfig', "Show Config"),
-						prompt: localize('chatWidget.suggestedPrompts.findConfigPrompt', "Where is the configuration for this project defined?"),
-					}
-				];
+				if (isCodeModeOn) {
+					return [
+						{
+							icon: Codicon.debugAlt,
+							label: localize('chatWidget.suggestedPrompts.buildWorkspace', "Build Workspace"),
+							prompt: localize('chatWidget.suggestedPrompts.buildWorkspacePrompt', "How do I build this workspace?"),
+						},
+						{
+							icon: Codicon.gear,
+							label: localize('chatWidget.suggestedPrompts.findConfig', "Show Config"),
+							prompt: localize('chatWidget.suggestedPrompts.findConfigPrompt', "Where is the configuration for this project defined?"),
+						}
+					];
+				} else {
+					return [
+						{
+							icon: Codicon.search,
+							label: localize('chatWidget.suggestedPrompts.exploreDocuments', "Explore Documents"),
+							prompt: localize('chatWidget.suggestedPrompts.exploreDocumentsPrompt', "What documents are in this workspace?"),
+						},
+						{
+							icon: Codicon.book,
+							label: localize('chatWidget.suggestedPrompts.startResearch', "Start Research"),
+							prompt: localize('chatWidget.suggestedPrompts.startResearchPrompt', "Help me research a topic using the documents in this workspace"),
+						}
+					];
+				}
 			}
 		}
 

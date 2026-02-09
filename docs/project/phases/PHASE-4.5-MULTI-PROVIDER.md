@@ -1344,4 +1344,21 @@ Added to handle API parameter incompatibilities across providers:
 - **`modelOverrides`** field on `IProviderConfig` for per-model pattern config
 - **Auto-detection** in `normalizeChatBody()` for GPT-5/o1/o3 reasoning models (strips `temperature`, `top_p`, `frequency_penalty`, `presence_penalty`)
 - **Admin override UI** in the provider editor with model pattern matching (trailing `*` wildcards)
-- **Override chain:** consumer defaults -> auto-detection -> admin overrides (admin wins)
+- **Override chain:** consumer defaults -> curated model overrides -> auto-detection -> provider-level admin overrides (admin wins)
+
+### Model Test Button
+
+Added a "Test Model" button to the curated model configuration panel in the Models settings section:
+
+- Sends a minimal `chatCompletion()` request ("Say hello in one sentence") through the full routing + normalization pipeline
+- On success: displays the model's response text and token usage in a green result box
+- On failure: displays the full API error message in a red result box with a tip to adjust parameter overrides
+- Creates a fast configure-test-fix loop for resolving parameter incompatibilities
+
+### Curated Model Override Plumbing
+
+Curated model overrides from `sandtable.models.curated` (with fields `dropParameters`, `renameParameters`, `forceParameters`, `extraParameters`) are now applied during inference. `CortexService._routeRequest()` reads the curated config and applies overrides to the request before the provider's own override resolution runs.
+
+### Provider Connectivity Timing Fix
+
+`ProviderRegistryService.getActiveProviders()` now includes enabled providers that haven't completed their first health check (optimistic inclusion). This prevents "No models available" in the chat panel during the startup window when health polls haven't finished yet. After the first health check completes (success or failure), the provider is included only if connected.

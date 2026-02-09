@@ -11,6 +11,7 @@ import {
 	ICortexCompletionResponse,
 	ICortexStreamChunk,
 	ICortexStreamResult,
+	ICortexUsage,
 } from './cortex.js';
 import { IProviderHealthResult, IModelParameterOverrides } from './cortexProviderTypes.js';
 
@@ -181,7 +182,7 @@ export class OpenAICompatibleClient {
 		const response = await fetch(url, {
 			method: 'POST',
 			headers,
-			body: JSON.stringify({ ...this.normalizeChatBody(request, overrides), stream: true }),
+			body: JSON.stringify({ ...this.normalizeChatBody(request, overrides), stream: true, stream_options: { include_usage: true } }),
 			signal: abortSignal,
 		});
 
@@ -342,6 +343,7 @@ export class OpenAICompatibleClient {
 		const decoder = new TextDecoder();
 		let buffer = '';
 		let totalTokens = 0;
+		let capturedUsage: ICortexUsage | undefined;
 
 		try {
 			while (true) {
@@ -366,6 +368,17 @@ export class OpenAICompatibleClient {
 
 					try {
 						const parsed = JSON.parse(data);
+
+						// Capture usage from the final SSE chunk (when stream_options.include_usage was honored).
+						// The final chunk has a usage object with prompt_tokens, completion_tokens, total_tokens.
+						if (parsed.usage) {
+							capturedUsage = {
+								prompt_tokens: parsed.usage.prompt_tokens ?? 0,
+								completion_tokens: parsed.usage.completion_tokens ?? 0,
+								total_tokens: parsed.usage.total_tokens ?? 0,
+							};
+						}
+
 						const choice = parsed.choices?.[0];
 						const delta = choice?.delta;
 						if (delta?.content) {
@@ -389,7 +402,7 @@ export class OpenAICompatibleClient {
 			reader.releaseLock();
 		}
 
-		return { totalTokens };
+		return { totalTokens, usage: capturedUsage };
 	}
 
 	/**

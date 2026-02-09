@@ -32,6 +32,7 @@ import { StickyScrollController } from '../../../../editor/contrib/stickyScroll/
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
 import { getFlatActionBarActions } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { CodeModeConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
 import { getSimpleEditorOptions } from '../../codeEditor/browser/simpleEditorOptions.js';
 import { PlaceholderTextContribution } from '../../../../editor/contrib/placeholderText/browser/placeholderTextContribution.js';
 import { InlineChatRunOptions } from './inlineChatController.js';
@@ -112,12 +113,21 @@ export class InlineChatInputWidget extends Disposable {
 		this._stickyScrollHeight = stickyScrollController ? observableFromEvent(stickyScrollController.onDidChangeStickyScrollHeight, () => stickyScrollController.stickyScrollWidgetHeight) : constObservable(0);
 
 		// Update placeholder based on selection state
+		// Sandtable: Use research-friendly placeholder when Code Mode is OFF
 		this._store.add(autorun(r => {
 			const selection = this._editorObs.cursorSelection.read(r);
 			const hasSelection = selection && !selection.isEmpty();
-			const placeholderText = hasSelection
-				? localize('placeholderWithSelection', "Modify selected code")
-				: localize('placeholderNoSelection', "Generate code");
+			const isCodeModeEnabled = configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+			let placeholderText: string;
+			if (isCodeModeEnabled) {
+				placeholderText = hasSelection
+					? localize('placeholderWithSelection', "Modify selected code")
+					: localize('placeholderNoSelection', "Generate code");
+			} else {
+				placeholderText = hasSelection
+					? localize('placeholderWithSelectionResearch', "Modify selected text")
+					: localize('placeholderNoSelectionResearch', "Generate content");
+			}
 
 			this._input.updateOptions({ placeholder: this._keybindingService.appendKeybinding(placeholderText, ACTION_START) });
 		}));

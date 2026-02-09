@@ -41,6 +41,7 @@ import { FocusAgentSessionsAction } from '../agentSessionsActions.js';
 import { IWorkbenchContribution } from '../../../../../common/contributions.js';
 import { IActionViewItemService } from '../../../../../../platform/actions/browser/actionViewItemService.js';
 import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
+import { CodeModeConfigKeys } from '../../../../../../platform/cortex/common/cortexConfiguration.js';
 import { mainWindow } from '../../../../../../base/browser/window.js';
 import { LayoutSettings } from '../../../../../services/layout/browser/layoutService.js';
 import { ChatConfiguration } from '../../../common/constants.js';
@@ -405,7 +406,10 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			label.classList.add('has-progress');
 		}
 
-		const hoverLabel = localize('askAnythingPlaceholder', "Ask anything or describe what to build next");
+		const isCodeModeEnabled = this.configurationService.getValue<boolean>(CodeModeConfigKeys.Enabled) ?? false;
+		const hoverLabel = isCodeModeEnabled
+			? localize('askAnythingPlaceholder', "Ask anything or describe what to build next")
+			: localize('askAnythingPlaceholderResearch', "Ask anything or describe what to research next");
 
 		label.textContent = defaultLabel;
 		pill.appendChild(label);

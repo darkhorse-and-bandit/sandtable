@@ -32,12 +32,15 @@ import { INativeEnvironmentService } from '../../../../platform/environment/comm
 import { URI } from '../../../../base/common/uri.js';
 import { FileAccess } from '../../../../base/common/network.js';
 import { basename, join } from '../../../../base/common/path.js';
+import { ILanguageModelToolsService, IToolData, ToolDataSource } from '../../chat/common/tools/languageModelToolsService.js';
+import { IJSONSchema } from '../../../../base/common/jsonSchema.js';
+import { DisposableStore } from '../../../../base/common/lifecycle.js';
 
 const $ = dom.$;
 
 // ─── Section IDs ──────────────────────────────────────────────────────────────
 
-type SectionId = 'general' | 'codeMode' | 'providers' | 'chat' | 'completion' | 'models' | 'agent' | 'appearance' | 'about' | 'personas' | 'documents' | 'dataSources' | 'workflows' | 'sessions' | 'users';
+type SectionId = 'general' | 'codeMode' | 'providers' | 'chat' | 'completion' | 'models' | 'agent' | 'tools' | 'appearance' | 'about' | 'personas' | 'documents' | 'dataSources' | 'workflows' | 'sessions' | 'users';
 
 interface ISectionDescriptor {
 	id: SectionId;
@@ -61,9 +64,10 @@ const SECTIONS: ISectionDescriptor[] = [
 	{ id: 'models', label: nls.localize('sandtable.settings.models', "Models"), icon: '$(server)' },
 	{ id: 'chat', label: nls.localize('sandtable.settings.chat', "Chat"), icon: '$(comment-discussion)' },
 	{ id: 'agent', label: nls.localize('sandtable.settings.agent', "Agent"), icon: '$(sparkle)' },
+	{ id: 'tools', label: nls.localize('sandtable.settings.tools', "Tools"), icon: '$(tools)' },
 	{ id: 'completion', label: nls.localize('sandtable.settings.completion', "Code Completion"), icon: '$(lightbulb)' },
 	// ── Research ──
-	{ id: 'personas', label: nls.localize('sandtable.settings.personas', "Personas"), icon: '$(person)', category: 'Research', placeholder: true, placeholderDesc: 'Create and manage AI agent personas with tailored system prompts, knowledge bases, and behavioral parameters. Define specialized roles — researcher, analyst, red team commander, facilitator — each with unique capabilities and context.' },
+	{ id: 'personas', label: nls.localize('sandtable.settings.personas', "Personas"), icon: '$(person)', category: 'Research', placeholder: true, placeholderDesc: 'Agent Personas have moved to the Agent Portfolio panel in the Activity Bar. Click the multi-person icon in the sidebar, or use the Command Palette: "Sandtable: Open Agent Portfolio". You can also ask the AI to create personas for you in the Chat panel.' },
 	{ id: 'documents', label: nls.localize('sandtable.settings.documents', "Documents"), icon: '$(file-text)', placeholder: true, placeholderDesc: 'Upload and manage research documents (PDF, DOCX, PPTX, XLSX). Documents are indexed for semantic search and can be referenced by AI agents during conversations and analysis.' },
 	{ id: 'dataSources', label: nls.localize('sandtable.settings.dataSources', "Data Sources"), icon: '$(database)', placeholder: true, placeholderDesc: 'Connect to external databases, APIs, and tool servers via the Model Context Protocol (MCP). Agents can query live data from wargame databases, research repositories, and structured data sources.' },
 	// ── Exercises ──
@@ -84,6 +88,7 @@ export class SandtableSettingsPage extends EditorPane {
 	private navContainer!: HTMLElement;
 	private contentContainer!: HTMLElement;
 	private activeSection: SectionId = 'general';
+	private _toolsSectionDisposables = new DisposableStore();
 
 	constructor(
 		group: IEditorGroup,
@@ -98,6 +103,7 @@ export class SandtableSettingsPage extends EditorPane {
 		@INativeEnvironmentService private readonly environmentService: INativeEnvironmentService,
 		@IProviderRegistryService private readonly providerRegistry: IProviderRegistryService,
 		@IDialogService private readonly dialogService: IDialogService,
+		@ILanguageModelToolsService private readonly toolsService: ILanguageModelToolsService,
 	) {
 		super(SandtableSettingsPage.ID, group, telemetryService, themeService, storageService);
 	}
@@ -186,6 +192,9 @@ export class SandtableSettingsPage extends EditorPane {
 	private _renderSection(sectionId: SectionId): void {
 		dom.clearNode(this.contentContainer);
 
+		// Dispose tools section listeners when switching away
+		this._toolsSectionDisposables.clear();
+
 		// Check if this section is a placeholder
 		const sectionDescriptor = SECTIONS.find(s => s.id === sectionId);
 		if (sectionDescriptor?.placeholder) {
@@ -214,6 +223,9 @@ export class SandtableSettingsPage extends EditorPane {
 				break;
 			case 'agent':
 				this._renderAgentSection();
+				break;
+			case 'tools':
+				this._renderToolsSection();
 				break;
 			case 'appearance':
 				this._renderAppearanceSection();
@@ -716,7 +728,7 @@ export class SandtableSettingsPage extends EditorPane {
 		const renderCuratedModels = () => {
 			dom.clearNode(curatedList);
 
-			type CuratedModel = { qualifiedName: string; displayName?: string; enabled: boolean; overrides?: { dropParameters?: string[]; renameParameters?: Record<string, string>; forceParameters?: Record<string, string>; extraParameters?: Record<string, string> } };
+			type CuratedModel = { qualifiedName: string; displayName?: string; enabled: boolean; contextWindowTokens?: number; maxOutputTokens?: number; overrides?: { dropParameters?: string[]; renameParameters?: Record<string, string>; forceParameters?: Record<string, string>; extraParameters?: Record<string, string> } };
 			const curated = this.configurationService.getValue<CuratedModel[]>(ModelsConfigKeys.CuratedModels) || [];
 
 			if (curated.length === 0) {
@@ -756,6 +768,27 @@ export class SandtableSettingsPage extends EditorPane {
 						badge.style.opacity = '0.6';
 						badge.style.marginLeft = '6px';
 						badge.textContent = '(has overrides)';
+					}
+					// Show context window and output token info when configured
+					if (model.contextWindowTokens || model.maxOutputTokens) {
+						const tokenInfoEl = dom.append(infoCol, $('div'));
+						tokenInfoEl.style.fontSize = '0.8em';
+						tokenInfoEl.style.opacity = '0.65';
+						tokenInfoEl.style.marginTop = '2px';
+						const parts: string[] = [];
+						if (model.contextWindowTokens) {
+							const ctxK = model.contextWindowTokens >= 1_000_000
+								? `${(model.contextWindowTokens / 1_000_000).toFixed(1)}M`
+								: `${Math.round(model.contextWindowTokens / 1_000)}K`;
+							parts.push(`Context: ${ctxK}`);
+						}
+						if (model.maxOutputTokens) {
+							const outK = model.maxOutputTokens >= 1_000_000
+								? `${(model.maxOutputTokens / 1_000_000).toFixed(1)}M`
+								: `${Math.round(model.maxOutputTokens / 1_000)}K`;
+							parts.push(`Max output: ${outK}`);
+						}
+						tokenInfoEl.textContent = parts.join(' · ');
 					}
 
 					const actionsCol = dom.append(row, $('div'));
@@ -816,7 +849,7 @@ export class SandtableSettingsPage extends EditorPane {
 		};
 
 		// Renders the inline configuration panel for a curated model
-		const renderConfigPanel = (container: HTMLElement, model: { qualifiedName: string; displayName?: string; enabled: boolean; overrides?: { dropParameters?: string[]; renameParameters?: Record<string, string>; forceParameters?: Record<string, string>; extraParameters?: Record<string, string> } }) => {
+		const renderConfigPanel = (container: HTMLElement, model: { qualifiedName: string; displayName?: string; enabled: boolean; contextWindowTokens?: number; maxOutputTokens?: number; overrides?: { dropParameters?: string[]; renameParameters?: Record<string, string>; forceParameters?: Record<string, string>; extraParameters?: Record<string, string> } }) => {
 			dom.clearNode(container);
 
 			const overrides = model.overrides || {};
@@ -831,6 +864,40 @@ export class SandtableSettingsPage extends EditorPane {
 			nameInput.value = model.displayName || '';
 			nameInput.placeholder = model.qualifiedName;
 			nameInput.style.width = '100%';
+
+			// Context Window Tokens
+			const ctxRow = dom.append(container, $('div'));
+			ctxRow.style.marginBottom = '8px';
+			const ctxLabel = dom.append(ctxRow, $('label.sandtable-settings-label'));
+			ctxLabel.textContent = nls.localize('sandtable.settings.contextWindowTokens', "Context Window (tokens)");
+			const ctxDesc = dom.append(ctxRow, $('div'));
+			ctxDesc.style.fontSize = '0.8em';
+			ctxDesc.style.opacity = '0.7';
+			ctxDesc.style.marginBottom = '4px';
+			ctxDesc.textContent = 'Total context window size in tokens. For local models (vLLM, llama.cpp), set this to your server\'s configured limit, not the model\'s theoretical max. Leave empty to auto-detect from the known models table.';
+			const ctxInput = dom.append(ctxRow, $('input.sandtable-settings-input')) as HTMLInputElement;
+			ctxInput.type = 'number';
+			ctxInput.min = '1';
+			ctxInput.value = model.contextWindowTokens ? String(model.contextWindowTokens) : '';
+			ctxInput.placeholder = 'e.g., 128000';
+			ctxInput.style.width = '100%';
+
+			// Max Output Tokens
+			const outRow = dom.append(container, $('div'));
+			outRow.style.marginBottom = '8px';
+			const outLabel = dom.append(outRow, $('label.sandtable-settings-label'));
+			outLabel.textContent = nls.localize('sandtable.settings.maxOutputTokens', "Max Output Tokens");
+			const outDesc = dom.append(outRow, $('div'));
+			outDesc.style.fontSize = '0.8em';
+			outDesc.style.opacity = '0.7';
+			outDesc.style.marginBottom = '4px';
+			outDesc.textContent = 'Maximum number of tokens the model can generate in a single response. Leave empty to use the known models table default.';
+			const outInput = dom.append(outRow, $('input.sandtable-settings-input')) as HTMLInputElement;
+			outInput.type = 'number';
+			outInput.min = '1';
+			outInput.value = model.maxOutputTokens ? String(model.maxOutputTokens) : '';
+			outInput.placeholder = 'e.g., 4096';
+			outInput.style.width = '100%';
 
 			// Drop Parameters
 			const dropRow = dom.append(container, $('div'));
@@ -942,15 +1009,93 @@ export class SandtableSettingsPage extends EditorPane {
 				}
 
 				const displayNameVal = nameInput.value.trim() || undefined;
+				const contextWindowVal = ctxInput.value.trim() ? parseInt(ctxInput.value.trim(), 10) : undefined;
+				const maxOutputVal = outInput.value.trim() ? parseInt(outInput.value.trim(), 10) : undefined;
 				const hasAnyOverrides = Object.keys(newOverrides).length > 0;
 
 				const updated = current.map(m =>
 					m.qualifiedName === model.qualifiedName
-						? { ...m, displayName: displayNameVal, overrides: hasAnyOverrides ? newOverrides : undefined }
+						? {
+							...m,
+							displayName: displayNameVal,
+							contextWindowTokens: (contextWindowVal && contextWindowVal > 0) ? contextWindowVal : undefined,
+							maxOutputTokens: (maxOutputVal && maxOutputVal > 0) ? maxOutputVal : undefined,
+							overrides: hasAnyOverrides ? newOverrides : undefined,
+						}
 						: m
 				);
 				this.configurationService.updateValue(ModelsConfigKeys.CuratedModels, updated);
 				renderCuratedModels();
+			});
+
+			// ─── Test Model Button ────────────────────────────────────────
+			const testRow = dom.append(container, $('div'));
+			testRow.style.marginTop = '12px';
+			testRow.style.borderTop = '1px solid var(--vscode-widget-border, rgba(255,255,255,0.1))';
+			testRow.style.paddingTop = '12px';
+
+			const testBtnRow = dom.append(testRow, $('div'));
+			testBtnRow.style.display = 'flex';
+			testBtnRow.style.alignItems = 'center';
+			testBtnRow.style.gap = '10px';
+
+			const testBtn = dom.append(testBtnRow, $('button.sandtable-settings-button-secondary')) as HTMLButtonElement;
+			testBtn.textContent = nls.localize('sandtable.settings.testModel', "Test Model");
+
+			const testHint = dom.append(testBtnRow, $('span'));
+			testHint.style.fontSize = '0.8em';
+			testHint.style.opacity = '0.6';
+			testHint.textContent = nls.localize('sandtable.settings.testModelHint', "Sends a quick chat request to verify the model works with current overrides");
+
+			const testResultEl = dom.append(testRow, $('div.sandtable-model-test-result'));
+
+			testBtn.addEventListener('click', async () => {
+				// Show loading state
+				dom.clearNode(testResultEl);
+				testResultEl.className = 'sandtable-model-test-result';
+				const loadingMsg = dom.append(testResultEl, $('div'));
+				loadingMsg.textContent = nls.localize('sandtable.settings.testingModel', "Testing {0}...", model.qualifiedName);
+				loadingMsg.style.opacity = '0.7';
+				testBtn.disabled = true;
+
+				try {
+					const response = await this.cortexService.chatCompletion({
+						model: model.qualifiedName,
+						messages: [{ role: 'user', content: 'Say hello in one sentence.' }],
+						max_tokens: 50,
+						temperature: 0.7,
+					});
+
+					dom.clearNode(testResultEl);
+					testResultEl.classList.add('sandtable-model-test-success');
+
+					const successHeader = dom.append(testResultEl, $('div.sandtable-model-test-header'));
+					successHeader.textContent = nls.localize('sandtable.settings.testModelSuccess', "Model responded successfully!");
+
+					const reply = response.choices?.[0]?.message?.content ?? '(empty response)';
+					const replyEl = dom.append(testResultEl, $('div.sandtable-model-test-reply'));
+					replyEl.textContent = reply;
+
+					if (response.usage) {
+						const usageEl = dom.append(testResultEl, $('div.sandtable-model-test-usage'));
+						usageEl.textContent = nls.localize('sandtable.settings.testModelUsage', "Tokens: {0} prompt + {1} completion", response.usage.prompt_tokens, response.usage.completion_tokens);
+					}
+				} catch (err) {
+					dom.clearNode(testResultEl);
+					testResultEl.classList.add('sandtable-model-test-failure');
+
+					const failHeader = dom.append(testResultEl, $('div.sandtable-model-test-header'));
+					failHeader.textContent = nls.localize('sandtable.settings.testModelFailed', "Test failed");
+
+					const errorMsg = err instanceof Error ? err.message : String(err);
+					const errorEl = dom.append(testResultEl, $('div.sandtable-model-test-error'));
+					errorEl.textContent = errorMsg;
+
+					const tipEl = dom.append(testResultEl, $('div.sandtable-model-test-tip'));
+					tipEl.textContent = nls.localize('sandtable.settings.testModelTip', "Tip: If the error mentions an unsupported parameter, use the override fields above to drop or rename it, save, then test again.");
+				} finally {
+					testBtn.disabled = false;
+				}
 			});
 		};
 
@@ -1152,6 +1297,229 @@ export class SandtableSettingsPage extends EditorPane {
 			max: 32768,
 			step: 256,
 		});
+	}
+
+	// ─── Tools Section ──────────────────────────────────────────────────
+
+	/**
+	 * Categorize a tool into a display group based on its source type and ID pattern.
+	 */
+	private _categorizeTool(tool: IToolData): string {
+		if (tool.source.type === 'mcp') {
+			const mcpSource = tool.source as { type: 'mcp'; label: string; serverLabel: string | undefined };
+			return `MCP: ${mcpSource.serverLabel || mcpSource.label}`;
+		}
+		if (tool.source.type === 'extension') {
+			return (tool.source as { type: 'extension'; label: string }).label;
+		}
+		if (tool.source.type === 'user') {
+			return 'User Defined';
+		}
+		// Internal Sandtable tools -- subcategorize by ID pattern
+		if (tool.id.includes('persona')) {
+			return 'Persona Management';
+		}
+		if (tool.runsInWorkspace) {
+			return 'Workspace';
+		}
+		return 'Other';
+	}
+
+	private _renderToolsSection(): void {
+		const section = dom.append(this.contentContainer, $('.sandtable-settings-section'));
+
+		const titleEl = dom.append(section, $('h2.sandtable-settings-section-title'));
+		titleEl.textContent = nls.localize('sandtable.settings.toolsTitle', "Tools");
+
+		const descEl = dom.append(section, $('p.sandtable-settings-section-desc'));
+		descEl.textContent = nls.localize('sandtable.settings.toolsDesc', "AI agent tool-calling capabilities available in Agent mode. Tools are discovered automatically from Sandtable, extensions, and MCP servers. The agent uses these tools to take actions in your workspace when you chat in Agent mode.");
+
+		// Container for the dynamic tool listing
+		const toolsContainer = dom.append(section, $('div'));
+
+		const renderTools = () => {
+			dom.clearNode(toolsContainer);
+
+			// Gather all enabled tools
+			const tools = Array.from(this.toolsService.getTools(undefined));
+
+			// Count badge
+			const countEl = dom.append(toolsContainer, $('div.sandtable-tool-count'));
+			countEl.textContent = `${tools.length} tool${tools.length !== 1 ? 's' : ''} available`;
+
+			if (tools.length === 0) {
+				const emptyMsg = dom.append(toolsContainer, $('p.sandtable-settings-info'));
+				emptyMsg.textContent = nls.localize('sandtable.settings.noTools', "No tools are currently registered. Tools become available when the agent is enabled and workbench contributions are loaded.");
+				return;
+			}
+
+			// Group tools by category
+			const groups = new Map<string, IToolData[]>();
+			for (const tool of tools) {
+				const category = this._categorizeTool(tool);
+				if (!groups.has(category)) {
+					groups.set(category, []);
+				}
+				groups.get(category)!.push(tool);
+			}
+
+			// Define display order for known categories
+			const categoryOrder = ['Workspace', 'Persona Management', 'User Defined', 'Other'];
+			const sortedCategories = Array.from(groups.keys()).sort((a, b) => {
+				const aIdx = categoryOrder.indexOf(a);
+				const bIdx = categoryOrder.indexOf(b);
+				const aOrd = aIdx >= 0 ? aIdx : 100; // MCP / Extension categories go after known ones
+				const bOrd = bIdx >= 0 ? bIdx : 100;
+				if (aOrd !== bOrd) { return aOrd - bOrd; }
+				return a.localeCompare(b);
+			});
+
+			// Render each category group
+			for (const category of sortedCategories) {
+				const categoryTools = groups.get(category)!;
+
+				// Category header
+				const categoryHeader = dom.append(toolsContainer, $('div.sandtable-tool-category'));
+				const categoryLabel = dom.append(categoryHeader, $('span.sandtable-tool-category-label'));
+				categoryLabel.textContent = category;
+				const categoryCount = dom.append(categoryHeader, $('span.sandtable-tool-category-count'));
+				categoryCount.textContent = `${categoryTools.length} tool${categoryTools.length !== 1 ? 's' : ''}`;
+
+				// Tool cards
+				for (const tool of categoryTools) {
+					this._renderToolCard(toolsContainer, tool);
+				}
+			}
+		};
+
+		// Initial render
+		renderTools();
+
+		// Subscribe to tool changes so the page auto-updates
+		this._toolsSectionDisposables.add(this.toolsService.onDidChangeTools(() => {
+			if (this.activeSection === 'tools') {
+				renderTools();
+			}
+		}));
+	}
+
+	/**
+	 * Render a single tool card with name, description, badges, and expandable details.
+	 */
+	private _renderToolCard(parent: HTMLElement, tool: IToolData): void {
+		const card = dom.append(parent, $('div.sandtable-tool-card'));
+
+		// ── Header row: display name + badges ──
+		const header = dom.append(card, $('div.sandtable-tool-header'));
+
+		const nameEl = dom.append(header, $('span.sandtable-tool-name'));
+		nameEl.textContent = tool.displayName || tool.id;
+
+		const badgesContainer = dom.append(header, $('div.sandtable-tool-badges'));
+
+		// Source badge
+		const sourceClassification = ToolDataSource.classify(tool.source);
+		const sourceBadge = dom.append(badgesContainer, $('span.sandtable-tool-badge.sandtable-tool-badge-source'));
+		sourceBadge.textContent = tool.source.type === 'internal' && (tool.source as { label: string }).label === 'Sandtable'
+			? 'Sandtable'
+			: sourceClassification.label;
+
+		// Workspace badge
+		if (tool.runsInWorkspace) {
+			const wsBadge = dom.append(badgesContainer, $('span.sandtable-tool-badge.sandtable-tool-badge-workspace'));
+			wsBadge.textContent = 'Workspace';
+		}
+
+		// ── User description subtitle ──
+		if (tool.userDescription) {
+			const userDescEl = dom.append(card, $('div.sandtable-tool-user-desc'));
+			userDescEl.textContent = tool.userDescription;
+		}
+
+		// ── Tool ID ──
+		const idEl = dom.append(card, $('div.sandtable-tool-id'));
+		idEl.textContent = tool.id;
+
+		// ── Expandable details section ──
+		const detailsToggle = dom.append(card, $('button.sandtable-tool-details-toggle'));
+		detailsToggle.textContent = nls.localize('sandtable.settings.toolShowDetails', "Show Details");
+
+		const detailsPanel = dom.append(card, $('div.sandtable-tool-details'));
+		detailsPanel.style.display = 'none';
+
+		detailsToggle.addEventListener('click', () => {
+			const isVisible = detailsPanel.style.display !== 'none';
+			detailsPanel.style.display = isVisible ? 'none' : 'block';
+			detailsToggle.textContent = isVisible
+				? nls.localize('sandtable.settings.toolShowDetails', "Show Details")
+				: nls.localize('sandtable.settings.toolHideDetails', "Hide Details");
+			detailsToggle.classList.toggle('expanded', !isVisible);
+		});
+
+		// Model description
+		if (tool.modelDescription) {
+			const modelDescLabel = dom.append(detailsPanel, $('div.sandtable-tool-details-label'));
+			modelDescLabel.textContent = 'Model Description';
+			const modelDescEl = dom.append(detailsPanel, $('div.sandtable-tool-model-desc'));
+			modelDescEl.textContent = tool.modelDescription;
+		}
+
+		// Parameters table
+		if (tool.inputSchema) {
+			const schema = tool.inputSchema as IJSONSchema;
+			if (schema.properties && Object.keys(schema.properties).length > 0) {
+				const paramsLabel = dom.append(detailsPanel, $('div.sandtable-tool-details-label'));
+				paramsLabel.textContent = 'Parameters';
+				this._renderParameterTable(detailsPanel, schema);
+			} else {
+				const noParams = dom.append(detailsPanel, $('div.sandtable-tool-no-params'));
+				noParams.textContent = 'No parameters required.';
+			}
+		}
+	}
+
+	/**
+	 * Render the inputSchema properties as a readable parameter table.
+	 */
+	private _renderParameterTable(parent: HTMLElement, schema: IJSONSchema): void {
+		const table = dom.append(parent, $('table.sandtable-tool-params-table'));
+
+		// Header row
+		const thead = dom.append(table, $('thead'));
+		const headerRow = dom.append(thead, $('tr'));
+		for (const header of ['Parameter', 'Type', 'Required', 'Description']) {
+			const th = dom.append(headerRow, $('th'));
+			th.textContent = header;
+		}
+
+		// Body rows
+		const tbody = dom.append(table, $('tbody'));
+		const requiredFields = new Set<string>(Array.isArray(schema.required) ? schema.required as string[] : []);
+		const properties = schema.properties as Record<string, IJSONSchema> | undefined;
+
+		if (properties) {
+			for (const [paramName, paramSchema] of Object.entries(properties)) {
+				const row = dom.append(tbody, $('tr'));
+
+				const nameCell = dom.append(row, $('td.sandtable-tool-param-name'));
+				nameCell.textContent = paramName;
+
+				const typeCell = dom.append(row, $('td.sandtable-tool-param-type'));
+				typeCell.textContent = (paramSchema.type as string) || 'any';
+
+				const reqCell = dom.append(row, $('td.sandtable-tool-param-required'));
+				if (requiredFields.has(paramName)) {
+					const reqBadge = dom.append(reqCell, $('span.sandtable-tool-badge-required'));
+					reqBadge.textContent = 'required';
+				} else {
+					reqCell.textContent = 'optional';
+					reqCell.style.opacity = '0.5';
+				}
+
+				const descCell = dom.append(row, $('td.sandtable-tool-param-desc'));
+				descCell.textContent = paramSchema.description || '';
+			}
+		}
 	}
 
 	// ─── Appearance Section ──────────────────────────────────────────────
