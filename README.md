@@ -93,42 +93,212 @@ Sandtable is in active development. See [docs/project/PROGRESS.md](docs/project/
 | 1 - Cortex Connection + Chat | **Complete** (IDE) | Platform service, streaming chat integrated into VS Code's built-in Chat panel |
 | 2 - Inline Code Completion | **Complete** (IDE) | Ghost text suggestions via Fill-in-the-Middle (awaiting Cortex FIM endpoint) |
 | 3 - Model Manager | **Complete** (IDE) | GPU dashboard, model start/stop, system monitoring panel |
-| 4 - Agent Mode | **Complete** (IDE) | Tool-calling agent with read/edit/create/search/terminal tools |
+| 4 - Agent Mode | **Complete** (IDE) | Tool-calling agent with 22 workspace + persona + COP tools |
 | 4.5 - Multi-Provider | **Complete** | Connect Cortex + OpenAI-compatible endpoints (Ollama, vLLM, cloud APIs) |
-| UX Overhaul | **In Progress** | Research-first identity, Code Mode toggle, settings reorganization |
-| 5+ - Research Features | Planned | Document ingestion, agent personas, MCP integration, exercises |
+| 6 - Agent Personas | **Complete** (IDE) | 5 built-in personas, full CRUD, AI-assisted creation, status bar picker |
+| UX Overhaul | **Complete** | Research-first identity, Code Mode toggle, settings reorganization |
+| COP Phase 1 - Map Panel | **Complete** | MapLibre GL JS in EditorPane, offline tiles, coordinate display, drawing tools |
+| COP Phase 2 - Symbology | **Complete** | MIL-STD-2525D via milsymbol, ORBAT tree, unit placement/editing |
+| COP Phase 3 - Agent Tools | **Complete** | 7 COP tools for AI-driven map queries, unit placement, spatial analysis |
+| COP Phase 4 - Timeline | Planned | Scenario timeline, phase playback, position interpolation |
 
-## Building from Source
+## Getting Started
 
-### Prerequisites
+### System Requirements
 
-- **OS:** Linux (Arch Linux is the primary development environment)
-- **Node.js:** v22.x (see `.nvmrc` for exact version)
-- **Python:** 3.x (required for node-gyp)
-- **GCC:** For native module compilation
-- **System libraries:** `libx11`, `libxkbfile`, `libsecret`, `krb5`
+| Requirement | Details |
+|-------------|---------|
+| **Operating System** | Linux (Arch Linux is the primary dev environment; Ubuntu/Debian should also work) |
+| **Node.js** | **v22.21.1** (exact version in `.nvmrc` -- higher versions like v25 may fail on native modules) |
+| **Python** | 3.x (required by node-gyp for compiling native Node.js modules) |
+| **GCC / G++** | Any recent version (for native module compilation) |
+| **Disk Space** | At least 10 GB free (the VS Code source tree + node_modules + compiled output is large) |
+| **RAM** | 8 GB minimum, 16 GB recommended (the TypeScript compilation is memory-intensive) |
 
-### Build
+### Step 1: Install System Dependencies
+
+**Arch Linux:**
+
+```bash
+sudo pacman -S base-devel gcc libx11 libxkbfile libsecret krb5 git python
+```
+
+**Ubuntu / Debian:**
+
+```bash
+sudo apt update
+sudo apt install build-essential g++ libx11-dev libxkbfile-dev libsecret-1-dev libkrb5-dev git python3
+```
+
+### Step 2: Install Node.js v22
+
+Sandtable requires **Node.js 22.21.1**. Use a version manager to avoid conflicts with your system Node.
+
+**Using [mise](https://mise.jdx.dev/) (recommended):**
+
+```bash
+# Install mise if you don't have it
+curl https://mise.run | sh
+
+# mise will read .nvmrc and install the correct version
+mise install
+mise use node@22.21.1
+```
+
+**Using [fnm](https://github.com/Schniz/fnm):**
+
+```bash
+fnm install 22.21.1
+fnm use 22.21.1
+```
+
+**Using [nvm](https://github.com/nvm-sh/nvm):**
+
+```bash
+nvm install 22.21.1
+nvm use 22.21.1
+```
+
+Verify:
+
+```bash
+node --version
+# Should output: v22.21.1
+```
+
+### Step 3: Clone and Build
 
 ```bash
 # Clone the repository
 git clone git@github.com:darkhorse-and-bandit/sandtable.git
 cd sandtable
 
-# Install the correct Node.js version (using mise, fnm, or nvm)
-mise use node@22.21.1   # or: fnm use / nvm use
+# Make sure you're on the right branch
+git checkout sandtable/main
 
-# Install dependencies (~10-15 minutes on first run)
+# Install npm dependencies (~5-15 minutes on first run)
 npm install
 
-# Build
+# Compile the full project (~2-3 minutes)
 npm run compile
+```
 
-# Launch
+If the compile finishes with **0 errors**, you're ready to launch.
+
+### Step 4: Increase File Watchers (Linux Only)
+
+VS Code's file watcher needs a higher limit than the Linux default. Without this, you'll get warnings and some features may not work:
+
+```bash
+# Check current limit
+cat /proc/sys/fs/inotify/max_user_watches
+
+# If it's less than 524288, increase it permanently:
+echo "fs.inotify.max_user_watches=524288" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+### Step 5: Launch Sandtable
+
+```bash
 ./scripts/code.sh
 ```
 
-See [docs/project/phases/PHASE-0-FORK-AND-BUILD.md](docs/project/phases/PHASE-0-FORK-AND-BUILD.md) for detailed build instructions and troubleshooting.
+Sandtable will open as a desktop application. You should see:
+
+- Title bar says **"Sandtable"**
+- Welcome page with sacred geometry background and walkthrough steps
+- Status bar at the bottom showing connection status
+
+### Step 6: Connect an LLM Provider
+
+Sandtable needs at least one LLM provider to power the chat and agent features. Open **Sandtable Settings** (`Ctrl+Shift+P` then type "Sandtable Settings") and navigate to the **Providers** section.
+
+**Option A: Cortex (Primary, full-featured)**
+
+If you're running [Cortex](https://github.com/AulendurForge/Cortex) on your local network:
+
+1. Go to Providers and click **"+ Add Provider"**
+2. Set Type to `cortex`, enter the endpoint URL (e.g., `http://192.168.1.11:8084`)
+3. Enter your Cortex username and password
+4. Click **"Test Connection"** to verify
+
+**Option B: Any OpenAI-Compatible Endpoint**
+
+Sandtable works with Ollama, vLLM, LM Studio, OpenAI, or any OpenAI-compatible API:
+
+1. Go to Providers and click **"+ Add Provider"**
+2. Set Type to `openai-compatible`
+3. Enter the endpoint URL (e.g., `http://localhost:11434/v1` for Ollama, `https://api.openai.com` for OpenAI)
+4. Enter an API key if required
+5. Click **"Test Connection"** to verify
+
+Once connected, models appear in the Chat panel's model picker.
+
+### Step 7: Open the Common Operating Picture (Optional)
+
+If you want to use the interactive military map:
+
+1. Click the **globe icon** in the Activity Bar (left sidebar)
+2. Click **"Open Map"** in the sidebar panel
+3. The COP map opens as a tab with a world basemap, coordinate display, and drawing tools
+
+You can right-click the map to place military units, or ask the AI agent to do it:
+
+> "Place a friendly infantry battalion called Alpha at 44.366 East, 33.315 North"
+
+## Developing
+
+### Compile and Run
+
+```bash
+# Full compile (first time or after pulling changes)
+npm run compile
+
+# Launch (uses the compiled output in out/)
+./scripts/code.sh
+```
+
+### Useful Commands
+
+| Command | Purpose |
+|---------|---------|
+| `npm run compile` | Full TypeScript compilation (extensions + core + client) |
+| `npm run watch` | Watch mode -- recompiles on file changes (faster iteration) |
+| `./scripts/code.sh` | Launch Sandtable in development mode |
+| `Ctrl+Shift+I` (inside Sandtable) | Open Chromium DevTools for debugging the renderer process |
+
+### File Structure
+
+Sandtable's custom code lives alongside VS Code's source:
+
+```
+src/vs/platform/cortex/           Platform services (ICortexService, providers, types)
+src/vs/workbench/contrib/
+  sandtableLM/                    Language model provider, chat agent, workspace tools
+  sandtableCop/                   Common Operating Picture (map, symbology, ORBAT, COP tools)
+  sandtableSettings/              Custom settings page
+  sandtableModels/                Model manager panel
+  sandtableCompletion/            Inline code completion
+  sandtablePersonas/              Agent Portfolio panel
+  sandtableAnimations/            Shared geometric animation module
+  sandtableAppearance/            Editor background images
+  sandtableCodeMode/              Research/Code mode toggle
+  sandtableStatus/                Status bar indicator
+docs/project/                     All project documentation, architecture, and phase plans
+resources/cop-assets/             COP static assets (fonts, sprites, PMTiles basemap)
+```
+
+### Key Patterns for Contributors
+
+- **Module loading:** npm packages in the browser layer must use `importAMDNodeModule()` from `amdX.ts`. Never use `require()` or bare `import` specifiers. UMD packages need `loadUmdModule()` (see `sandtableCopMapRenderer.ts`).
+- **Trusted Types:** VS Code enforces `require-trusted-types-for 'script'`. Use DOM APIs (`createElement`, `createElementNS`) instead of `innerHTML`. If you must add a TrustedTypes policy, add it to **both** `workbench.html` and `workbench-dev.html`.
+- **Local file access:** Use `vscode-file://vscode-app/` protocol, not `file://`, for loading resources in the Electron renderer.
+- **CSS selectors:** Use `ThemeIcon.asCSSSelector()` not `asClassName()` for codicon icons in `$()` DOM helpers.
+- **Service injection:** Follow VS Code's `createDecorator` + `registerSingleton` DI pattern. See any existing service for examples.
+- **Tool registration:** Chat agent tools follow the `IToolData` + `IToolImpl` pattern in `sandtableTools.ts` (workspace tools) and `sandtableCopTools.ts` (COP tools).
+
+For detailed architecture docs, see [docs/project/ARCHITECTURE.md](docs/project/ARCHITECTURE.md).
 
 ## Project Documentation
 
@@ -138,16 +308,23 @@ Detailed planning and architecture documents live in [`docs/project/`](docs/proj
 |----------|-------------|
 | [Project Charter](docs/project/PROJECT-CHARTER.md) | Vision, scope, goals, and constraints |
 | [Architecture](docs/project/ARCHITECTURE.md) | Technical architecture, interfaces, data flows |
+| [COP Architecture](docs/project/funspace/integrated_map_cop/ARCHITECTURE.md) | Common Operating Picture map system design |
 | [Milestones](docs/project/MILESTONES.md) | Phase overview with deliverables and timelines |
 | [Progress](docs/project/PROGRESS.md) | Living checklist -- single source of truth for status |
 | [Phase Plans](docs/project/phases/) | Detailed task breakdowns for each implementation phase |
 
 ## Technology
 
-- **Editor:** [VS Code](https://github.com/microsoft/vscode) (MIT License) -- Electron + TypeScript
-- **LLM Backend:** [Cortex](https://github.com/AulendurForge/Cortex) (Apache 2.0) -- FastAPI + PostgreSQL + Redis
-- **Inference:** [vLLM](https://github.com/vllm-project/vllm) and [llama.cpp](https://github.com/ggerganov/llama.cpp)
-- **Protocol:** [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) for external tool integration
+| Layer | Technology | License |
+|-------|-----------|---------|
+| Editor | [VS Code](https://github.com/microsoft/vscode) (Electron + TypeScript) | MIT |
+| LLM Backend | [Cortex](https://github.com/AulendurForge/Cortex) (FastAPI + PostgreSQL + Redis) | Apache 2.0 |
+| Inference | [vLLM](https://github.com/vllm-project/vllm), [llama.cpp](https://github.com/ggerganov/llama.cpp) | Apache 2.0, MIT |
+| Map Renderer | [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js) | BSD-3-Clause |
+| Offline Tiles | [PMTiles](https://github.com/protomaps/PMTiles) + [Protomaps Basemaps](https://github.com/protomaps/basemaps) | BSD-3-Clause |
+| Military Symbology | [milsymbol](https://github.com/spatialillusions/milsymbol) | MIT |
+| Coordinates | [mgrs](https://www.npmjs.com/package/mgrs) | MIT |
+| Protocol | [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) | -- |
 
 ## License
 
