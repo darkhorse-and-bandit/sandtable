@@ -6,7 +6,9 @@
 import { $, append, clearNode, h } from '../../../../base/browser/dom.js';
 import { KeybindingLabel } from '../../../../base/browser/ui/keybindingLabel/keybindingLabel.js';
 import { coalesce, shuffle } from '../../../../base/common/arrays.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
+import { Disposable, DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
+import { createCenteredComposition } from '../../../contrib/sandtableAnimations/browser/sandtableAnimations.js';
+import { FileAccess } from '../../../../base/common/network.js';
 import { isMacintosh, isWeb, OS } from '../../../../base/common/platform.js';
 import { localize } from '../../../../nls.js';
 import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
@@ -81,6 +83,7 @@ export class EditorGroupWatermark extends Disposable {
 
 	private enabled = false;
 	private workbenchState: WorkbenchState;
+	private geoBackgroundDisposable: IDisposable | undefined;
 
 	constructor(
 		container: HTMLElement,
@@ -104,6 +107,35 @@ export class EditorGroupWatermark extends Disposable {
 
 		append(container, elements.root);
 		this.shortcuts = elements.shortcuts;
+
+		// Sandtable: Huge centered sacred-geometry composition across the full editor group area.
+		// Size 1600px extends well beyond the viewport for an immersive effect.
+		// slowFactor 2 = half-speed rotations because the composition is so large.
+		// Wrapped in try-catch: animations are decorative and must never crash the workbench.
+		try {
+			container.style.position = 'relative';
+			container.style.overflow = 'hidden';
+			// Layer 1: Sacred geometry composition
+			this.geoBackgroundDisposable = createCenteredComposition(container, {
+				size: 1600,
+				opacity: 0.08,
+				ringCount: 6,
+				lineCount: 12,
+				hexRadius: 50,
+				slowFactor: 2,
+			});
+			this._register(this.geoBackgroundDisposable);
+
+			// Layer 2: Desert floor panoramic image anchored to bottom
+			const desertUri = FileAccess.asBrowserUri('vs/workbench/browser/parts/editor/media/sandtableDesertFloor.png');
+			const desertImg = $('img.sandtable-watermark-desert');
+			desertImg.setAttribute('src', desertUri.toString(true));
+			desertImg.setAttribute('alt', '');
+			desertImg.setAttribute('aria-hidden', 'true');
+			container.appendChild(desertImg);
+		} catch (_err) {
+			// Silently ignore — geometric animations are purely decorative
+		}
 
 		this.registerListeners();
 

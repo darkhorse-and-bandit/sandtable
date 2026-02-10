@@ -434,6 +434,8 @@ import './contrib/editTelemetry/browser/editTelemetry.contribution.js';
 // Opener
 import './contrib/opener/browser/opener.contribution.js';
 
+// Sandtable -- Shared animation module (must be first so CSS keyframes are available to all surfaces)
+import './contrib/sandtableAnimations/browser/sandtableAnimations.contribution.js';
 // Sandtable -- Cortex platform service + provider registry + LM provider + chat agent + tools + status + settings + completion + models + appearance + code mode + personas
 import '../platform/cortex/browser/cortexService.js';
 import '../platform/cortex/browser/providerRegistryService.js';
@@ -447,6 +449,10 @@ import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.j
 import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
 import './contrib/sandtableAppearance/browser/sandtableAppearance.contribution.js';
 import './contrib/sandtablePersonas/browser/sandtablePersonas.contribution.js';     // Phase 6: Persona status bar + quick-pick
+// COP -- Common Operating Picture (Map Panel)
+import './contrib/sandtableCop/browser/sandtableCopService.js';                    // ISandtableCopService singleton
+import './contrib/sandtableCop/browser/sandtableCop.contribution.js';              // EditorPane, Activity Bar, commands
+import './contrib/sandtableCop/browser/sandtableCopTools.js';                      // 7 COP agent tools (Phase 3)
 // NOTE: sandtableChat and sandtableAgent are DEPRECATED -- replaced by sandtableLM integration with VS Code's built-in chat panel
 // import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
 // import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';

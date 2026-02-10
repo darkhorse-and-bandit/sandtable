@@ -89,7 +89,7 @@
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories {
-	padding: 12px 24px;
+	padding: 60px 24px 12px 24px;
 }
 
 /* duplicated until the getting-started specific setting is removed */
@@ -168,6 +168,7 @@
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .header {
 	grid-area: header;
 	align-self: end;
+	overflow: visible;   /* Allow Sandtable logo to extend above header row */
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories > .gettingStartedCategoriesContainer > .footer {
@@ -963,8 +964,10 @@
 	background-color: var(--vscode-toolbar-hoverBackground);
 }
 
+/* Sandtable: Use editor background as fallback to prevent the watermark
+   composition from bleeding through when welcomePage-background is transparent */
 .monaco-workbench .part.editor > .content .gettingStartedContainer {
-	background: var(--vscode-welcomePage-background);
+	background: var(--vscode-welcomePage-background, var(--vscode-editor-background));
 	color: var(--vscode-foreground);
 }
 
@@ -1107,4 +1110,118 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlide .getting-started-checkbox {
 	border-color: var(--vscode-checkbox-border) !important;
+}
+
+/* ─── Sandtable: Welcome Page Logo ─────────────────────────────────────────── */
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .header .sandtable-welcome-logo {
+	display: block;
+	width: 180px;
+	height: auto;
+	margin: 0 0 12px 0;
+	opacity: 0.9;
+}
+
+/* ─── Sandtable: Developer Branding (Footer) ──────────────────────────────── */
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .footer .sandtable-dev-brand {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	margin-bottom: 10px;
+	opacity: 0.75;
+	cursor: pointer;
+	text-decoration: none;
+	transition: opacity 0.15s ease;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .footer .sandtable-dev-brand:hover {
+	opacity: 1;
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .footer .sandtable-dev-brand:hover .sandtable-dev-brand-text {
+	text-decoration: underline;
+	color: var(--vscode-textLink-foreground, #3794ff);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .footer .sandtable-dev-brand-icon {
+	width: 48px;
+	height: 48px;
+	object-fit: contain;
+	filter: drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 0 1px white);
+}
+
+.monaco-workbench .part.editor > .content .gettingStartedContainer .footer .sandtable-dev-brand-text {
+	font-size: 18px;
+	font-weight: 500;
+	color: var(--vscode-descriptionForeground, #999);
+	letter-spacing: 0.04em;
+}
+
+/* ─── Sandtable: Welcome Screen Layer Stack ────────────────────────────────── */
+
+/* Layer order (bottom to top):
+   z-index 0: opaque background (from .gettingStartedContainer background)
+   z-index 1: sacred geometry composition (.sandtable-composition)
+   z-index 50: desert floor panoramic image (.sandtable-welcome-desert)
+   z-index 100: text, cards, footer (grid content) */
+
+/* Layer 1: Composition sits behind everything (applies to BOTH slides) */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlide > .sandtable-composition {
+	z-index: 1;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+/* Layer 2: Desert floor image sits above the composition (applies to BOTH slides) */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlide > .sandtable-welcome-desert {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 55%;
+	object-fit: cover;
+	object-position: center bottom;
+	pointer-events: none;
+	z-index: 50;
+	opacity: 0.5;
+	mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.4) 30%, rgba(0, 0, 0, 1) 70%);
+	-webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.4) 30%, rgba(0, 0, 0, 1) 70%);
+}
+
+/* Layer 3: Categories slide grid content sits on top */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedCategoriesContainer > .header,
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedCategoriesContainer > .categories-column-left,
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedCategoriesContainer > .categories-column-right,
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedCategoriesContainer > .footer {
+	position: relative;
+	z-index: 100;
+}
+
+/* Layer 3: Details slide content (prev button, walkthrough steps) sits on top */
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideDetails > .prev-button,
+.monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideDetails > .full-height-scrollable {
+	position: relative;
+	z-index: 100;
+}
+
+/* Fade entrance for header on welcome page */
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .gettingStartedContainer .header {
+	animation: sandtable-fade-drift 0.6s ease-out forwards;
+}
+
+/* Fade entrance for footer */
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .gettingStartedContainer .footer {
+	animation: sandtable-fade-drift 0.8s ease-out forwards;
+	animation-delay: 0.2s;
+	opacity: 0;
+}
+
+/* Reduced motion: show everything immediately */
+.monaco-workbench.monaco-reduce-motion .part.editor > .content .gettingStartedContainer .header,
+.monaco-workbench.monaco-reduce-motion .part.editor > .content .gettingStartedContainer .footer {
+	animation: none;
+	opacity: 1;
 }

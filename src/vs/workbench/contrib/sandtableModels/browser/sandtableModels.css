@@ -474,3 +474,101 @@
 	color: var(--vscode-editorError-foreground, #f44747);
 	font-size: 12px;
 }
+
+/* ─── Sandtable: Models Panel Animations ───────────────────────────────────── */
+
+/* Loading state gradient sweep */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-loading {
+	position: relative;
+	overflow: hidden;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-loading::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 40%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		color-mix(in srgb, var(--vscode-focusBorder, #007acc) 6%, transparent) 50%,
+		transparent 100%
+	);
+	pointer-events: none;
+	animation: sandtable-gradient-sweep 2s ease-in-out infinite;
+}
+
+/* Disconnected state entrance animation */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-disconnected {
+	position: relative;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-disconnected-icon {
+	animation: sandtable-fade-drift 0.5s ease-out forwards;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-disconnected-title {
+	animation: sandtable-fade-drift 0.5s ease-out forwards;
+	animation-delay: 0.1s;
+	opacity: 0;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-disconnected-message {
+	animation: sandtable-fade-drift 0.5s ease-out forwards;
+	animation-delay: 0.2s;
+	opacity: 0;
+}
+
+/* GPU card staggered entrance */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card {
+	animation: sandtable-card-enter 0.35s ease-out forwards;
+	opacity: 0;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(1) { animation-delay: 0ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(2) { animation-delay: 60ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(3) { animation-delay: 120ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(4) { animation-delay: 180ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(5) { animation-delay: 240ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(6) { animation-delay: 300ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(7) { animation-delay: 360ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-gpu-card:nth-child(8) { animation-delay: 420ms; }
+
+/* Model list item staggered entrance */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item {
+	animation: sandtable-card-enter 0.25s ease-out forwards;
+	opacity: 0;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(1) { animation-delay: 0ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(2) { animation-delay: 30ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(3) { animation-delay: 60ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(4) { animation-delay: 90ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(5) { animation-delay: 120ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(6) { animation-delay: 150ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(7) { animation-delay: 180ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(8) { animation-delay: 210ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(9) { animation-delay: 240ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-item:nth-child(10) { animation-delay: 270ms; }
+
+/* Empty model list text */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-models-list-empty {
+	animation: sandtable-fade-drift 0.4s ease-out forwards;
+}
+
+/* Reduced motion: show everything immediately */
+.monaco-workbench.monaco-reduce-motion .sandtable-models-loading::after {
+	display: none;
+}
+
+.monaco-workbench.monaco-reduce-motion .sandtable-models-disconnected-icon,
+.monaco-workbench.monaco-reduce-motion .sandtable-models-disconnected-title,
+.monaco-workbench.monaco-reduce-motion .sandtable-models-disconnected-message,
+.monaco-workbench.monaco-reduce-motion .sandtable-models-gpu-card,
+.monaco-workbench.monaco-reduce-motion .sandtable-models-item,
+.monaco-workbench.monaco-reduce-motion .sandtable-models-list-empty {
+	animation: none !important;
+	opacity: 1 !important;
+}

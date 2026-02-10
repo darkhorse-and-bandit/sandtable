@@ -86,6 +86,8 @@ src/vs/
       sandtableStatus/     ** NEW: Status bar indicator **
       sandtableAppearance/ ** NEW: Editor background images **
       sandtablePersonas/   ** NEW: Agent Portfolio panel + persona picker + AI creation tool (Phase 6) **
+      sandtableAnimations/ ** NEW: Shared geometric animation module (CSS keyframes + SVG generator) **
+      sandtableCop/        ** NEW: Common Operating Picture map panel **
       sandtableChat/       ** DEPRECATED: Custom chat panel (replaced by sandtableLM) **
       sandtableAgent/      ** DEPRECATED: Custom agent panel (replaced by sandtableLM) **
   code/          Electron desktop app entry point
@@ -597,6 +599,8 @@ External OpenAI-compatible providers use standard **Bearer token authentication*
 
 The Electron workbench HTML (`workbench.html`, `workbench-dev.html`) includes a CSP `connect-src` directive that allows `'self'`, `https:`, `http:`, and `ws:` protocols. The `http:` allowance is required for connecting to local network servers (Cortex, Ollama, etc.) that don't use HTTPS.
 
+**Trusted Types:** Both HTML files include `require-trusted-types-for 'script'` and a `trusted-types` allowlist. This means `innerHTML` cannot be used with raw strings -- it requires a registered TrustedTypes policy, or better yet, use DOM APIs (`createElement`, `createElementNS`, `appendChild`). When adding a new policy name, it **must** be added to **both** `workbench.html` (production) **and** `workbench-dev.html` (development). Forgetting `workbench-dev.html` will cause runtime crashes when using `./scripts/code.sh` while production builds work fine. See `docs/project/funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md` for detailed guidance.
+
 ## Settings Schema
 
 All new settings registered under the `sandtable` namespace:
@@ -800,6 +804,34 @@ src/vs/workbench/contrib/sandtableLM/
     sandtableTools.ts                  # 15 tools: 6 workspace + 9 persona CRUD/import/export/duplicate
 ```
 
+### Visual Animations & Branding Files
+
+```
+src/vs/workbench/contrib/sandtableAnimations/
+  browser/
+    sandtableAnimations.css              # @keyframes (rotate-cw/ccw, drift, sweep, pulse), composition positioning
+    sandtableAnimations.ts               # createGeometricBackground(), createCenteredComposition(), utilities
+    sandtableAnimations.contribution.ts  # Global CSS import
+
+src/vs/workbench/contrib/welcomeGettingStarted/browser/media/
+    sandtableLogo.png                    # Sandtable logo for welcome page header
+    sandtableDesertFloor.png             # Night desert panorama for welcome/walkthrough backgrounds
+
+src/vs/workbench/browser/parts/editor/media/
+    sandtableLogo.png                    # Greyscale logo for "no files open" watermark
+    sandtableDesertFloor.png             # Desert panorama for watermark background
+```
+
+**Critical notes for future developers:**
+
+1. **Never use `innerHTML`** for SVG -- use `document.createElementNS()`. VS Code's CSP blocks raw HTML assignment.
+2. **Always wrap animation injection in try-catch** -- decorative failures in constructors like `EditorGroupWatermark` will crash the entire workbench.
+3. **Elements injected into `.editor-group-container` must include `:not(.empty)` hiding rules** -- otherwise they appear behind open files. See `editorgroupview.css`.
+4. **Chat tool call selectors must target `.chat-thinking-box` containers** (not `.value > .chat-tool-invocation-part`). Tool invocations are nested inside the thinking box in VS Code 1.109+.
+5. **SVG `<g>` transform-origin defaults to 0,0** -- set explicit pixel coordinates for centered rotation.
+
+See `docs/project/funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md` for complete guidance.
+
 ### Code Mode Architecture
 
 The Code Mode toggle (`sandtable.codeMode.enabled`, default: `false`) controls the visibility of all coding-centric UI elements. The implementation uses two complementary patterns:
@@ -848,9 +880,22 @@ import './contrib/sandtableCompletion/browser/sandtableCompletion.contribution.j
 import './contrib/sandtableModels/browser/sandtableModels.contribution.js';
 import './contrib/sandtableAppearance/browser/sandtableAppearance.contribution.js';
 import './contrib/sandtablePersonas/browser/sandtablePersonas.contribution.js';   // Phase 6: Agent Portfolio + persona picker + AI creation tool
+// COP -- Common Operating Picture (Map Panel)
+import './contrib/sandtableCop/browser/sandtableCopService.js';                    // ISandtableCopService singleton
+import './contrib/sandtableCop/browser/sandtableCop.contribution.js';              // EditorPane, Activity Bar, commands
 // DEPRECATED (replaced by sandtableLM integration with VS Code's built-in chat panel):
 // import './contrib/sandtableChat/browser/sandtableChat.contribution.js';
 // import './contrib/sandtableAgent/browser/sandtableAgent.contribution.js';
 ```
 
-The `cortexService.js` import triggers the `registerSingleton()` call that registers `ICortexService` with the DI system. The `sandtableLM` imports register Cortex as a language model provider with VS Code's `ILanguageModelsService`, register the Sandtable default chat agent via `IChatAgentService`, and register 6 workspace tools via `ILanguageModelToolsService`. This integrates Cortex models into VS Code's built-in Chat panel (right-side Auxiliary Bar) rather than using custom sidebar panels.
+The `cortexService.js` import triggers the `registerSingleton()` call that registers `ICortexService` with the DI system. The `sandtableLM` imports register Cortex as a language model provider with VS Code's `ILanguageModelsService`, register the Sandtable default chat agent via `IChatAgentService`, and register 15 workspace tools via `ILanguageModelToolsService`. This integrates Cortex models into VS Code's built-in Chat panel (right-side Auxiliary Bar) rather than using custom sidebar panels. The `sandtableCop` imports register the Common Operating Picture map panel with `ISandtableCopService` for map state management and the EditorPane with MapLibre GL JS for rendering.
+
+### Loading npm Packages in the Browser Layer
+
+VS Code's browser layer (`browser/` subdirectories) runs as ESM in the Electron renderer. npm packages cannot be loaded via `require()` (not available in ESM) or static `import` (bare specifiers don't resolve). The correct pattern is `importAMDNodeModule()` from `src/vs/amdX.ts`, which loads scripts via `<script>` tags with an AMD `define()` shim.
+
+**Critical Electron caveat:** UMD modules detect Electron's Node.js globals (`module`, `exports`) and take the CJS path instead of AMD, causing `importAMDNodeModule` to return `undefined`. The workaround is to temporarily nullify these globals before loading -- see `loadUmdModule()` in `sandtableCopMapRenderer.ts`.
+
+**IIFE modules** (like `pmtiles`, `@protomaps/basemaps`) don't call `define()` at all. After `importAMDNodeModule` loads the script, access the module via `(globalThis as any).packageName`.
+
+**Local file access:** Use `vscode-file://vscode-app/` protocol (not `file://`) for loading resources from the local filesystem in the Electron renderer.

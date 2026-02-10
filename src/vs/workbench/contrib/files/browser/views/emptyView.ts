@@ -22,6 +22,7 @@ import { isWeb } from '../../../../../base/common/platform.js';
 import { DragAndDropObserver, getWindow } from '../../../../../base/browser/dom.js';
 import { ILocalizedString } from '../../../../../platform/action/common/action.js';
 import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
+import { createGeometricBackground } from '../../../sandtableAnimations/browser/sandtableAnimations.js';
 
 export class EmptyView extends ViewPane {
 
@@ -55,6 +56,30 @@ export class EmptyView extends ViewPane {
 
 	protected override renderBody(container: HTMLElement): void {
 		super.renderBody(container);
+
+		// Sandtable: Add subtle geometric background to empty explorer view
+		// We inject into container.parentElement (the main pane container) because the body
+		// container gets visually hidden when shouldShowWelcome() returns true and VS Code
+		// renders the welcome overlay. The parent remains visible and holds both layers.
+		// Wrapped in try-catch: animations are decorative and must never crash the explorer.
+		try {
+			const paneContainer = container.parentElement;
+			if (paneContainer) {
+				paneContainer.style.position = 'relative';
+				this._register(createGeometricBackground(paneContainer, {
+					shapeCount: 3,
+					types: ['circle', 'line'],
+					opacity: 0.08,
+					shadowDepth: 1,
+					minDuration: 50,
+					maxDuration: 100,
+					minSize: 25,
+					maxSize: 80,
+				}));
+			}
+		} catch (_err) {
+			// Silently ignore — geometric animations are purely decorative
+		}
 
 		this._register(new DragAndDropObserver(container, {
 			onDrop: e => {

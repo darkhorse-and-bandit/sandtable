@@ -2841,3 +2841,116 @@ have to be updated for changes to the rules above, or to support more deeply nes
 	font-style: italic;
 	color: var(--vscode-descriptionForeground);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * Sandtable: Tool Call Processing Animations
+ *
+ * Animated border pulse, background tint, and gradient sweep on the thinking
+ * box container while tools are actively processing. Uses the semantic
+ * .chat-thinking-streaming class (VS Code's own state indicator) rather than
+ * fragile :has(.codicon-loading) DOM probing.
+ *
+ * Two rendering paths are covered:
+ * 1. Thinking box (primary) — agent tool calls render inside .chat-thinking-box
+ * 2. Standalone fallback — edge cases where tools render directly under .value
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Path 1: Thinking box (primary — agent mode tool calls) ──────────────── */
+
+/* Border pulse + background tint on the thinking collapsible list while streaming */
+.monaco-workbench:not(.monaco-reduce-motion) .chat-thinking-box .chat-used-context-list.chat-thinking-collapsible.chat-thinking-streaming {
+	border-color: color-mix(in srgb, var(--vscode-focusBorder, #007acc) 60%, transparent);
+	background-color: color-mix(in srgb, var(--vscode-focusBorder, #007acc) 4%, transparent);
+	animation: sandtable-border-pulse 1.2s ease-in-out infinite;
+	overflow: hidden;
+}
+
+/* Gradient sweep overlay across the thinking box during streaming */
+.monaco-workbench:not(.monaco-reduce-motion) .chat-thinking-box .chat-used-context-list.chat-thinking-collapsible.chat-thinking-streaming::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 40%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		color-mix(in srgb, var(--vscode-focusBorder, #007acc) 10%, transparent) 50%,
+		transparent 100%
+	);
+	pointer-events: none;
+	z-index: 1;
+	animation: sandtable-gradient-sweep 1.5s ease-in-out infinite;
+}
+
+/* ─── Path 2: Standalone fallback (tools not inside thinking box) ─────────── */
+
+/* Border pulse on standalone tool invocation parts (descendant, no > combinator) */
+.monaco-workbench:not(.monaco-reduce-motion) .interactive-item-container .value .chat-tool-invocation-part:has(.codicon-loading) {
+	position: relative;
+	overflow: hidden;
+	border-radius: 4px;
+	border: 1px solid color-mix(in srgb, var(--vscode-focusBorder, #007acc) 60%, transparent);
+	background-color: color-mix(in srgb, var(--vscode-focusBorder, #007acc) 4%, transparent);
+	animation: sandtable-border-pulse 1.2s ease-in-out infinite;
+}
+
+/* Gradient sweep on standalone tool invocation parts */
+.monaco-workbench:not(.monaco-reduce-motion) .interactive-item-container .value .chat-tool-invocation-part:has(.codicon-loading)::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 40%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		color-mix(in srgb, var(--vscode-focusBorder, #007acc) 10%, transparent) 50%,
+		transparent 100%
+	);
+	pointer-events: none;
+	z-index: 1;
+	animation: sandtable-gradient-sweep 1.5s ease-in-out infinite;
+}
+
+/* ─── Progress container — enhanced sweep for "Working..." state ──────────── */
+
+.monaco-workbench:not(.monaco-reduce-motion) .interactive-item-container .progress-container.working-progress {
+	position: relative;
+	overflow: hidden;
+	border-radius: 3px;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .interactive-item-container .progress-container.working-progress::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 35%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		color-mix(in srgb, var(--vscode-focusBorder, #007acc) 5%, transparent) 50%,
+		transparent 100%
+	);
+	pointer-events: none;
+	animation: sandtable-gradient-sweep 2s ease-in-out infinite;
+}
+
+/* ─── Reduced motion: disable all Sandtable chat processing animations ────── */
+
+.monaco-workbench.monaco-reduce-motion .chat-thinking-box .chat-used-context-list.chat-thinking-collapsible.chat-thinking-streaming,
+.monaco-workbench.monaco-reduce-motion .interactive-item-container .value .chat-tool-invocation-part,
+.monaco-workbench.monaco-reduce-motion .interactive-item-container .progress-container.working-progress {
+	animation: none !important;
+}
+
+.monaco-workbench.monaco-reduce-motion .chat-thinking-box .chat-used-context-list.chat-thinking-collapsible.chat-thinking-streaming::after,
+.monaco-workbench.monaco-reduce-motion .interactive-item-container .value .chat-tool-invocation-part::after,
+.monaco-workbench.monaco-reduce-motion .interactive-item-container .progress-container.working-progress::after {
+	animation: none !important;
+	display: none;
+}

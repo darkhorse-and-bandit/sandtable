@@ -37,6 +37,7 @@ The [funspace/](funspace/) directory documents optional, non-core features built
 | Editor Background Image | [funspace/custom_editor_background/EDITOR-BACKGROUND-IMAGE.md](funspace/custom_editor_background/EDITOR-BACKGROUND-IMAGE.md) | Custom background images behind code with opacity, blur, and overlay controls |
 | Sandtable UX Overhaul | [funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md](funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md) | Code Mode toggle, research-first identity, comprehensive UI text/label cleanup, command center overhaul, menu/panel gating |
 | Chat Token Tracking | [funspace/chat_token_tracking/DESIGN.md](funspace/chat_token_tracking/DESIGN.md) | Model picker fix, token usage tracking, context window awareness with pie chart indicator |
+| Visual Animations & Branding | [funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md](funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md) | Sacred geometry compositions, desert floor images, logo branding, and chat processing animations. Includes critical VS Code fork guidance on CSP, `.empty` class visibility, chat DOM structure, and SVG transform-origin |
 | Integrated Map & COP | [funspace/integrated_map_cop/VISION.md](funspace/integrated_map_cop/VISION.md) | Vision for an AI-aware Common Operating Picture with military symbology, ORBAT management, and spatial reasoning for wargaming |
 
 ## How to Use These Documents

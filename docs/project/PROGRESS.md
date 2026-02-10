@@ -3,7 +3,7 @@
 This is the living checklist for the Sandtable project. Update checkboxes as tasks are completed. This is the single source of truth for project status.
 
 **Last updated:** 2026-02-09
-**Current phase:** Chat Model Picker & Token Usage Tracking Complete
+**Current phase:** Visual Animations & Branding -- Active Development
 
 ---
 
@@ -491,6 +491,7 @@ Adds a "Test Model" button for verifying models work before using them in chat, 
 - [x] `docs/project/funspace/sandtable_ux_overhaul/SANDTABLE-UX-OVERHAUL.md` -- UX overhaul & Code Mode documentation
 - [x] `docs/project/funspace/sandtable_ux_overhaul/NEXT-STEPS.md` -- Remaining work and follow-up tasks
 - [x] `docs/project/funspace/chat_token_tracking/DESIGN.md` -- Chat model picker fix & token usage tracking design
+- [x] `docs/project/funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md` -- Geometric animations design, implementation, and critical CSP/TrustedTypes guidance
 
 ---
 
@@ -884,3 +885,180 @@ Two connected fixes that complete the chat panel's model selection and context a
 - [x] `src/vs/platform/cortex/common/openAICompatibleClient.ts` -- `stream_options`, SSE usage capture
 - [x] `src/vs/platform/cortex/common/cortexConfiguration.ts` -- `contextWindowTokens` and `maxOutputTokens` in curated schema
 - [x] `src/vs/workbench/contrib/sandtableSettings/browser/sandtableSettingsPage.ts` -- Token budget inputs and display in model edit panel
+
+---
+
+## Funspace: Visual Animations & Branding
+
+**Status:** Active Development
+**Started:** 2026-02-09
+**Docs:** [funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md](funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md)
+
+Sacred geometry compositions, desert floor panoramic images, Sandtable logo branding, and processing-state animations across Sandtable's key UI surfaces.
+
+### Shared Animation Module
+- [x] `sandtableAnimations.css` -- `@keyframes` (rotate-cw, rotate-ccw, drift, fade-drift, gradient-sweep, border-pulse, card-enter, section-fade), composition positioning, reduced-motion support
+- [x] `sandtableAnimations.ts` -- `createGeometricBackground()` (scattered shapes), `createCenteredComposition()` (sacred geometry emblem with slowFactor), plus `addGradientSweep()`, `addBorderPulse()`, `addStaggeredEntrance()`, `addSectionFade()`
+- [x] `sandtableAnimations.contribution.ts` -- Global CSS import, registered first in `workbench.common.main.ts`
+- [x] All SVG built with `document.createElementNS()` -- no `innerHTML`, no TrustedTypes dependency
+
+### Welcome Page (4-layer composited background)
+- [x] **Opaque background** -- `var(--vscode-editor-background)` fallback prevents watermark bleed-through
+- [x] **Sacred geometry composition** -- 1600px, 6 rings, 12 spokes (varying lengths), 36 compass ticks, static hexagon center, slowFactor 2
+- [x] **Desert floor image** -- Night desert sand panorama, anchored bottom, full editor width, gradient mask, 50% opacity
+- [x] **Sandtable logo** -- Above title text via `FileAccess.asBrowserUri()`
+- [x] **Walkthrough detail screens** -- Same composition + desert image on Get Started and Explore Sandtable walkthroughs
+- [x] Staggered card entrance animations for left/right columns
+- [x] Header/footer fade-in entrance
+
+### Empty Editor Watermark (No Files Open)
+- [x] **Sacred geometry composition** -- 1600px, same parameters as welcome, centered on editor area, `overflow: hidden` clips to bounds
+- [x] **Desert floor image** -- Same styling as welcome page
+- [x] **Greyscale Sandtable logo** -- Replaces VS Code's letterpress SVGs, 480px, `filter: grayscale(100%)`, 40% opacity
+- [x] **`.empty` class hiding** -- Composition and desert hidden via `:not(.empty)` selector when files are open
+- [x] Staggered shortcut fade-in, logo fade entrance
+
+### Chat Tool Call Processing
+- [x] **Thinking box border pulse** -- Targets `.chat-used-context-list.chat-thinking-collapsible.chat-thinking-streaming` (VS Code's semantic state class)
+- [x] **Gradient sweep** -- `::after` pseudo-element sweep across thinking box during streaming
+- [x] **Standalone fallback** -- Descendant selector `.chat-tool-invocation-part:has(.codicon-loading)` for non-thinking-box rendering
+- [x] **Working-progress sweep** -- Enhanced gradient on `.progress-container.working-progress`
+
+### Other Surfaces
+- [x] **Settings page** -- Sacred-geometry composition in header, section fade transitions, staggered card entrance, nav item stagger
+- [x] **Model Manager** -- Loading gradient sweep, disconnected entrance, GPU card + model item stagger
+- [x] **Explorer empty state** -- Geometric background, welcome content fade-in
+- [x] **COP map page** -- Grid loading overlay, coordinate/toolbar entrance, layer panel stagger
+- [x] **Agent panel** (deprecated) -- Tool indicator sweep, diff border pulse, welcome entrance
+
+### Critical Fixes Applied
+- [x] **TrustedTypes / innerHTML** -- Rewrote to DOM APIs, added CSP entries to both HTML files
+- [x] **Error boundaries** -- All animation calls wrapped in try-catch
+- [x] **Chat selector fix** -- Changed from `> .chat-tool-invocation-part` (never matched) to `.chat-thinking-collapsible.chat-thinking-streaming` (correct thinking-box target)
+- [x] **`.empty` class visibility** -- Added `:not(.empty)` hiding rules so decorations don't appear behind open files
+- [x] **SVG transform-origin** -- Explicit `cx`/`cy` pixel coordinates on `<g>` layers (SVG defaults to 0,0, not center)
+- [x] **Welcome background opacity** -- Added `var(--vscode-editor-background)` fallback to prevent watermark composition bleed-through
+
+### Build
+- [x] `npm run compile` passes with 0 errors
+
+### Key Lessons Learned
+
+1. **The blank workbench incident:** `innerHTML` in `EditorGroupWatermark` constructor crashed the entire workbench. Fix: DOM APIs + error boundaries + dual CSP HTML updates.
+2. **The invisible border pulse:** CSS targeted `.value > .chat-tool-invocation-part` but tool calls render inside `.chat-thinking-box` (3 levels deep). Fix: verify runtime DOM with element inspector before writing selectors.
+3. **The bleeding decorations:** Elements injected into `.editor-group-container` are visible even when files are open. Fix: mirror VS Code's `:not(.empty)` hiding pattern.
+4. **SVG layers flying apart:** `<g>` elements default to transform-origin 0,0. Fix: explicit pixel coordinates via CSS custom properties.
+
+---
+
+## COP Phase 1: Map Panel and Basic Interaction
+
+**Status:** Complete (code infrastructure; static assets pending download)
+**Completed:** 2026-02-09
+**Docs:** [funspace/integrated_map_cop/COP-PHASE-1-IMPLEMENTATION.md](funspace/integrated_map_cop/COP-PHASE-1-IMPLEMENTATION.md)
+
+MapLibre GL JS integrated into a VS Code EditorPane as the Common Operating Picture (COP). Provides an interactive map with coordinate display, drawing tools, layer management, and five basemap themes -- all designed for offline/air-gapped deployment.
+
+### Platform Types and Settings
+- [x] `copTypes.ts` -- `ISandtableCopService` interface, 15+ domain types/enums, full Phase 2-4 stubs
+- [x] `copConfiguration.ts` -- 12 `sandtable.cop.*` settings with validation (tile source, theme, coordinate format, zoom, symbology standard)
+- [x] COP section added to Sandtable Settings page with all configuration fields
+
+### EditorPane Infrastructure
+- [x] `sandtableCopInput.ts` -- Singleton `EditorInput` with `sandtable-cop://map` URI, globe icon, pinned by default
+- [x] `sandtableCopPage.ts` -- `EditorPane` hosting MapLibre with toolbar, coordinate display, layer sidebar
+- [x] `sandtableCop.contribution.ts` -- Activity Bar globe icon, ViewContainer with sidebar panel, EditorResolver, Command Palette entry
+- [x] `sandtableCopService.ts` -- In-memory state management, 3 default layers, event emitters, DI singleton
+- [x] Wired into `workbench.common.main.ts`
+
+### MapLibre Renderer
+- [x] `sandtableCopMapRenderer.ts` -- MapLibre GL JS initialization with PMTiles protocol, Protomaps basemap styling, `vscode-file://` asset URLs
+- [x] `loadUmdModule()` helper -- Workaround for Electron's Node.js globals that break UMD module detection in `importAMDNodeModule`
+- [x] Trusted Types patches for Worker constructor (`maplibreWorker`) and innerHTML (`maplibreHtml`)
+- [x] MapLibre critical CSS injected programmatically (navigation icons, scale bar, control positioning)
+- [x] `style.load` event (not `load`) for source creation -- works even without tile files
+- [x] `onSourcesReady` event for annotation persistence across theme switches
+
+### Interactive Features
+- [x] `sandtableCopCoordinateDisplay.ts` -- MGRS/lat-lon/UTM with `mgrs` npm package (UMD), click-to-cycle, right-click-to-copy
+- [x] `sandtableCopDrawTools.ts` -- Custom drawing (no external draw library): point, line, polygon with temp preview layer
+- [x] `sandtableCopLayerPanel.ts` -- Layer list with visibility toggle, opacity slider, 3 default layers
+- [x] MapLibre interaction control: dragPan/doubleClickZoom disabled during drawing, re-enabled after
+
+### CSP and Build
+- [x] `workbench.html` + `workbench-dev.html` -- `file:` in img/connect/font-src; `maplibreHtml` + `maplibreWorker` in trusted-types
+- [x] `npm run compile` passes with 0 errors
+
+### Key Lessons Learned
+
+1. **No `require()` or bare `import` in browser layer.** VS Code's ESM build externalizes packages. Use `importAMDNodeModule()` from `amdX.ts`.
+2. **UMD modules need `module`/`exports` nullification in Electron.** Node.js globals cause UMD to take CJS path instead of AMD.
+3. **IIFE modules set globals.** Access via `(globalThis as any).packageName` after `importAMDNodeModule` loads the script.
+4. **Always update BOTH HTML files.** Dev mode uses `workbench-dev.html`, not `workbench.html`.
+5. **Use `vscode-file://vscode-app/` not `file://`.** Electron blocks `file://` in renderer.
+6. **Use `ThemeIcon.asCSSSelector()` not `asClassName()`.** The `$()` helper needs dot-separated CSS selectors.
+7. **Use `style.load` not `load`.** MapLibre's `load` event requires ALL sources to finish, which fails without tile files.
+8. **Disable dragPan during drawing.** MapLibre's drag handler steals click events from drawing tools.
+9. **`setStyle()` replaces all sources.** Theme switches destroy annotation layers. Fire an event to re-push data.
+
+---
+
+## COP Phase 2: Military Symbology and ORBAT
+
+**Status:** Complete
+**Completed:** 2026-02-09
+**Dependencies:** COP Phase 1
+
+MIL-STD-2525D military unit symbols via milsymbol, unit placement dialog, hierarchical ORBAT tree in the Activity Bar sidebar, inline unit properties editor, and ORBAT import/export.
+
+### npm Dependencies Added
+
+| Package | Version | License | Loading Method |
+|---------|---------|---------|----------------|
+| `milsymbol` | ^3.x | MIT | `loadUmdModule()` via `importAMDNodeModule` |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/vs/platform/cortex/common/copUnitTypes.ts` | SIDC construction helpers: `buildSidc()`, affiliation/echelon/unitType-to-SIDC lookup tables, `generateUnitId()`, display label helpers |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCopSymbology.ts` | milsymbol wrapper: SIDC to SVG to data URI to MapLibre image pipeline, symbol cache, `reloadAllSymbols()` for theme switches |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCopUnitPlacement.ts` | Right-click context menu on map, DOM-based dialog with affiliation/echelon/type/designation fields, live SIDC preview, creates units |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCopOrbatTree.ts` | `WorkbenchAsyncDataTree`-based `ViewPane` in Activity Bar sidebar, hierarchical ORBAT tree with affiliation dots, echelon badges, bidirectional selection with map |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCopUnitEditor.ts` | Inline unit properties editor panel on selection, editable fields, Move Unit mode, Delete with confirmation |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCopOrbatIO.ts` | Export ORBAT to `orbat.geojson` + `orbat-tree.json` via `IFileService`, import from file dialog, debounced auto-save |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/vs/platform/cortex/common/copTypes.ts` | Added `onUnitSelected`, `selectUnit()`, `getSelectedUnitId()` to `ISandtableCopService` |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCopService.ts` | Added selection state/events, ORBAT tree maintenance in addUnit/removeUnit/updateUnit, bbox filter |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCopPage.ts` | Integrated symbology, unit placement, unit editor, unit click-to-select, `_updateUnitsSource()`, theme-switch symbol reload |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCop.contribution.ts` | Replaced placeholder ViewPane with ORBAT tree, added Export/Import ORBAT commands, auto-save contribution, welcome content for empty state |
+| `src/vs/workbench/contrib/sandtableCop/browser/sandtableCop.css` | Added ~400 lines for unit placement dialog, unit editor, delete confirmation overlay, ORBAT tree node styles |
+| `package.json` | Added `milsymbol: ^3.0.3` |
+
+### Verification Checklist
+- [x] Right-click map opens unit placement dialog with affiliation/echelon/type selectors
+- [x] Live SIDC preview in dialog renders correct milsymbol symbol
+- [x] Place Unit creates unit with correct MIL-STD-2525D symbol on map
+- [x] Friendly = blue rectangle, hostile = red diamond, neutral = green square (affiliation shapes correct)
+- [x] ORBAT tree in Activity Bar sidebar shows hierarchical unit list
+- [x] Click unit in tree pans map to unit location
+- [x] Click unit on map highlights in ORBAT tree
+- [x] Unit editor panel shows editable properties on selection
+- [x] Move Unit mode repositions unit on next map click
+- [x] Delete Unit removes from map and ORBAT tree
+- [x] ORBAT welcome view shows "Open Map" button when tree is empty
+- [x] Export ORBAT writes `orbat.geojson` + `orbat-tree.json` to workspace
+- [x] Import ORBAT reads GeoJSON files via file dialog
+- [x] Unit symbols persist across theme switches (onSourcesReady reload)
+- [x] `npm run compile` passes with 0 errors
+
+### Key Lessons Learned
+
+1. **MIL-STD-2525D SIDC is 20 digits with 2-digit Standard Identity.** The initial implementation used a 1-digit affiliation field (positions 3 only), which shifted every subsequent field by one position, producing malformed SIDCs that milsymbol rendered as generic unknown symbols. The fix was verified against the Carmenta SIDC reference and the ARCHITECTURE.md example SIDC `10031000161211000000`. Correct layout: `{version:2}{identity:2}{symbolSet:2}{status:1}{hqTfDummy:1}{echelon:2}{entity:6}{mod1:2}{mod2:2}`.
+2. **`_closeDialog()` must not clear coordinates prematurely.** The unit placement dialog's `_showPlacementDialog()` called `_closeDialog()` to remove any previous dialog, but `_closeDialog()` unconditionally cleared `_pendingCoordinates`. This silently prevented all unit placements. Fix: save and restore coordinates across dialog cleanup.
+3. **ViewPane `shouldShowWelcome()` defaults to `false`.** The ORBAT tree sidebar appeared blank because no welcome state was configured. Fix: override `shouldShowWelcome()` to return `true` when ORBAT is empty, fire `_onDidChangeViewWelcomeState` on ORBAT changes, and register welcome content via `registerViewWelcomeContent()`.
+4. **milsymbol loads correctly via `loadUmdModule()`.** milsymbol v3 is a proper UMD module and works with the same `loadUmdModule()` pattern used for maplibre-gl. No additional Trusted Types policies were needed -- SVGs are converted to data URIs and loaded as `<img>` elements.

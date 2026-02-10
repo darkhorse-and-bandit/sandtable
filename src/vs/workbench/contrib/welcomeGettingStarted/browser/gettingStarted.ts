@@ -21,7 +21,7 @@ import { splitRecentLabel } from '../../../../base/common/labels.js';
 import { DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
 import { ILink, LinkedText } from '../../../../base/common/linkedText.js';
 import { parse } from '../../../../base/common/marshalling.js';
-import { Schemas, matchesScheme } from '../../../../base/common/network.js';
+import { FileAccess, Schemas, matchesScheme } from '../../../../base/common/network.js';
 import { OS } from '../../../../base/common/platform.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
 import { assertReturnsDefined } from '../../../../base/common/types.js';
@@ -73,6 +73,7 @@ import { AccessibilityVerbositySettingId } from '../../accessibility/browser/acc
 import { AccessibleViewAction } from '../../accessibility/browser/accessibleViewActions.js';
 import { KeybindingLabel } from '../../../../base/browser/ui/keybindingLabel/keybindingLabel.js';
 import { ScrollbarVisibility } from '../../../../base/common/scrollable.js';
+import { addStaggeredEntrance, createCenteredComposition } from '../../sandtableAnimations/browser/sandtableAnimations.js';
 
 const SLIDE_TRANSITION_TIME_MS = 250;
 const configurationKey = 'workbench.startupEditor';
@@ -881,6 +882,28 @@ export class GettingStartedPage extends EditorPane {
 
 		this.stepsSlide.appendChild(this.detailsPageScrollbar.getDomNode());
 
+		// Sandtable: Add composition + desert image to the walkthrough details slide
+		// Same layered background as the categories slide (composition behind desert behind content)
+		try {
+			this._register(createCenteredComposition(this.stepsSlide, {
+				size: 1600,
+				opacity: 0.08,
+				ringCount: 6,
+				lineCount: 12,
+				hexRadius: 50,
+				slowFactor: 2,
+			}));
+		} catch (_err) {
+			// Silently ignore
+		}
+
+		const detailsDesertUri = FileAccess.asBrowserUri('vs/workbench/contrib/welcomeGettingStarted/browser/media/sandtableDesertFloor.png');
+		const detailsDesertImg = $('img.sandtable-welcome-desert');
+		detailsDesertImg.setAttribute('src', detailsDesertUri.toString(true));
+		detailsDesertImg.setAttribute('alt', '');
+		detailsDesertImg.setAttribute('aria-hidden', 'true');
+		this.stepsSlide.appendChild(detailsDesertImg);
+
 		const gettingStartedPage = $('.gettingStarted', {}, this.categoriesPageScrollbar.getDomNode(), this.stepsSlide);
 		this.container.appendChild(gettingStartedPage);
 
@@ -920,8 +943,14 @@ export class GettingStartedPage extends EditorPane {
 			onShowOnStartupChanged();
 		}));
 
+		const logoUri = FileAccess.asBrowserUri('vs/workbench/contrib/welcomeGettingStarted/browser/media/sandtableLogo.png');
+		const logoImg = $('img.sandtable-welcome-logo');
+		logoImg.setAttribute('src', logoUri.toString(true));
+		logoImg.setAttribute('alt', 'Sandtable');
+
 		const header = $('.header', {},
-			$('h1.product-name.caption', {}, this.productService.nameLong),
+			logoImg,
+			$('h1.product-name.caption', {}, this.productService.nameShort),
 			$('p.subtitle.description', {}, localize({ key: 'gettingStarted.editingEvolved', comment: ['Shown as subtitle on the Welcome page.'] }, "Research & Roleplay in the Ultimate Sandbox"))
 		);
 
@@ -932,11 +961,37 @@ export class GettingStartedPage extends EditorPane {
 		const recentList = this.buildRecentlyOpenedList();
 		const gettingStartedList = this.buildGettingStartedWalkthroughsList();
 
+		// Developer branding (links to About page in Sandtable Settings)
+		const devBrandUri = FileAccess.asBrowserUri('vs/workbench/contrib/welcomeGettingStarted/browser/media/darkhorseBanditIcon.png');
+		const devBrandImg = $('img.sandtable-dev-brand-icon');
+		devBrandImg.setAttribute('src', devBrandUri.toString(true));
+		devBrandImg.setAttribute('alt', 'Darkhorse + Bandit');
+		devBrandImg.setAttribute('aria-hidden', 'true');
+
+		const devBrandLink = $('a.sandtable-dev-brand', {});
+		devBrandLink.setAttribute('role', 'button');
+		devBrandLink.setAttribute('tabindex', '0');
+		devBrandLink.setAttribute('title', 'Open About Sandtable');
+		devBrandLink.appendChild(devBrandImg);
+		devBrandLink.appendChild($('span.sandtable-dev-brand-text', {}, 'Developed by Darkhorse + Bandit'));
+		devBrandLink.addEventListener('click', (e) => {
+			e.preventDefault();
+			this.commandService.executeCommand('sandtable.openSettings', { section: 'about' });
+		});
+		devBrandLink.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				this.commandService.executeCommand('sandtable.openSettings', { section: 'about' });
+			}
+		});
+
 		const footer = $('.footer', {},
+			devBrandLink,
 			$('p.showOnStartup', {},
 				showOnStartupCheckbox.domNode,
 				showOnStartupLabel,
-			));
+			),
+		);
 
 		const layoutLists = () => {
 			if (gettingStartedList.itemCount) {
@@ -965,7 +1020,47 @@ export class GettingStartedPage extends EditorPane {
 		gettingStartedList.onDidChange(layoutLists);
 		layoutLists();
 
-		reset(this.categoriesSlide, $('.gettingStartedCategoriesContainer', {}, header, leftColumn, rightColumn, footer,));
+		const categoriesContainer = $('.gettingStartedCategoriesContainer', {}, header, leftColumn, rightColumn, footer,);
+		categoriesContainer.style.position = 'relative';
+
+		reset(this.categoriesSlide, categoriesContainer);
+
+		// Sandtable: Layered welcome screen background.
+		// Layer order (bottom to top): opaque bg → composition → desert image → text/cards
+		// All appended to the slide so they span the full editor width.
+		// Wrapped in try-catch: decorative, must never crash.
+		try {
+			// Layer 1: Sacred geometry composition (z-index 1, behind desert)
+			this.categoriesSlideDisposables.add(createCenteredComposition(this.categoriesSlide, {
+				size: 1600,
+				opacity: 0.08,
+				ringCount: 6,
+				lineCount: 12,
+				hexRadius: 50,
+				slowFactor: 2,
+			}));
+		} catch (_err) {
+			// Silently ignore
+		}
+
+		// Layer 2: Desert floor panoramic image (z-index 2, above composition)
+		const desertUri = FileAccess.asBrowserUri('vs/workbench/contrib/welcomeGettingStarted/browser/media/sandtableDesertFloor.png');
+		const desertImg = $('img.sandtable-welcome-desert');
+		desertImg.setAttribute('src', desertUri.toString(true));
+		desertImg.setAttribute('alt', '');
+		desertImg.setAttribute('aria-hidden', 'true');
+		this.categoriesSlide.appendChild(desertImg);
+
+		// Layer 3: Text/cards are already z-index 3 via CSS
+
+		// Sandtable: Staggered entrance animation for left/right columns
+		try {
+			this.categoriesSlideDisposables.add(addStaggeredEntrance(leftColumn, 50));
+			this.categoriesSlideDisposables.add(addStaggeredEntrance(rightColumn, 60));
+		} catch (_err) {
+			// Silently ignore — animations are purely decorative
+		}
+
 		this.categoriesPageScrollbar?.scanDomNode();
 
 		this.updateCategoryProgress();

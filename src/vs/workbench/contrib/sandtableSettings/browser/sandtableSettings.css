@@ -22,19 +22,29 @@
 	padding: 24px 32px 16px 32px;
 	border-bottom: 1px solid var(--vscode-panel-border, #333);
 	flex-shrink: 0;
+	overflow: hidden;
+}
+
+.sandtable-settings-header-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	position: relative;
+	z-index: 1;
+}
+
+.sandtable-settings-logo {
+	width: 48px;
+	height: auto;
+	opacity: 0.9;
+	flex-shrink: 0;
 }
 
 .sandtable-settings-title {
 	font-size: 24px;
 	font-weight: 600;
-	margin: 0 0 6px 0;
-	color: var(--vscode-foreground, #cccccc);
-}
-
-.sandtable-settings-subtitle {
-	font-size: 13px;
 	margin: 0;
-	color: var(--vscode-descriptionForeground, #999);
+	color: var(--vscode-foreground, #cccccc);
 }
 
 /* ─── Body (Nav + Content) ─────────────────────────────────────────────────── */
@@ -1292,3 +1302,82 @@
 }
 
 /* Persona styles have moved to sandtablePersonas.css in the Agent Portfolio panel */
+
+/* ─── Developer Branding (About Section) ──────────────────────────────────── */
+
+.sandtable-dev-brand-card {
+	text-align: center;
+	padding: 28px 20px;
+}
+
+.sandtable-dev-brand-row {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+}
+
+.sandtable-dev-brand-logo {
+	width: 120px;
+	height: 120px;
+	object-fit: contain;
+	filter: drop-shadow(0 0 1px white) drop-shadow(0 0 1px white) drop-shadow(0 0 1px white);
+}
+
+.sandtable-dev-brand-label {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--vscode-foreground, #cccccc);
+	letter-spacing: 0.04em;
+}
+
+/* ─── Sandtable: Settings Page Animations ──────────────────────────────────── */
+
+/* Header sacred geometry composition positioning */
+.sandtable-settings-header > .sandtable-composition {
+	z-index: 0;
+	/* Override default positioning for the compact header context */
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.sandtable-settings-header .sandtable-settings-header-row {
+	position: relative;
+	z-index: 1;
+}
+
+/* Fade entrance for header */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-header {
+	animation: sandtable-fade-drift 0.4s ease-out forwards;
+}
+
+/* Nav items fade in */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item {
+	animation: sandtable-fade-drift 0.3s ease-out forwards;
+	opacity: 0;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(1) { animation-delay: 0.05s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(2) { animation-delay: 0.08s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(3) { animation-delay: 0.11s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(4) { animation-delay: 0.14s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(5) { animation-delay: 0.17s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(6) { animation-delay: 0.20s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(7) { animation-delay: 0.23s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(8) { animation-delay: 0.26s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(9) { animation-delay: 0.29s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(10) { animation-delay: 0.32s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(11) { animation-delay: 0.35s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(12) { animation-delay: 0.38s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(13) { animation-delay: 0.41s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(14) { animation-delay: 0.44s; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-settings-nav-item:nth-child(15) { animation-delay: 0.47s; }
+
+/* Reduced motion: show everything immediately */
+.monaco-workbench.monaco-reduce-motion .sandtable-settings-header,
+.monaco-workbench.monaco-reduce-motion .sandtable-settings-nav-item,
+.monaco-workbench.monaco-reduce-motion .sandtable-settings-card {
+	animation: none !important;
+	opacity: 1 !important;
+}

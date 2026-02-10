@@ -15,9 +15,10 @@ Funspace features are:
 |---------|-----------|--------|-------------|
 | Editor Background Image | [custom_editor_background/](custom_editor_background/) | Complete | Custom background images behind code with opacity, blur, and overlay controls |
 | Sandtable UX Overhaul | [sandtable_ux_overhaul/](sandtable_ux_overhaul/) | Phase 2 Complete | Code Mode toggle, research-first identity, comprehensive UI text/label cleanup, command center overhaul, menu/panel gating, VS Code Chat integration, settings reorganization |
-| Integrated Map & COP | [integrated_map_cop/](integrated_map_cop/) | Vision & Research | Interactive Common Operating Picture with military symbology, ORBAT management, AI-aware spatial tools, scenario timeline, and offline map tiles for wargaming and research |
+| Integrated Map & COP | [integrated_map_cop/](integrated_map_cop/) | Phase 1 Complete | Interactive Common Operating Picture with MapLibre GL JS in EditorPane. Phase 1: map rendering, drawing tools, coordinate display, layer management, 5 basemap themes. Phase 2 next: military symbology + ORBAT |
 | Chat Model Picker & Token Tracking | [chat_token_tracking/](chat_token_tracking/) | Complete | Model picker populated with registered models in all chat modes, token usage pie chart fed with real API data, 60+ model context window reference table, streaming usage capture, Settings UI for token budgets |
 | Tool Call Display Overhaul | [tool_call_display/](tool_call_display/) | Complete | Persistent, collapsible tool call rendering with human-friendly aliases, transparency into tool inputs/outputs, native VS Code tool invocation pipeline integration |
+| Visual Animations & Branding | [geometric_animations/](geometric_animations/) | Active | Sacred geometry compositions (concentric circles, radiating spokes, compass ticks, hexagon center), desert floor panoramic images, Sandtable logo branding, and chat processing animations across welcome page, walkthroughs, empty editor, and chat panel. Includes critical guidance on VS Code TrustedTypes CSP, `.empty` class visibility, chat thinking-box DOM structure, and SVG transform-origin. |
 
 ## Contributing a Funspace Feature
 

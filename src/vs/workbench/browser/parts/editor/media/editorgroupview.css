@@ -52,33 +52,45 @@
 	display: none;
 }
 
+/* Sandtable: Hide composition and desert image when files are open (mirrors watermark hiding) */
+.monaco-workbench .part.editor > .content .editor-group-container:not(.empty) > .sandtable-composition,
+.monaco-workbench .part.editor > .content .editor-group-container:not(.empty) > .sandtable-watermark-desert {
+	display: none;
+}
+
 .monaco-workbench .part.editor > .content:not(.empty) .editor-group-container.empty > .editor-group-watermark,
 .monaco-workbench .part.editor > .content.auxiliary .editor-group-container.empty > .editor-group-watermark {
 	max-width: 200px;
 	height: calc(100% - 70px);
 }
 
+/* Sandtable: Greyscale logo replaces the generic VS Code document icon */
 .monaco-workbench .part.editor > .content .editor-group-container > .editor-group-watermark .letterpress {
 	width: 100%;
 	max-height: 100%;
 	aspect-ratio: 1/1;
-	background-image: url('./letterpress-light.svg');
+	background-image: url('./sandtableLogo.png');
 	background-size: contain;
 	background-position-x: center;
 	background-repeat: no-repeat;
-	max-width: 256px;
+	max-width: 480px;
+	filter: grayscale(100%);
+	opacity: 0.4;
 }
 
+/* Same greyscale logo for all themes */
 .monaco-workbench.vs-dark .part.editor > .content .editor-group-container .editor-group-watermark .letterpress {
-	background-image: url('./letterpress-dark.svg');
+	background-image: url('./sandtableLogo.png');
 }
 
 .monaco-workbench.hc-light .part.editor > .content .editor-group-container .editor-group-watermark .letterpress {
-	background-image: url('./letterpress-hcLight.svg');
+	background-image: url('./sandtableLogo.png');
+	opacity: 0.5;
 }
 
 .monaco-workbench.hc-black .part.editor > .content .editor-group-container .editor-group-watermark .letterpress {
-	background-image: url('./letterpress-hcDark.svg');
+	background-image: url('./sandtableLogo.png');
+	opacity: 0.3;
 }
 
 .monaco-workbench .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts {
@@ -119,6 +131,76 @@
 .monaco-workbench .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dd {
 	text-align: left;
 	margin-inline-start: 24px;
+}
+
+/* ─── Sandtable: Watermark Geometric Animations ───────────────────────────── */
+
+/* Fade entrance for the letterpress logo */
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .editor-group-container > .editor-group-watermark .letterpress {
+	animation: sandtable-fade-drift 0.8s ease-out forwards;
+}
+
+/* Staggered fade-in for shortcut entries */
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dl {
+	animation: sandtable-fade-drift 0.4s ease-out forwards;
+	opacity: 0;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dl:nth-child(1) {
+	animation-delay: 0.3s;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dl:nth-child(2) {
+	animation-delay: 0.35s;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dl:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dl:nth-child(4) {
+	animation-delay: 0.45s;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dl:nth-child(5) {
+	animation-delay: 0.5s;
+}
+
+/* Ensure reduced motion users see everything immediately */
+.monaco-workbench.monaco-reduce-motion .part.editor > .content .editor-group-container > .editor-group-watermark .letterpress,
+.monaco-workbench.monaco-reduce-motion .part.editor > .content .editor-group-container > .editor-group-watermark .shortcuts dl {
+	animation: none;
+	opacity: 1;
+}
+
+/* Layer 1: Sacred geometry composition (centered, extends beyond viewport) */
+.monaco-workbench .part.editor > .content .editor-group-container > .sandtable-composition {
+	z-index: 1;
+	pointer-events: none;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+/* Layer 2: Desert floor panoramic image anchored to bottom */
+.monaco-workbench .part.editor > .content .editor-group-container > .sandtable-watermark-desert {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 55%;
+	object-fit: cover;
+	object-position: center bottom;
+	pointer-events: none;
+	z-index: 50;
+	opacity: 0.4;
+	mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.4) 30%, rgba(0, 0, 0, 1) 70%);
+	-webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.4) 30%, rgba(0, 0, 0, 1) 70%);
+}
+
+/* Layer 3: Watermark content (logo + shortcuts) sits on top */
+.monaco-workbench .part.editor > .content .editor-group-container > .editor-group-watermark {
+	z-index: 100;
 }
 
 /* Title */

@@ -252,6 +252,59 @@ Phases 5+ extend Sandtable from a developer tool into a full research and scenar
 | Token usage pie chart | Done | VS Code's built-in `ChatContextUsageWidget` fed real data -- circular pie chart with color-coded warnings at 75% and 90% |
 | Settings token budget UI | Done | Context window and max output token fields added to curated model edit panel |
 
+### Visual Animations & Branding
+
+**Status:** Active Development
+**Started:** 2026-02-09
+**Docs:** [funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md](funspace/geometric_animations/GEOMETRIC-ANIMATIONS.md)
+
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| Shared animation module | Done | CSS keyframes + TypeScript SVG generator + composition builder using DOM APIs |
+| Sacred geometry composition | Done | `createCenteredComposition()` with concentric rings, spokes, compass ticks, hexagon center, slowFactor |
+| Welcome page 4-layer background | Done | Opaque bg, composition, desert floor image, content. Logo in header. Same on walkthrough screens |
+| Empty editor watermark | Done | 1600px composition + desert image + 480px greyscale logo. Hidden via `:not(.empty)` when files open |
+| Chat thinking-box animations | Done | Border pulse + gradient sweep on `.chat-thinking-streaming`. Correct DOM target (not direct child) |
+| Settings/Models/Explorer/COP | Done | Entrance animations, stagger effects, loading states |
+| CSP and error safety | Done | DOM API SVG, error boundaries, dual HTML CSP, reduced motion |
+| Critical fixes | Done | Chat selector retarget, `.empty` visibility, SVG transform-origin, welcome background opacity |
+
+### COP Phase 1: Map Panel and Basic Interaction
+
+**Status:** Complete (code infrastructure; static assets pending download)
+**Completed:** 2026-02-09
+**Docs:** [funspace/integrated_map_cop/COP-PHASE-1-IMPLEMENTATION.md](funspace/integrated_map_cop/COP-PHASE-1-IMPLEMENTATION.md)
+
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| Platform types + settings | Done | ISandtableCopService interface, 12 configuration keys, COP settings page section |
+| EditorPane infrastructure | Done | Globe icon in Activity Bar, sidebar panel, EditorPane with sandtable-cop:// URI, serializer |
+| MapLibre renderer | Done | MapLibre GL JS with PMTiles, Protomaps styling, vscode-file:// URLs, Trusted Types patches |
+| Coordinate display | Done | MGRS/lat-lon/UTM via `mgrs` package, click-to-cycle, right-click-to-copy |
+| Drawing tools | Done | Custom point/line/polygon drawing with MapLibre interaction control |
+| Layer panel | Done | 3 default layers, visibility toggle, opacity slider |
+| Theme switching | Done | 5 themes (light/dark/grayscale/white/black), annotation persistence across switches |
+| CSP and module loading | Done | UMD workaround for Electron, Worker + innerHTML Trusted Types, dual HTML CSP update |
+| Static assets | Pending | Fonts, sprites, natural-earth PMTiles need manual download |
+
+### COP Phase 2: Military Symbology and ORBAT (Next)
+
+| Milestone | Description |
+|-----------|-------------|
+| milsymbol integration | Load milsymbol (MIT) via loadUmdModule, SIDC to SVG to MapLibre image pipeline |
+| Unit placement dialog | Right-click map to place units with affiliation, echelon, type selection |
+| ORBAT tree view | Hierarchical unit list in sidebar ViewPane, bidirectional selection with map |
+| Unit properties editor | Click unit to view/edit properties inline |
+| ORBAT import/export | GeoJSON + tree JSON files via IFileService |
+
+### COP Phase 3: Agent Map Tools
+
+| Milestone | Description |
+|-----------|-------------|
+| 7 COP tools | Register with ILanguageModelToolsService: query_map_state, add_map_unit, move_map_unit, add_map_overlay, add_map_event, capture_map_snapshot, query_spatial |
+| Query engine | Tiered summaries, filtered unit lists, spatial queries via Turf.js |
+| Map snapshot | Canvas to PNG data URI, saved to workspace via IFileService |
+
 ### Phase 7: MCP Integration and External Data
 
 | Milestone | Description |

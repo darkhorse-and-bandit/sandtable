@@ -16,6 +16,7 @@ import { IEditorGroup } from '../../../services/editor/common/editorGroupsServic
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { ICortexService } from '../../../../platform/cortex/common/cortex.js';
 import { ChatConfigKeys, CompletionConfigKeys, ModelsConfigKeys, AgentConfigKeys, AppearanceConfigKeys, CodeModeConfigKeys, ProviderConfigKeys } from '../../../../platform/cortex/common/cortexConfiguration.js';
+import { CopConfigKeys } from '../../../../platform/cortex/common/copConfiguration.js';
 import { IProviderRegistryService } from '../../../../platform/cortex/common/providerRegistry.js';
 import { IProviderConfig } from '../../../../platform/cortex/common/cortexProviderTypes.js';
 import { SandtableProviderEditor } from './sandtableProviderEditor.js';
@@ -35,12 +36,13 @@ import { basename, join } from '../../../../base/common/path.js';
 import { ILanguageModelToolsService, IToolData, ToolDataSource } from '../../chat/common/tools/languageModelToolsService.js';
 import { IJSONSchema } from '../../../../base/common/jsonSchema.js';
 import { DisposableStore } from '../../../../base/common/lifecycle.js';
+import { addSectionFade, addStaggeredEntrance, createCenteredComposition } from '../../sandtableAnimations/browser/sandtableAnimations.js';
 
 const $ = dom.$;
 
 // ─── Section IDs ──────────────────────────────────────────────────────────────
 
-type SectionId = 'general' | 'codeMode' | 'providers' | 'chat' | 'completion' | 'models' | 'agent' | 'tools' | 'appearance' | 'about' | 'personas' | 'documents' | 'dataSources' | 'workflows' | 'sessions' | 'users';
+type SectionId = 'general' | 'codeMode' | 'providers' | 'chat' | 'completion' | 'models' | 'agent' | 'tools' | 'appearance' | 'about' | 'personas' | 'documents' | 'dataSources' | 'workflows' | 'sessions' | 'users' | 'cop';
 
 interface ISectionDescriptor {
 	id: SectionId;
@@ -71,7 +73,8 @@ const SECTIONS: ISectionDescriptor[] = [
 	{ id: 'documents', label: nls.localize('sandtable.settings.documents', "Documents"), icon: '$(file-text)', placeholder: true, placeholderDesc: 'Upload and manage research documents (PDF, DOCX, PPTX, XLSX). Documents are indexed for semantic search and can be referenced by AI agents during conversations and analysis.' },
 	{ id: 'dataSources', label: nls.localize('sandtable.settings.dataSources', "Data Sources"), icon: '$(database)', placeholder: true, placeholderDesc: 'Connect to external databases, APIs, and tool servers via the Model Context Protocol (MCP). Agents can query live data from wargame databases, research repositories, and structured data sources.' },
 	// ── Exercises ──
-	{ id: 'workflows', label: nls.localize('sandtable.settings.workflows', "Workflows"), icon: '$(play-circle)', category: 'Exercises', placeholder: true, placeholderDesc: 'Configure exercise templates and structured workflows for wargaming, scenario planning, and research analysis. Define multi-step agent workflows that produce formatted deliverables.' },
+	{ id: 'cop', label: nls.localize('sandtable.settings.cop', "COP (Map)"), icon: '$(globe)', category: 'Exercises' },
+	{ id: 'workflows', label: nls.localize('sandtable.settings.workflows', "Workflows"), icon: '$(play-circle)', placeholder: true, placeholderDesc: 'Configure exercise templates and structured workflows for wargaming, scenario planning, and research analysis. Define multi-step agent workflows that produce formatted deliverables.' },
 	{ id: 'sessions', label: nls.localize('sandtable.settings.sessions', "Sessions"), icon: '$(history)', placeholder: true, placeholderDesc: 'Manage exercise sessions, recordings, and after-action reports. Record scenario sessions for review, training, and analysis. Track session history across teams.' },
 	// ── System ──
 	{ id: 'users', label: nls.localize('sandtable.settings.users', "Users & Roles"), icon: '$(shield)', category: 'System', placeholder: true, placeholderDesc: 'Manage user accounts, roles, and permissions. Configure role-based access for administrators, facilitators, analysts, players, and observers. Control who can manage providers, models, and system settings.' },
@@ -113,10 +116,31 @@ export class SandtableSettingsPage extends EditorPane {
 
 		// ─── Header ───────────────────────────────────────────────────────
 		const header = dom.append(this.container, $('.sandtable-settings-header'));
-		const titleEl = dom.append(header, $('h1.sandtable-settings-title'));
+		header.style.position = 'relative';
+
+		// Logo + title row
+		const headerRow = dom.append(header, $('.sandtable-settings-header-row'));
+		const logoUri = FileAccess.asBrowserUri('vs/workbench/contrib/welcomeGettingStarted/browser/media/sandtableLogo.png');
+		const logoImg = dom.append(headerRow, $('img.sandtable-settings-logo'));
+		logoImg.setAttribute('src', logoUri.toString(true));
+		logoImg.setAttribute('alt', 'Sandtable');
+		const titleEl = dom.append(headerRow, $('h1.sandtable-settings-title'));
 		titleEl.textContent = nls.localize('sandtable.settings.title', "Sandtable Settings");
-		const subtitleEl = dom.append(header, $('p.sandtable-settings-subtitle'));
-		subtitleEl.textContent = nls.localize('sandtable.settings.subtitle', "Configure your Sandtable workspace, Cortex connection, and chat preferences.");
+
+		// Sandtable: Sacred geometry composition behind header
+		// Wrapped in try-catch: animations are decorative and must never crash settings
+		try {
+			this._register(createCenteredComposition(header, {
+				size: 500,
+				opacity: 0.06,
+				ringCount: 4,
+				lineCount: 8,
+				hexRadius: 20,
+				slowFactor: 3,
+			}));
+		} catch (_err) {
+			// Silently ignore -- animations are decorative
+		}
 
 		// ─── Body (nav + content) ─────────────────────────────────────────
 		const body = dom.append(this.container, $('.sandtable-settings-body'));
@@ -132,6 +156,12 @@ export class SandtableSettingsPage extends EditorPane {
 
 	override async setInput(input: EditorInput, options: IEditorOptions | undefined, context: object, token: CancellationToken): Promise<void> {
 		await super.setInput(input, options, context, token);
+
+		// Support deep-linking to a specific section via editor options
+		const sectionHint = (options as { section?: SectionId } | undefined)?.section;
+		if (sectionHint) {
+			this._switchSection(sectionHint);
+		}
 	}
 
 	override layout(dimension: dom.Dimension): void {
@@ -192,6 +222,9 @@ export class SandtableSettingsPage extends EditorPane {
 	private _renderSection(sectionId: SectionId): void {
 		dom.clearNode(this.contentContainer);
 
+		// Sandtable: Add section fade-in animation on content switch
+		try { addSectionFade(this.contentContainer); } catch (_err) { /* decorative */ }
+
 		// Dispose tools section listeners when switching away
 		this._toolsSectionDisposables.clear();
 
@@ -233,7 +266,13 @@ export class SandtableSettingsPage extends EditorPane {
 			case 'about':
 				this._renderAboutSection();
 				break;
+			case 'cop':
+				this._renderCopSection();
+				break;
 		}
+
+		// Sandtable: Staggered entrance animation for settings cards
+		try { addStaggeredEntrance(this.contentContainer, 40, '.sandtable-settings-card'); } catch (_err) { /* decorative */ }
 	}
 
 	// ─── Placeholder Section (Coming Soon) ────────────────────────────────
@@ -267,6 +306,24 @@ export class SandtableSettingsPage extends EditorPane {
 
 		const titleEl = dom.append(section, $('h2.sandtable-settings-section-title'));
 		titleEl.textContent = nls.localize('sandtable.settings.aboutTitle', "About Sandtable");
+
+		// Developer branding (prominent, first card)
+		const devCard = dom.append(section, $('.sandtable-settings-card.sandtable-dev-brand-card'));
+		const devRow = dom.append(devCard, $('.sandtable-dev-brand-row'));
+		const devLogoUri = FileAccess.asBrowserUri('vs/workbench/contrib/welcomeGettingStarted/browser/media/darkhorseBanditLogo.png');
+		const devLogoImg = dom.append(devRow, $('img.sandtable-dev-brand-logo'));
+		devLogoImg.setAttribute('src', devLogoUri.toString(true));
+		devLogoImg.setAttribute('alt', 'Darkhorse + Bandit');
+		const devTextEl = dom.append(devRow, $('span.sandtable-dev-brand-label'));
+		devTextEl.textContent = 'Developed by Darkhorse + Bandit';
+
+		// Mission statement
+		const missionCard = dom.append(section, $('.sandtable-settings-card'));
+		const missionTitle = dom.append(missionCard, $('h3.sandtable-settings-card-title'));
+		missionTitle.textContent = nls.localize('sandtable.settings.mission', "Mission");
+		const missionText = dom.append(missionCard, $('p'));
+		missionText.style.lineHeight = '1.5';
+		missionText.textContent = 'Sandtable is an AI-powered research and scenario simulation workspace. Built as a fork of VS Code with core-level LLM integration powered by Cortex, it runs fully offline on self-hosted infrastructure — providing an intelligent workspace for researchers, analysts, and teams to chat with AI agents, ingest documents, create specialized personas, and conduct structured research and wargaming exercises.';
 
 		// Version info card
 		const infoCard = dom.append(section, $('.sandtable-settings-card'));
@@ -309,14 +366,126 @@ export class SandtableSettingsPage extends EditorPane {
 			a.setAttribute('target', '_blank');
 			a.setAttribute('rel', 'noopener noreferrer');
 		}
+	}
 
-		// Mission statement
-		const missionCard = dom.append(section, $('.sandtable-settings-card'));
-		const missionTitle = dom.append(missionCard, $('h3.sandtable-settings-card-title'));
-		missionTitle.textContent = nls.localize('sandtable.settings.mission', "Mission");
-		const missionText = dom.append(missionCard, $('p'));
-		missionText.style.lineHeight = '1.5';
-		missionText.textContent = 'Sandtable is an AI-powered research and scenario simulation workspace. Built as a fork of VS Code with core-level LLM integration powered by Cortex, it runs fully offline on self-hosted infrastructure — providing an intelligent workspace for researchers, analysts, and teams to chat with AI agents, ingest documents, create specialized personas, and conduct structured research and wargaming exercises.';
+	// ─── COP Section ─────────────────────────────────────────────────────
+
+	private _renderCopSection(): void {
+		const section = dom.append(this.contentContainer, $('.sandtable-settings-section'));
+
+		const titleEl = dom.append(section, $('h2.sandtable-settings-section-title'));
+		titleEl.textContent = nls.localize('sandtable.settings.copTitle', "Common Operating Picture (COP)");
+
+		const descEl = dom.append(section, $('p.sandtable-settings-section-desc'));
+		descEl.textContent = nls.localize('sandtable.settings.copDesc', "Configure the interactive map panel for scenario visualization, military symbology, and spatial analysis. Open the COP from the Activity Bar globe icon or Command Palette.");
+
+		// Tile Source
+		this._renderTextSetting(section, {
+			key: CopConfigKeys.TileSource,
+			label: nls.localize('sandtable.settings.copTileSource', "Tile Source"),
+			description: nls.localize('sandtable.settings.copTileSourceDesc', "Path or URL to a .pmtiles tile archive. Supports workspace-relative paths (./maps/region.pmtiles), absolute paths, and HTTP URLs. Leave empty to use the bundled Natural Earth fallback."),
+			placeholder: nls.localize('sandtable.settings.copTileSourcePlaceholder', "e.g., ./maps/exercise-area.pmtiles"),
+		});
+
+		// Basemap Theme
+		this._renderSelectSetting(section, {
+			key: CopConfigKeys.BasemapTheme,
+			label: nls.localize('sandtable.settings.copBasemapTheme', "Basemap Theme"),
+			description: nls.localize('sandtable.settings.copBasemapThemeDesc', "Color theme for the basemap. Dark themes are suitable for low-light environments."),
+			options: [
+				{ value: 'light', label: 'Light' },
+				{ value: 'dark', label: 'Dark' },
+				{ value: 'grayscale', label: 'Grayscale' },
+				{ value: 'white', label: 'White' },
+				{ value: 'black', label: 'Black' },
+			],
+		});
+
+		// Coordinate Format
+		this._renderSelectSetting(section, {
+			key: CopConfigKeys.DefaultCoordinateFormat,
+			label: nls.localize('sandtable.settings.copCoordFormat', "Coordinate Format"),
+			description: nls.localize('sandtable.settings.copCoordFormatDesc', "Default coordinate display format on the map. Click the coordinate display to cycle between formats."),
+			options: [
+				{ value: 'mgrs', label: 'MGRS (Military Grid Reference System)' },
+				{ value: 'latlon', label: 'Latitude / Longitude' },
+				{ value: 'utm', label: 'UTM (Universal Transverse Mercator)' },
+			],
+		});
+
+		// MGRS Grid Overlay
+		this._renderBooleanSetting(section, {
+			key: CopConfigKeys.MgrsGridEnabled,
+			label: nls.localize('sandtable.settings.copMgrsGrid', "MGRS Grid Overlay"),
+			description: nls.localize('sandtable.settings.copMgrsGridDesc', "Show MGRS grid lines overlaid on the map."),
+		});
+
+		// Show Coordinate Display
+		this._renderBooleanSetting(section, {
+			key: CopConfigKeys.ShowCoordinateDisplay,
+			label: nls.localize('sandtable.settings.copShowCoords', "Show Coordinate Display"),
+			description: nls.localize('sandtable.settings.copShowCoordsDesc', "Display cursor coordinates in the bottom-left corner of the map."),
+		});
+
+		// Default Center
+		this._renderTextSetting(section, {
+			key: CopConfigKeys.DefaultCenter,
+			label: nls.localize('sandtable.settings.copDefaultCenter', "Default Map Center"),
+			description: nls.localize('sandtable.settings.copDefaultCenterDesc', "Default map center as 'longitude,latitude' (e.g., '44.366,33.315' for Baghdad, '-77.036,38.897' for Washington DC)."),
+			placeholder: '0,0',
+		});
+
+		// Default Zoom
+		this._renderNumberSetting(section, {
+			key: CopConfigKeys.DefaultZoom,
+			label: nls.localize('sandtable.settings.copDefaultZoom', "Default Zoom Level"),
+			description: nls.localize('sandtable.settings.copDefaultZoomDesc', "Default zoom level (0-22). 0 = world view, 10 = city level, 18 = street level."),
+			min: 0,
+			max: 22,
+			step: 1,
+		});
+
+		// Symbology Standard
+		this._renderSelectSetting(section, {
+			key: CopConfigKeys.SymbologyStandard,
+			label: nls.localize('sandtable.settings.copSymbology', "Symbology Standard"),
+			description: nls.localize('sandtable.settings.copSymbologyDesc', "Military symbology standard for rendering unit symbols on the map."),
+			options: [
+				{ value: '2525C', label: 'MIL-STD-2525C (US Legacy)' },
+				{ value: '2525D', label: 'MIL-STD-2525D (US Current)' },
+				{ value: '2525E', label: 'MIL-STD-2525E (US Latest)' },
+				{ value: 'APP6B', label: 'STANAG APP-6B (NATO Legacy)' },
+				{ value: 'APP6D', label: 'STANAG APP-6D (NATO Current)' },
+				{ value: 'APP6E', label: 'STANAG APP-6E (NATO Latest)' },
+			],
+		});
+
+		// Unit Symbol Size
+		this._renderNumberSetting(section, {
+			key: CopConfigKeys.UnitSymbolSize,
+			label: nls.localize('sandtable.settings.copSymbolSize', "Unit Symbol Size"),
+			description: nls.localize('sandtable.settings.copSymbolSizeDesc', "Default size of military unit symbols in pixels."),
+			min: 10,
+			max: 100,
+			step: 5,
+		});
+
+		// Auto Save ORBAT
+		this._renderBooleanSetting(section, {
+			key: CopConfigKeys.AutoSaveOrbat,
+			label: nls.localize('sandtable.settings.copAutoSave', "Auto-Save ORBAT"),
+			description: nls.localize('sandtable.settings.copAutoSaveDesc', "Automatically save ORBAT changes to workspace files."),
+		});
+
+		// Animation Duration
+		this._renderNumberSetting(section, {
+			key: CopConfigKeys.AnimationDurationMs,
+			label: nls.localize('sandtable.settings.copAnimDuration', "Animation Duration (ms)"),
+			description: nls.localize('sandtable.settings.copAnimDurationDesc', "Duration of unit movement animations when advancing timeline phases (milliseconds). Set to 0 for instant transitions."),
+			min: 0,
+			max: 5000,
+			step: 100,
+		});
 	}
 
 	// ─── Providers Section (Phase 4.5) ───────────────────────────────────
@@ -2252,6 +2421,46 @@ export class SandtableSettingsPage extends EditorPane {
 				const newVal = this.configurationService.getValue<boolean>(opts.key) ?? false;
 				if (checkbox.checked !== newVal) {
 					checkbox.checked = newVal;
+				}
+			}
+		}));
+	}
+
+	private _renderSelectSetting(parent: HTMLElement, opts: {
+		key: string;
+		label: string;
+		description: string;
+		options: { value: string; label: string }[];
+	}): void {
+		const card = dom.append(parent, $('.sandtable-settings-card'));
+
+		const labelEl = dom.append(card, $('label.sandtable-settings-label'));
+		labelEl.textContent = opts.label;
+
+		const descEl = dom.append(card, $('p.sandtable-settings-desc'));
+		descEl.textContent = opts.description;
+
+		const select = dom.append(card, $('select.sandtable-settings-input')) as HTMLSelectElement;
+		const currentValue = this.configurationService.getValue<string>(opts.key) || '';
+
+		for (const opt of opts.options) {
+			const option = dom.append(select, $('option')) as HTMLOptionElement;
+			option.value = opt.value;
+			option.textContent = opt.label;
+			if (opt.value === currentValue) {
+				option.selected = true;
+			}
+		}
+
+		this._register(dom.addDisposableListener(select, 'change', () => {
+			this.configurationService.updateValue(opts.key, select.value);
+		}));
+
+		this._register(this.configurationService.onDidChangeConfiguration(e => {
+			if (e.affectsConfiguration(opts.key)) {
+				const newVal = this.configurationService.getValue<string>(opts.key) || '';
+				if (select.value !== newVal) {
+					select.value = newVal;
 				}
 			}
 		}));

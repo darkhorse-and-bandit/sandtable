@@ -106,13 +106,14 @@ registerAction2(class OpenSandtableSettingsAction extends Action2 {
 		});
 	}
 
-	run(accessor: ServicesAccessor): void {
+	run(accessor: ServicesAccessor, args?: { section?: string }): void {
 		const editorService = accessor.get(IEditorService);
 		editorService.openEditor({
 			resource: SandtableSettingsInput.RESOURCE,
 			options: {
 				override: SandtableSettingsInput.ID,
 				pinned: false,
+				...(args?.section ? { section: args.section } : {}),
 			}
 		});
 	}

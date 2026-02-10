@@ -1,0 +1,850 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Sandtable Contributors. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* ─── Root Container ─────────────────────────────────────────────────────── */
+
+.sandtable-cop {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	background-color: var(--vscode-editor-background);
+	color: var(--vscode-editor-foreground);
+}
+
+/* ─── Toolbar ────────────────────────────────────────────────────────────── */
+
+.sandtable-cop-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 36px;
+	min-height: 36px;
+	padding: 0 8px;
+	background-color: var(--vscode-editorWidget-background);
+	border-bottom: 1px solid var(--vscode-editorWidget-border, var(--vscode-widget-border));
+	gap: 8px;
+}
+
+.sandtable-cop-toolbar-left,
+.sandtable-cop-toolbar-center,
+.sandtable-cop-toolbar-right {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.sandtable-cop-toolbar-center {
+	flex: 1;
+	justify-content: center;
+}
+
+.cop-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: none;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--vscode-editor-foreground);
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.cop-btn:hover {
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.cop-btn.active {
+	background-color: var(--vscode-toolbar-activeBackground, rgba(128, 128, 128, 0.2));
+	color: var(--vscode-focusBorder);
+}
+
+.cop-btn .codicon {
+	font-size: 16px;
+}
+
+.cop-phase-label {
+	font-size: 12px;
+	opacity: 0.8;
+	white-space: nowrap;
+}
+
+.cop-basemap-picker {
+	height: 24px;
+	font-size: 11px;
+	background-color: var(--vscode-dropdown-background);
+	color: var(--vscode-dropdown-foreground);
+	border: 1px solid var(--vscode-dropdown-border);
+	border-radius: 3px;
+	padding: 0 4px;
+	cursor: pointer;
+}
+
+/* ─── Body (map + sidebars) ──────────────────────────────────────────────── */
+
+.sandtable-cop-body {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+	position: relative;
+}
+
+/* ─── Map Container ──────────────────────────────────────────────────────── */
+
+.sandtable-cop-map-container {
+	flex: 1;
+	position: relative;
+	overflow: hidden;
+}
+
+.sandtable-cop-map-container .maplibregl-map {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.sandtable-cop-map-container canvas {
+	outline: none;
+}
+
+/* ─── Coordinate Display ─────────────────────────────────────────────────── */
+
+.cop-coordinate-display {
+	position: absolute;
+	bottom: 8px;
+	left: 8px;
+	display: flex;
+	gap: 12px;
+	padding: 4px 8px;
+	background-color: rgba(0, 0, 0, 0.6);
+	color: #e0e0e0;
+	border-radius: 4px;
+	font-size: 11px;
+	font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+	cursor: pointer;
+	z-index: 10;
+	user-select: none;
+	backdrop-filter: blur(4px);
+}
+
+.cop-coordinate-display:hover {
+	background-color: rgba(0, 0, 0, 0.75);
+}
+
+.cop-coord-mgrs,
+.cop-coord-latlon,
+.cop-coord-utm {
+	white-space: nowrap;
+}
+
+.cop-coord-label {
+	opacity: 0.6;
+	margin-right: 4px;
+	font-size: 10px;
+	text-transform: uppercase;
+}
+
+/* ─── Layer Panel (right sidebar) ────────────────────────────────────────── */
+
+.sandtable-cop-sidebar-right {
+	width: 0;
+	overflow: hidden;
+	transition: width 0.2s ease;
+	background-color: var(--vscode-sideBar-background);
+	border-left: 1px solid var(--vscode-sideBar-border, var(--vscode-widget-border));
+}
+
+.sandtable-cop-sidebar-right.open {
+	width: 240px;
+}
+
+.cop-layer-panel {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.cop-layer-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	border-bottom: 1px solid var(--vscode-widget-border);
+}
+
+.cop-layer-panel-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 4px 0;
+}
+
+.cop-layer-item {
+	display: flex;
+	align-items: center;
+	padding: 6px 12px;
+	gap: 8px;
+	cursor: pointer;
+}
+
+.cop-layer-item:hover {
+	background-color: var(--vscode-list-hoverBackground);
+}
+
+.cop-layer-color {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.cop-layer-name {
+	flex: 1;
+	font-size: 12px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cop-layer-visibility {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	border: none;
+	background: transparent;
+	color: var(--vscode-editor-foreground);
+	cursor: pointer;
+	border-radius: 3px;
+	opacity: 0.7;
+}
+
+.cop-layer-visibility:hover {
+	opacity: 1;
+	background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.cop-layer-visibility.hidden {
+	opacity: 0.3;
+}
+
+.cop-layer-opacity {
+	width: 60px;
+	height: 4px;
+	accent-color: var(--vscode-focusBorder);
+	cursor: pointer;
+}
+
+/* ─── Draw Toolbar ───────────────────────────────────────────────────────── */
+
+.cop-draw-separator {
+	width: 1px;
+	height: 20px;
+	background-color: var(--vscode-widget-border);
+	margin: 0 2px;
+}
+
+/* ─── Timeline Bar (Phase 4 placeholder) ─────────────────────────────────── */
+
+.sandtable-cop-timeline {
+	display: none; /* Hidden until Phase 4 */
+	height: 40px;
+	background-color: var(--vscode-editorWidget-background);
+	border-top: 1px solid var(--vscode-editorWidget-border, var(--vscode-widget-border));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * Sandtable: COP Loading & Entrance Animations
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Geometric grid loading animation — shown before map tiles load */
+@keyframes sandtable-cop-grid-draw {
+	0% {
+		stroke-dashoffset: 1000;
+		opacity: 0;
+	}
+	20% {
+		opacity: 0.08;
+	}
+	100% {
+		stroke-dashoffset: 0;
+		opacity: 0.08;
+	}
+}
+
+/* Map container loading state — geometric grid overlay */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-map-container::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	z-index: 1;
+	background:
+		repeating-linear-gradient(
+			0deg,
+			transparent,
+			transparent 59px,
+			var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5)) 59px,
+			var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5)) 60px
+		),
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 59px,
+			var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5)) 59px,
+			var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5)) 60px
+		);
+	opacity: 0.06;
+	animation: sandtable-fade-drift 1.5s ease-out forwards;
+	transition: opacity 1s ease;
+}
+
+/* When map canvas is loaded, fade out the grid */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-map-container:has(.maplibregl-map.maplibregl-loaded)::before {
+	opacity: 0;
+	transition: opacity 0.8s ease;
+}
+
+/* Coordinate display entrance animation */
+.monaco-workbench:not(.monaco-reduce-motion) .cop-coordinate-display {
+	animation: sandtable-fade-drift 0.5s ease-out forwards;
+	animation-delay: 0.3s;
+	opacity: 0;
+}
+
+/* Toolbar entrance */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-toolbar {
+	animation: sandtable-fade-drift 0.3s ease-out forwards;
+}
+
+/* Layer panel sidebar entrance */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-sidebar-right.open .cop-layer-item {
+	animation: sandtable-card-enter 0.25s ease-out forwards;
+	opacity: 0;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-sidebar-right.open .cop-layer-item:nth-child(1) { animation-delay: 0ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-sidebar-right.open .cop-layer-item:nth-child(2) { animation-delay: 40ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-sidebar-right.open .cop-layer-item:nth-child(3) { animation-delay: 80ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-sidebar-right.open .cop-layer-item:nth-child(4) { animation-delay: 120ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-sidebar-right.open .cop-layer-item:nth-child(5) { animation-delay: 160ms; }
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-cop-sidebar-right.open .cop-layer-item:nth-child(6) { animation-delay: 200ms; }
+
+/* Reduced motion: disable all COP animations */
+.monaco-workbench.monaco-reduce-motion .sandtable-cop-map-container::before,
+.monaco-workbench.monaco-reduce-motion .cop-coordinate-display,
+.monaco-workbench.monaco-reduce-motion .sandtable-cop-toolbar,
+.monaco-workbench.monaco-reduce-motion .cop-layer-item {
+	animation: none !important;
+	opacity: 1 !important;
+}
+
+.monaco-workbench.monaco-reduce-motion .sandtable-cop-map-container::before {
+	display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COP Phase 2: Unit Placement Dialog
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cop-unit-dialog {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 100;
+	background: var(--vscode-editor-background);
+	border: 1px solid var(--vscode-widget-border);
+	border-radius: 8px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	width: 380px;
+	max-height: 80vh;
+	overflow-y: auto;
+	padding: 0;
+}
+
+.cop-unit-dialog-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--vscode-widget-border);
+}
+
+.cop-unit-dialog-header h3 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--vscode-foreground);
+}
+
+.cop-unit-dialog-close {
+	background: none;
+	border: none;
+	font-size: 18px;
+	cursor: pointer;
+	color: var(--vscode-foreground);
+	opacity: 0.6;
+	padding: 0 4px;
+	line-height: 1;
+}
+
+.cop-unit-dialog-close:hover {
+	opacity: 1;
+}
+
+.cop-unit-dialog-form {
+	padding: 12px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.cop-unit-dialog-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.cop-unit-dialog-group label {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: var(--vscode-descriptionForeground);
+	letter-spacing: 0.5px;
+}
+
+.cop-unit-dialog-aff-row {
+	display: flex;
+	gap: 6px;
+}
+
+.cop-unit-dialog-aff-btn {
+	flex: 1;
+	padding: 6px 8px;
+	border: 2px solid;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--vscode-foreground);
+	font-size: 11px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.15s, color 0.15s;
+}
+
+.cop-unit-dialog-aff-btn:hover {
+	opacity: 0.9;
+}
+
+.cop-unit-dialog-aff-btn.selected {
+	font-weight: 700;
+}
+
+.cop-unit-dialog-select {
+	padding: 5px 8px;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	border: 1px solid var(--vscode-input-border);
+	border-radius: 4px;
+	font-size: 12px;
+	outline: none;
+}
+
+.cop-unit-dialog-select:focus {
+	border-color: var(--vscode-focusBorder);
+}
+
+.cop-unit-dialog-input {
+	padding: 5px 8px;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	border: 1px solid var(--vscode-input-border);
+	border-radius: 4px;
+	font-size: 12px;
+	outline: none;
+}
+
+.cop-unit-dialog-input:focus {
+	border-color: var(--vscode-focusBorder);
+}
+
+.cop-unit-dialog-row {
+	display: flex;
+	gap: 10px;
+}
+
+.cop-unit-dialog-flex {
+	flex: 1;
+}
+
+.cop-unit-dialog-preview {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px;
+	background: var(--vscode-editorWidget-background);
+	border-radius: 4px;
+	border: 1px solid var(--vscode-widget-border);
+}
+
+.cop-unit-dialog-preview-svg {
+	flex-shrink: 0;
+}
+
+.cop-unit-dialog-preview-sidc {
+	font-family: var(--monaco-monospace-font);
+	font-size: 10px;
+	color: var(--vscode-descriptionForeground);
+	word-break: break-all;
+}
+
+.cop-unit-dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 12px 0 4px;
+	border-top: 1px solid var(--vscode-widget-border);
+	margin-top: 4px;
+}
+
+.cop-unit-dialog-cancel-btn {
+	padding: 6px 14px;
+	background: transparent;
+	border: 1px solid var(--vscode-button-secondaryBorder, var(--vscode-widget-border));
+	border-radius: 4px;
+	color: var(--vscode-foreground);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.cop-unit-dialog-cancel-btn:hover {
+	background: var(--vscode-button-secondaryHoverBackground, rgba(128,128,128,0.1));
+}
+
+.cop-unit-dialog-submit-btn {
+	padding: 6px 14px;
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border: none;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.cop-unit-dialog-submit-btn:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COP Phase 2: Unit Properties Editor
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cop-unit-editor {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	z-index: 90;
+	width: 300px;
+	max-height: 70vh;
+	overflow-y: auto;
+	background: var(--vscode-editor-background);
+	border-left: 1px solid var(--vscode-widget-border);
+	border-top: 1px solid var(--vscode-widget-border);
+	border-radius: 8px 0 0 0;
+	box-shadow: -2px -2px 12px rgba(0, 0, 0, 0.15);
+	padding: 0;
+}
+
+.cop-unit-editor-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--vscode-widget-border);
+}
+
+.cop-unit-editor-header h4 {
+	margin: 0;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--vscode-foreground);
+}
+
+.cop-unit-editor-close {
+	background: none;
+	border: none;
+	font-size: 16px;
+	cursor: pointer;
+	color: var(--vscode-foreground);
+	opacity: 0.6;
+	padding: 0 4px;
+	line-height: 1;
+}
+
+.cop-unit-editor-close:hover {
+	opacity: 1;
+}
+
+.cop-unit-editor-preview {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	background: var(--vscode-editorWidget-background);
+	border-bottom: 1px solid var(--vscode-widget-border);
+}
+
+.cop-unit-editor-preview-svg {
+	flex-shrink: 0;
+}
+
+.cop-unit-editor-preview-info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.cop-unit-editor-sidc {
+	font-family: var(--monaco-monospace-font);
+	font-size: 9px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.cop-unit-editor-coords {
+	font-size: 10px;
+	color: var(--vscode-descriptionForeground);
+}
+
+.cop-unit-editor-form {
+	padding: 8px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.cop-unit-editor-field {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.cop-unit-editor-field label {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: var(--vscode-descriptionForeground);
+	letter-spacing: 0.5px;
+}
+
+.cop-unit-editor-field input,
+.cop-unit-editor-field select,
+.cop-unit-editor-field textarea {
+	padding: 4px 6px;
+	background: var(--vscode-input-background);
+	color: var(--vscode-input-foreground);
+	border: 1px solid var(--vscode-input-border);
+	border-radius: 3px;
+	font-size: 12px;
+	outline: none;
+	font-family: inherit;
+}
+
+.cop-unit-editor-field input:focus,
+.cop-unit-editor-field select:focus,
+.cop-unit-editor-field textarea:focus {
+	border-color: var(--vscode-focusBorder);
+}
+
+.cop-unit-editor-field textarea {
+	resize: vertical;
+	min-height: 40px;
+}
+
+.cop-unit-editor-actions {
+	display: flex;
+	gap: 6px;
+	padding: 8px 12px;
+	border-top: 1px solid var(--vscode-widget-border);
+}
+
+.cop-unit-editor-move-btn {
+	flex: 1;
+	padding: 5px 10px;
+	background: transparent;
+	border: 1px solid var(--vscode-button-secondaryBorder, var(--vscode-widget-border));
+	border-radius: 4px;
+	color: var(--vscode-foreground);
+	font-size: 11px;
+	cursor: pointer;
+}
+
+.cop-unit-editor-move-btn:hover {
+	background: var(--vscode-button-secondaryHoverBackground, rgba(128,128,128,0.1));
+}
+
+.cop-unit-editor-move-btn.active {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-color: transparent;
+}
+
+.cop-unit-editor-delete-btn {
+	padding: 5px 10px;
+	background: transparent;
+	border: 1px solid var(--vscode-errorForeground, #f44336);
+	border-radius: 4px;
+	color: var(--vscode-errorForeground, #f44336);
+	font-size: 11px;
+	cursor: pointer;
+}
+
+.cop-unit-editor-delete-btn:hover {
+	background: var(--vscode-errorForeground, #f44336);
+	color: #fff;
+}
+
+/* Delete confirmation overlay */
+.cop-unit-editor-confirm {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 200;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.cop-unit-editor-confirm-box {
+	background: var(--vscode-editor-background);
+	border: 1px solid var(--vscode-widget-border);
+	border-radius: 6px;
+	padding: 16px;
+	max-width: 300px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.cop-unit-editor-confirm-box p {
+	margin: 0 0 12px;
+	font-size: 13px;
+	color: var(--vscode-foreground);
+}
+
+.cop-unit-editor-confirm-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.cop-unit-editor-cancel-btn {
+	padding: 5px 12px;
+	background: transparent;
+	border: 1px solid var(--vscode-widget-border);
+	border-radius: 4px;
+	color: var(--vscode-foreground);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.cop-unit-editor-cancel-btn:hover {
+	background: rgba(128, 128, 128, 0.1);
+}
+
+.cop-unit-editor-delete-confirm-btn {
+	padding: 5px 12px;
+	background: var(--vscode-errorForeground, #f44336);
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.cop-unit-editor-delete-confirm-btn:hover {
+	opacity: 0.9;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COP Phase 2: ORBAT Tree
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cop-orbat-tree-container {
+	overflow: hidden;
+}
+
+.cop-orbat-node {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 4px;
+	font-size: 12px;
+	cursor: pointer;
+	height: 24px;
+}
+
+.cop-orbat-node:hover {
+	background: var(--vscode-list-hoverBackground);
+}
+
+.cop-orbat-node-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.cop-orbat-node-designation {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--vscode-foreground);
+	font-weight: 500;
+}
+
+.cop-orbat-node-echelon {
+	font-size: 10px;
+	color: var(--vscode-descriptionForeground);
+	padding: 1px 4px;
+	background: var(--vscode-badge-background);
+	border-radius: 3px;
+	flex-shrink: 0;
+}
+
+.cop-orbat-node-status {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.cop-orbat-status-operational {
+	background: #4caf50;
+}
+
+.cop-orbat-status-degraded {
+	background: #ff9800;
+}
+
+.cop-orbat-status-critical {
+	background: #f44336;
+}

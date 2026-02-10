@@ -1,0 +1,345 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Sandtable Contributors. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * Sandtable Geometric Animations — Shared CSS Module
+ *
+ * Minimalist geometric animations (lines, circles, shapes) used across the
+ * Sandtable workbench. All animations respect prefers-reduced-motion and use
+ * only transform/opacity for GPU-composited performance.
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Keyframes ───────────────────────────────────────────────────────────── */
+
+/* Slow linear drift — translates shapes across a container */
+@keyframes sandtable-drift {
+	0% {
+		transform: translate(0, 0);
+	}
+	25% {
+		transform: translate(30px, -20px);
+	}
+	50% {
+		transform: translate(-15px, 25px);
+	}
+	75% {
+		transform: translate(20px, 10px);
+	}
+	100% {
+		transform: translate(0, 0);
+	}
+}
+
+/* Elliptical orbit for small circles */
+@keyframes sandtable-orbit {
+	0% {
+		transform: translate(0, 0) rotate(0deg);
+	}
+	25% {
+		transform: translate(20px, -15px) rotate(90deg);
+	}
+	50% {
+		transform: translate(0px, 5px) rotate(180deg);
+	}
+	75% {
+		transform: translate(-20px, -10px) rotate(270deg);
+	}
+	100% {
+		transform: translate(0, 0) rotate(360deg);
+	}
+}
+
+/* SVG stroke-dashoffset draw animation */
+@keyframes sandtable-line-draw {
+	0% {
+		stroke-dashoffset: 100;
+		opacity: 0;
+	}
+	10% {
+		opacity: 1;
+	}
+	100% {
+		stroke-dashoffset: 0;
+		opacity: 1;
+	}
+}
+
+/* Fade + translate entrance animation */
+@keyframes sandtable-fade-drift {
+	0% {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Left-to-right gradient shimmer for processing states */
+@keyframes sandtable-gradient-sweep {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(200%);
+	}
+}
+
+/* Border/shadow pulse for active containers — starts at peak for instant visibility */
+@keyframes sandtable-border-pulse {
+	0%, 100% {
+		box-shadow: 0 0 0 1px color-mix(in srgb, var(--vscode-focusBorder, #007acc) 30%, transparent);
+	}
+	50% {
+		box-shadow: 0 0 4px 2px color-mix(in srgb, var(--vscode-focusBorder, #007acc) 60%, transparent);
+	}
+}
+
+/* Very slow rotation for geometric accents */
+@keyframes sandtable-rotate-slow {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Staggered card entrance */
+@keyframes sandtable-card-enter {
+	0% {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Subtle section content transition */
+@keyframes sandtable-section-fade {
+	0% {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ─── Geometric Background Canvas ─────────────────────────────────────────── */
+
+.sandtable-geo-canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	overflow: hidden;
+	z-index: 0;
+}
+
+/* Individual geometric shape wrapper */
+.sandtable-geo-shape {
+	position: absolute;
+	pointer-events: none;
+	will-change: transform;
+}
+
+/* Shape type: circle outline */
+.sandtable-geo-shape svg circle {
+	fill: none;
+	stroke: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5));
+	stroke-width: 1;
+}
+
+/* Shape type: line */
+.sandtable-geo-shape svg line {
+	stroke: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5));
+	stroke-width: 1;
+}
+
+/* Shape type: polygon (hexagon, triangle) */
+.sandtable-geo-shape svg polygon {
+	fill: none;
+	stroke: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5));
+	stroke-width: 1;
+}
+
+/* SVG line draw animation targets */
+.sandtable-geo-shape svg .sandtable-draw-path {
+	stroke-dasharray: 100;
+	stroke-dashoffset: 100;
+}
+
+/* ─── Gradient Sweep Overlay (for processing states) ──────────────────────── */
+
+.sandtable-sweep-overlay {
+	position: relative;
+	overflow: hidden;
+}
+
+.sandtable-sweep-overlay::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 50%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		var(--vscode-focusBorder, rgba(0, 122, 204, 0.08)) 50%,
+		transparent 100%
+	);
+	opacity: 0.35;
+	pointer-events: none;
+	z-index: 1;
+}
+
+/* ─── Reduced Motion Support ──────────────────────────────────────────────── */
+
+/* Apply animations only when reduced motion is NOT requested */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-geo-shape.sandtable-anim-drift {
+	animation: sandtable-drift var(--sandtable-anim-duration, 60s) linear infinite;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-geo-shape.sandtable-anim-orbit {
+	animation: sandtable-orbit var(--sandtable-anim-duration, 50s) ease-in-out infinite;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-geo-shape.sandtable-anim-rotate {
+	animation: sandtable-rotate-slow var(--sandtable-anim-duration, 120s) linear infinite;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-geo-shape .sandtable-draw-path {
+	animation: sandtable-line-draw var(--sandtable-anim-duration, 4s) ease-out forwards;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-sweep-overlay::before {
+	animation: sandtable-gradient-sweep 2.5s ease-in-out infinite;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-anim-border-pulse {
+	animation: sandtable-border-pulse 2.5s ease-in-out infinite;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-anim-fade-enter {
+	animation: sandtable-fade-drift 0.5s ease-out forwards;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-anim-card-enter {
+	animation: sandtable-card-enter 0.35s ease-out forwards;
+	opacity: 0;
+}
+
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-anim-section-fade {
+	animation: sandtable-section-fade 0.2s ease-out forwards;
+}
+
+/* Disable all animations when reduced motion IS requested */
+.monaco-workbench.monaco-reduce-motion .sandtable-geo-shape,
+.monaco-workbench.monaco-reduce-motion .sandtable-sweep-overlay::before,
+.monaco-workbench.monaco-reduce-motion .sandtable-anim-border-pulse,
+.monaco-workbench.monaco-reduce-motion .sandtable-anim-fade-enter,
+.monaco-workbench.monaco-reduce-motion .sandtable-anim-card-enter,
+.monaco-workbench.monaco-reduce-motion .sandtable-anim-section-fade {
+	animation: none !important;
+	opacity: 1 !important;
+}
+
+/* ─── Shadow Depth Utility ────────────────────────────────────────────────── */
+
+.sandtable-geo-shape.sandtable-shadow-depth {
+	filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+}
+
+/* Light theme: softer shadow */
+.monaco-workbench.vs .sandtable-geo-shape.sandtable-shadow-depth {
+	filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
+}
+
+/* ─── Explorer Empty View — Welcome Content Entrance ──────────────────────── */
+
+.monaco-workbench:not(.monaco-reduce-motion) .explorer-empty-view .welcome-view-content {
+	animation: sandtable-fade-drift 0.5s ease-out forwards;
+}
+
+.monaco-workbench.monaco-reduce-motion .explorer-empty-view .welcome-view-content {
+	animation: none;
+	opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * Centered Composition — Sacred Geometry Emblem
+ *
+ * A single coherent geometric figure (concentric circles, radiating lines,
+ * solid hexagon center) that slowly transforms via counter-rotating layers.
+ * Used behind prominent UI elements like walkthrough cards.
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Clockwise rotation */
+@keyframes sandtable-rotate-cw {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+/* Counter-clockwise rotation */
+@keyframes sandtable-rotate-ccw {
+	from { transform: rotate(360deg); }
+	to { transform: rotate(0deg); }
+}
+
+/* Composition container — positioned behind walkthrough cards area.
+   top/left place the SVG's top-left corner; adjust to align the composition
+   center with the walkthrough cards. Negative values shift up/left. */
+.sandtable-composition {
+	position: absolute;
+	top: -280px;
+	left: 0%;
+	transform: translateX(-50%);
+	pointer-events: none;
+	z-index: 0;
+}
+
+/* Each rotating layer group — transform-origin must be set to the SVG center
+   in explicit px via a CSS custom property (set by TypeScript) so all layers
+   rotate around the same point. SVG <g> elements default to 0,0 origin. */
+.sandtable-composition-layer {
+	transform-origin: var(--sandtable-comp-cx) var(--sandtable-comp-cy);
+	will-change: transform;
+}
+
+/* Apply rotation animations when reduced motion is NOT requested */
+.monaco-workbench:not(.monaco-reduce-motion) .sandtable-composition-layer {
+	animation: var(--sandtable-comp-animation, sandtable-rotate-cw)
+		var(--sandtable-comp-duration, 60s)
+		linear infinite;
+	animation-direction: var(--sandtable-comp-direction, normal);
+}
+
+/* SVG strokes inherit from the composition */
+.sandtable-composition svg circle,
+.sandtable-composition svg line {
+	fill: none;
+	stroke: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5));
+	stroke-width: 1;
+}
+
+/* Filled hexagon center */
+.sandtable-composition svg .sandtable-comp-fill {
+	stroke: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5));
+	stroke-width: 1;
+	fill: var(--vscode-descriptionForeground, rgba(128, 128, 128, 0.5));
+}
+
+/* Reduced motion: stop all composition rotations, show static */
+.monaco-workbench.monaco-reduce-motion .sandtable-composition-layer {
+	animation: none !important;
+}
